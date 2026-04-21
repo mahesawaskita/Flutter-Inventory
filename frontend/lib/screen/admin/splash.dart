@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:lemigas/constants/app_assets.dart';
-import 'package:lemigas/screen/admin/login.dart';
+import 'package:frontend/constants/app_assets.dart';
+import 'package:frontend/screen/admin/login.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

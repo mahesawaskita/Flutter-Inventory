@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lemigas/constants/app_assets.dart';
+import 'package:frontend/constants/app_assets.dart';
 
 class DetailBarangAdmin extends StatelessWidget {
   const DetailBarangAdmin({super.key});

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:lemigas/constants/app_assets.dart';
-import 'package:lemigas/screen/admin/BuatPasswordBaru.dart';
+import 'package:frontend/constants/app_assets.dart';
+import 'package:frontend/screen/admin/BuatPasswordBaru.dart';
 
 // ════════════════════════════════════════════════════════════════════════════
 //  LUPA PASSWORD PAGE

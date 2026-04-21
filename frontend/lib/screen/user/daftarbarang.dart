@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:frontend/constants/app_assets.dart';
 class DaftarBarangUser extends StatelessWidget {
   @override
   Widget build(BuildContext context) {

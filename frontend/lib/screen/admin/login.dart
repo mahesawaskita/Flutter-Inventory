@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:lemigas/constants/app_assets.dart';
-import 'package:lemigas/screen/admin/AdminDashboard.dart';
-import 'package:lemigas/screen/admin/LupaPassword.dart';
-import 'package:lemigas/screen/admin/Register.dart';
+import 'package:frontend/constants/app_assets.dart';
+import 'package:frontend/screen/admin/AdminDashboard.dart';
+import 'package:frontend/screen/admin/LupaPassword.dart';
+import 'package:frontend/screen/admin/Register.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
