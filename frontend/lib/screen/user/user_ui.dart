@@ -8,6 +8,8 @@ class UserUi {
   static const textMuted = Color(0xFF6D6D6D);
   static const primary = Color(0xFF3280FF);
   static const card = Color(0xFFFAF0F8);
+  static const frameFill = Color(0xFFEFE4F2);
+  static const frameBorder = Color(0xFFA79AA6);
 
   static const radius = 16.0;
 }
@@ -55,11 +57,7 @@ class UserPageScaffold extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
           child: Column(
             children: [
-              const _UserHeaderLogo(),
-              const SizedBox(height: 12),
-              UserSurface(
-                child: child,
-              ),
+              child,
             ],
           ),
         ),
@@ -68,54 +66,57 @@ class UserPageScaffold extends StatelessWidget {
   }
 }
 
-class _UserHeaderLogo extends StatelessWidget {
-  const _UserHeaderLogo();
+class UserFramedPage extends StatelessWidget {
+  const UserFramedPage({
+    super.key,
+    required this.title,
+    required this.topIcon,
+    required this.child,
+  });
+
+  final String title;
+  final Widget topIcon;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 74,
-      decoration: BoxDecoration(
-        color: UserUi.surface2,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: UserUi.border, width: 2),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      child: Row(
-        children: [
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: UserUi.border.withValues(alpha: 0.5)),
-            ),
-            child: const Icon(Icons.inventory_2_outlined),
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.topCenter,
+      children: [
+        Container(
+          margin: const EdgeInsets.only(top: 36),
+          padding: const EdgeInsets.fromLTRB(14, 52, 14, 14),
+          decoration: BoxDecoration(
+            color: UserUi.frameFill,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: UserUi.frameBorder, width: 3),
           ),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Text(
-              'Sistem Peminjaman\nInventaris',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                height: 1.1,
+          child: Column(
+            children: [
+              Text(
+                title,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
               ),
-            ),
+              const SizedBox(height: 12),
+              child,
+            ],
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        ),
+        Positioned(
+          top: 0,
+          child: Container(
+            width: 64,
+            height: 64,
             decoration: BoxDecoration(
-              color: const Color(0xFFD5D2DD),
-              borderRadius: BorderRadius.circular(8),
+              color: const Color(0xFFF2EAF4),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: UserUi.frameBorder, width: 2),
             ),
-            child: const Text(
-              'User',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
+            child: Center(child: topIcon),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -199,6 +200,87 @@ class UserChip extends StatelessWidget {
   }
 }
 
+class UserActionPill extends StatelessWidget {
+  const UserActionPill({super.key, required this.text, required this.onTap});
+
+  final String text;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: UserUi.primary,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Text('Detail', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12)),
+              SizedBox(width: 6),
+              Icon(Icons.chevron_right_rounded, color: Colors.white, size: 18),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class UserSegmented3 extends StatelessWidget {
+  const UserSegmented3({
+    super.key,
+    required this.items,
+    required this.selectedIndex,
+    required this.onSelect,
+  });
+
+  final List<String> items;
+  final int selectedIndex;
+  final ValueChanged<int> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 34,
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3EAF4),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: List.generate(items.length, (i) {
+          final selected = i == selectedIndex;
+          return Expanded(
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () => onSelect(i),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: selected ? UserUi.primary : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  items[i],
+                  style: TextStyle(
+                    color: selected ? Colors.white : Colors.black,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}
+
 class UserListCard extends StatelessWidget {
   const UserListCard({
     super.key,
@@ -207,6 +289,7 @@ class UserListCard extends StatelessWidget {
     this.trailingChip,
     this.onTap,
     this.leadingIcon = Icons.devices_other_rounded,
+    this.trailing,
   });
 
   final String title;
@@ -214,6 +297,7 @@ class UserListCard extends StatelessWidget {
   final Widget? trailingChip;
   final VoidCallback? onTap;
   final IconData leadingIcon;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -259,12 +343,8 @@ class UserListCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (trailingChip != null) ...[
-                const SizedBox(width: 10),
-                trailingChip!,
-              ],
-              const SizedBox(width: 8),
-              const Icon(Icons.chevron_right_rounded),
+              if (trailingChip != null) ...[const SizedBox(width: 10), trailingChip!],
+              if (trailing != null) ...[const SizedBox(width: 10), trailing!],
             ],
           ),
         ),
