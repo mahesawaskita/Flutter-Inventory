@@ -1,260 +1,158 @@
 import 'package:flutter/material.dart';
 
-class ProfileUserScreen extends StatefulWidget {
-  const ProfileUserScreen({Key? key}) : super(key: key);
+import 'user_ui.dart';
 
-  @override
-  State<ProfileUserScreen> createState() => _ProfileUserScreenState();
-}
+class ProfileUserScreen extends StatelessWidget {
+  const ProfileUserScreen({super.key});
 
-class _ProfileUserScreenState extends State<ProfileUserScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Header with back button
-            SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back),
-                    ),
-                    const Spacer(),
-                  ],
-                ),
-              ),
-            ),
+    final menus = <({IconData icon, String title})>[
+      (icon: Icons.badge_rounded, title: 'Data\nPribadi'),
+      (icon: Icons.lock_rounded, title: 'Data\nPassword'),
+      (icon: Icons.history_toggle_off_rounded, title: 'Riwayat\nAktivitas'),
+      (icon: Icons.logout_rounded, title: 'Logout'),
+    ];
 
-            // Profile Card
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF5E6F0),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+    return UserPageScaffold(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: UserUi.card,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 62,
+                  height: 62,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFDFE2EC),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.person, size: 42, color: Color(0xFF5C678A)),
+                ),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        width: 60,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          shape: BoxShape.circle,
-                        ),
-                        child: Image.asset(
-                          'assets/image/user/dashboard/user 1.png',
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      Text('Muhammad Riza', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+                      SizedBox(height: 4),
+                      Row(
                         children: [
-                          const Text(
-                            'Muhammad Riza',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: const Text(
-                              'Edit Profil',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ),
+                          Icon(Icons.circle, size: 9, color: Color(0xFF17E700)),
+                          SizedBox(width: 8),
+                          Text('User', style: TextStyle(fontSize: 13)),
                         ],
                       ),
+                      SizedBox(height: 4),
+                      Text('No. 2390343091', style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic)),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Menu Profil',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        _buildProfileMenuItem(
-                          'Email',
-                          'production@gmail.com',
-                        ),
-                        const SizedBox(height: 8),
-                        _buildProfileMenuItem(
-                          'No. Telepon',
-                          '+62 858 2563',
-                        ),
-                        const SizedBox(height: 8),
-                        _buildProfileMenuItem(
-                          'Jabatan',
-                          'Staff Gudang',
-                        ),
-                        const SizedBox(height: 8),
-                        _buildProfileMenuItem(
-                          'Bergabung Sejak',
-                          '2024',
-                        ),
-                      ],
-                    ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDAD5DE),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                ],
-              ),
+                  child: const Text('Edit Profil', style: TextStyle(fontStyle: FontStyle.italic)),
+                ),
+              ],
             ),
-            const SizedBox(height: 24),
-
-            // Menu Options
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                children: [
-                  _buildMenuOption(
-                    icon: Icons.person,
-                    title: 'Data Pribadi',
-                    subtitle: '',
-                    onTap: () {},
-                  ),
-                  const SizedBox(height: 12),
-                  _buildMenuOption(
-                    icon: Icons.lock,
-                    title: 'Data Password',
-                    subtitle: '',
-                    onTap: () {},
-                  ),
-                  const SizedBox(height: 12),
-                  _buildMenuOption(
-                    icon: Icons.history,
-                    title: 'Riwayat Aktivitas',
-                    subtitle: '',
-                    onTap: () {},
-                  ),
-                  const SizedBox(height: 12),
-                  _buildMenuOption(
-                    icon: Icons.logout,
-                    title: 'Logout',
-                    subtitle: '',
-                    onTap: () {
-                      // Handle logout
-                    },
-                  ),
-                ],
-              ),
+          ),
+          const SizedBox(height: 58),
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: UserUi.card,
+              borderRadius: BorderRadius.circular(16),
             ),
-          ],
-        ),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Menu Profil', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+                SizedBox(height: 16),
+                _ProfileLine(label: 'Email', value: 'production@gmail.com'),
+                SizedBox(height: 12),
+                _ProfileLine(label: 'No. Telepon', value: '+62 858 2563'),
+                SizedBox(height: 12),
+                _ProfileLine(label: 'Jabatan', value: 'Staff Gudang'),
+                SizedBox(height: 12),
+                _ProfileLine(label: 'Bergabung Sejak', value: '2024'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 72),
+          Wrap(
+            spacing: 16,
+            runSpacing: 16,
+            children: menus.map((menu) {
+              return Container(
+                width: (MediaQuery.of(context).size.width - 40) / 2,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: UserUi.card,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 54,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(.6),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(menu.icon, size: 28, color: const Color(0xFF6099E9)),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Text(
+                        menu.title,
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }
+}
 
-  Widget _buildProfileMenuItem(String label, String value) {
+class _ProfileLine extends StatelessWidget {
+  const _ProfileLine({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: Colors.black54,
-          ),
+        Expanded(
+          child: Text(label, style: const TextStyle(fontSize: 15, fontStyle: FontStyle.italic)),
         ),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: const TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildMenuOption({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey[300]!),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                size: 20,
-                color: Colors.blue,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  if (subtitle.isNotEmpty)
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: Colors.black54,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right, color: Colors.grey),
-          ],
-        ),
-      ),
     );
   }
 }

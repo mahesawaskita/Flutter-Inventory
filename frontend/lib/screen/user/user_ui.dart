@@ -1,62 +1,54 @@
 import 'package:flutter/material.dart';
 
 class UserUi {
-  static const bg = Color(0xFFF7EEF8);
-  static const surface = Color(0xFFEDE2F0);
-  static const surface2 = Color(0xFFFBF0F8);
-  static const border = Color(0xFFAC9BAB);
-  static const textMuted = Color(0xFF6D6D6D);
-  static const primary = Color(0xFF3280FF);
-  static const card = Color(0xFFFAF0F8);
-  static const frameFill = Color(0xFFEFE4F2);
-  static const frameBorder = Color(0xFFA79AA6);
-
-  static const radius = 16.0;
+  static const background = Colors.white;
+  static const frameFill = Color(0xFFE8DCEB);
+  static const frameBorder = Color(0xFFB2A0B0);
+  static const card = Color(0xFFF8F1F7);
+  static const cardSoft = Color(0xFFF2EAF4);
+  static const input = Color(0xFFF6F3F8);
+  static const blue = Color(0xFF3B82F6);
+  static const blueDark = Color(0xFF1F5AA8);
+  static const green = Color(0xFF97D987);
+  static const yellow = Color(0xFFF8E1A7);
+  static const peach = Color(0xFFF8D9D2);
+  static const softBorder = Color(0xFFC6B7C5);
+  static const textMuted = Color(0xFF7E7484);
+  static const textLight = Color(0xFFAEA4B0);
 }
 
 class UserPageScaffold extends StatelessWidget {
   const UserPageScaffold({
     super.key,
-    required this.title,
     required this.child,
     this.showBack = true,
-    this.actions,
   });
 
-  final String title;
   final Widget child;
   final bool showBack;
-  final List<Widget>? actions;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: UserUi.bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        leading: showBack
-            ? IconButton(
-                onPressed: () => Navigator.maybePop(context),
-                icon: const Icon(Icons.arrow_back_ios_new_rounded),
-              )
-            : null,
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        actions: actions,
-      ),
+      backgroundColor: UserUi.background,
       body: SafeArea(
-        top: false,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
+          padding: const EdgeInsets.fromLTRB(8, 8, 8, 24),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (showBack)
+                Padding(
+                  padding: const EdgeInsets.only(left: 4),
+                  child: IconButton(
+                    onPressed: () => Navigator.maybePop(context),
+                    icon: const Icon(
+                      Icons.arrow_back_rounded,
+                      size: 38,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
               child,
             ],
           ),
@@ -72,31 +64,52 @@ class UserFramedPage extends StatelessWidget {
     required this.title,
     required this.topIcon,
     required this.child,
+    this.topTrailing,
   });
 
   final String title;
   final Widget topIcon;
   final Widget child;
+  final Widget? topTrailing;
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       clipBehavior: Clip.none,
-      alignment: Alignment.topCenter,
       children: [
         Container(
-          margin: const EdgeInsets.only(top: 36),
-          padding: const EdgeInsets.fromLTRB(14, 52, 14, 14),
+          width: double.infinity,
+          margin: const EdgeInsets.only(top: 42),
+          padding: const EdgeInsets.fromLTRB(12, 42, 12, 12),
           decoration: BoxDecoration(
             color: UserUi.frameFill,
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(color: UserUi.frameBorder, width: 3),
           ),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                title,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+              Row(
+                children: [
+                  const Spacer(),
+                  Expanded(
+                    flex: 8,
+                    child: Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: topTrailing ?? const SizedBox.shrink(),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               child,
@@ -105,15 +118,19 @@ class UserFramedPage extends StatelessWidget {
         ),
         Positioned(
           top: 0,
-          child: Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF2EAF4),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: UserUi.frameBorder, width: 2),
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Container(
+              width: 106,
+              height: 78,
+              decoration: BoxDecoration(
+                color: UserUi.card,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: UserUi.frameBorder, width: 3),
+              ),
+              child: Center(child: topIcon),
             ),
-            child: Center(child: topIcon),
           ),
         ),
       ],
@@ -121,72 +138,111 @@ class UserFramedPage extends StatelessWidget {
   }
 }
 
-class UserSurface extends StatelessWidget {
-  const UserSurface({super.key, required this.child});
+class UserSectionCard extends StatelessWidget {
+  const UserSectionCard({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.all(12),
+    this.color = UserUi.card,
+  });
+
   final Widget child;
+  final EdgeInsetsGeometry padding;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: padding,
       decoration: BoxDecoration(
-        color: UserUi.surface,
-        borderRadius: BorderRadius.circular(UserUi.radius),
-        border: Border.all(color: UserUi.border, width: 2),
+        color: color,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: UserUi.softBorder),
       ),
-      padding: const EdgeInsets.all(14),
       child: child,
     );
   }
 }
 
-class UserSearchField extends StatelessWidget {
-  const UserSearchField({
+class UserPrimaryButton extends StatelessWidget {
+  const UserPrimaryButton({
     super.key,
-    required this.hintText,
-    this.onChanged,
+    required this.text,
+    this.onTap,
+    this.icon,
+    this.background = UserUi.blue,
   });
 
-  final String hintText;
-  final ValueChanged<String>? onChanged;
+  final String text;
+  final VoidCallback? onTap;
+  final IconData? icon;
+  final Color background;
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      onChanged: onChanged,
-      decoration: InputDecoration(
-        hintText: hintText,
-        prefixIcon: const Icon(Icons.search_rounded),
-        filled: true,
-        fillColor: const Color(0xFFF7EDF8),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
+    return Material(
+      color: background,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          height: 46,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: background == UserUi.blue ? UserUi.blueDark : background,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, color: Colors.white, size: 18),
+                  const SizedBox(width: 8),
+                ],
+                Text(
+                  text,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-class UserChip extends StatelessWidget {
-  const UserChip({
+class UserPill extends StatelessWidget {
+  const UserPill({
     super.key,
     required this.text,
     required this.background,
     required this.foreground,
+    this.padding = const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
   });
 
   final String text;
   final Color background;
   final Color foreground;
+  final EdgeInsetsGeometry padding;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: padding,
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
         text,
@@ -200,156 +256,231 @@ class UserChip extends StatelessWidget {
   }
 }
 
-class UserActionPill extends StatelessWidget {
-  const UserActionPill({super.key, required this.text, required this.onTap});
+class UserInfoTile extends StatelessWidget {
+  const UserInfoTile({
+    super.key,
+    required this.leading,
+    required this.title,
+    this.subtitle,
+    this.trailing,
+    this.padding = const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+  });
 
-  final String text;
-  final VoidCallback onTap;
+  final Widget leading;
+  final String title;
+  final String? subtitle;
+  final Widget? trailing;
+  final EdgeInsetsGeometry padding;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: UserUi.primary,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
+    return Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9F4F8),
         borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: const [
-              Text('Detail', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12)),
-              SizedBox(width: 6),
-              Icon(Icons.chevron_right_rounded, color: Colors.white, size: 18),
-            ],
+        border: Border.all(color: UserUi.softBorder),
+      ),
+      child: Row(
+        children: [
+          leading,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle!,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
-        ),
+          if (trailing != null) trailing!,
+        ],
       ),
     );
   }
 }
 
-class UserSegmented3 extends StatelessWidget {
-  const UserSegmented3({
+class UserTextInputMock extends StatelessWidget {
+  const UserTextInputMock({
     super.key,
-    required this.items,
-    required this.selectedIndex,
-    required this.onSelect,
+    required this.text,
+    this.icon,
+    this.trailing,
+    this.centerText = false,
+    this.muted = false,
   });
 
-  final List<String> items;
-  final int selectedIndex;
-  final ValueChanged<int> onSelect;
+  final String text;
+  final Widget? icon;
+  final Widget? trailing;
+  final bool centerText;
+  final bool muted;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 34,
-      padding: const EdgeInsets.all(3),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFF3EAF4),
-        borderRadius: BorderRadius.circular(14),
+        color: UserUi.input,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: UserUi.softBorder),
       ),
       child: Row(
-        children: List.generate(items.length, (i) {
-          final selected = i == selectedIndex;
-          return Expanded(
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () => onSelect(i),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: selected ? UserUi.primary : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  items[i],
-                  style: TextStyle(
-                    color: selected ? Colors.white : Colors.black,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                  ),
-                ),
+        children: [
+          if (icon != null) ...[icon!, const SizedBox(width: 8)],
+          Expanded(
+            child: Text(
+              text,
+              textAlign: centerText ? TextAlign.center : TextAlign.start,
+              style: TextStyle(
+                color: muted ? UserUi.textLight : Colors.black87,
+                fontSize: 12,
               ),
             ),
-          );
-        }),
+          ),
+          if (trailing != null) trailing!,
+        ],
       ),
     );
   }
 }
 
-class UserListCard extends StatelessWidget {
-  const UserListCard({
+class UserProductThumb extends StatelessWidget {
+  const UserProductThumb({
     super.key,
-    required this.title,
-    required this.subtitle,
-    this.trailingChip,
-    this.onTap,
-    this.leadingIcon = Icons.devices_other_rounded,
-    this.trailing,
+    required this.icon,
+    this.background = Color(0xFFE4E8FF),
+    this.size = 44,
   });
 
-  final String title;
-  final String subtitle;
-  final Widget? trailingChip;
-  final VoidCallback? onTap;
-  final IconData leadingIcon;
-  final Widget? trailing;
+  final IconData icon;
+  final Color background;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: UserUi.card,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(leadingIcon, color: UserUi.primary),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: UserUi.textMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (trailingChip != null) ...[const SizedBox(width: 10), trailingChip!],
-              if (trailing != null) ...[const SizedBox(width: 10), trailing!],
-            ],
-          ),
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Icon(icon, color: const Color(0xFF4460C8), size: size * .62),
+    );
+  }
+}
+
+class UserHistoryRow extends StatelessWidget {
+  const UserHistoryRow({
+    super.key,
+    required this.avatar,
+    required this.name,
+    required this.date,
+    required this.status,
+    required this.statusColor,
+    this.subtitle,
+  });
+
+  final Widget avatar;
+  final String name;
+  final String date;
+  final String status;
+  final Color statusColor;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: const BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: UserUi.softBorder),
         ),
+      ),
+      child: Row(
+        children: [
+          avatar,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                if (subtitle != null)
+                  Text(
+                    subtitle!,
+                    style: const TextStyle(fontSize: 11, color: UserUi.textMuted),
+                  ),
+                Text(
+                  date,
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+                ),
+              ],
+            ),
+          ),
+          UserPill(
+            text: status,
+            background: statusColor.withOpacity(.22),
+            foreground: statusColor,
+          ),
+        ],
       ),
     );
   }
 }
 
+class UserMockSearch extends StatelessWidget {
+  const UserMockSearch({super.key, required this.hint});
+
+  final String hint;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 34,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF6ECF7),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 18,
+            height: 18,
+            decoration: const BoxDecoration(
+              color: Color(0xFF9DE8F2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.search, size: 13, color: Colors.black54),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              hint,
+              style: const TextStyle(fontSize: 12, color: UserUi.textLight),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

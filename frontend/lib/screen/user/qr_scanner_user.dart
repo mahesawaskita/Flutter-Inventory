@@ -1,288 +1,206 @@
 import 'package:flutter/material.dart';
 
-class QRScannerUserScreen extends StatefulWidget {
-  const QRScannerUserScreen({Key? key}) : super(key: key);
+import 'user_ui.dart';
 
-  @override
-  State<QRScannerUserScreen> createState() => _QRScannerUserScreenState();
-}
+class QRScannerUserScreen extends StatelessWidget {
+  const QRScannerUserScreen({super.key});
 
-class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'QR Scanner',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              // Camera Area with QR Code Scanner
-              Container(
-                width: double.infinity,
-                height: 300,
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.grey[400]!,
-                    width: 2,
-                  ),
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Background image
-                    Container(
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: AssetImage(
-                            'assets/image/user/detail QR scanner/image 20.png',
-                          ),
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    // QR code overlay
-                    Container(
-                      width: 180,
-                      height: 180,
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Colors.blue,
-                          width: 3,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Image.asset(
-                        'assets/image/user/detail QR scanner/054-qr code scan 1.png',
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ],
+    return UserPageScaffold(
+      child: UserFramedPage(
+        title: 'QR Scanner',
+        topIcon: const Icon(Icons.qr_code_2_rounded, size: 46, color: Color(0xFF545163)),
+        child: Column(
+          children: [
+            Container(
+              height: 184,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: UserUi.softBorder),
+                image: const DecorationImage(
+                  image: AssetImage('assets/image/user/detail QR scanner/image 20.png'),
+                  fit: BoxFit.cover,
+                  colorFilter: ColorFilter.mode(Color(0x66FFFFFF), BlendMode.lighten),
                 ),
               ),
-              const SizedBox(height: 24),
-
-              // Item Details
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 50,
-                      height: 50,
+              child: Stack(
+                children: [
+                  Center(
+                    child: Container(
+                      width: 120,
+                      height: 120,
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.black, width: 7),
+                        borderRadius: BorderRadius.circular(24),
                       ),
-                      child: Image.asset(
-                        'assets/image/user/detail QR scanner/image 22.png',
-                        fit: BoxFit.cover,
+                      child: const Center(
+                        child: Icon(Icons.qr_code_2_rounded, size: 90, color: Colors.black),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                  ),
+                  Positioned(
+                    right: 10,
+                    bottom: 10,
+                    child: Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 3),
+                      ),
+                      child: const Icon(Icons.document_scanner_rounded, size: 38, color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            const UserInfoTile(
+              leading: UserProductThumb(icon: Icons.laptop_mac_rounded),
+              title: 'Laptop',
+              subtitle: 'Bintang Audi',
+              trailing: UserPill(text: 'Kembalikan', background: UserUi.blue, foreground: Colors.white),
+            ),
+            const SizedBox(height: 4),
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: EdgeInsets.only(left: 10),
+                child: Text('Batas Pengembalian 28 Maret 2024  2 hari lagi', style: TextStyle(fontSize: 11, color: UserUi.textMuted)),
+              ),
+            ),
+            const SizedBox(height: 10),
+            const Row(
+              children: [
+                Expanded(child: _ScanTab(text: 'Riwayat Peminjaman', active: true)),
+                SizedBox(width: 8),
+                Expanded(child: _ScanTab(text: 'Riwayat Perbaikan')),
+              ],
+            ),
+            const SizedBox(height: 8),
+            UserSectionCard(
+              color: const Color(0xFFF8F2F7),
+              child: Column(
+                children: [
+                  Row(
+                    children: const [
+                      Expanded(child: _InnerTab(text: 'Riwayat Peminjaman', active: true)),
+                      SizedBox(width: 8),
+                      Expanded(child: _InnerTab(text: 'Riwayat Perbaikan')),
+                      SizedBox(width: 8),
+                      Icon(Icons.more_horiz_rounded, color: UserUi.blue),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const UserHistoryRow(
+                    avatar: UserProductThumb(icon: Icons.laptop_mac_rounded),
+                    name: 'Bintang Audi',
+                    subtitle: 'Pinjam hingga',
+                    date: '28 Maret 2024',
+                    status: 'Sedang Dipinjam',
+                    statusColor: Color(0xFF68B45B),
+                  ),
+                  const UserHistoryRow(
+                    avatar: UserProductThumb(icon: Icons.laptop_mac_rounded),
+                    name: 'Melissa Putri',
+                    subtitle: 'Di pinjam selama',
+                    date: '14 Maret 2024',
+                    status: 'Sudah Dikembalikan',
+                    statusColor: Color(0xFF68B45B),
+                  ),
+                  const UserHistoryRow(
+                    avatar: UserProductThumb(icon: Icons.laptop_mac_rounded),
+                    name: 'Budi Agung',
+                    subtitle: 'Di pinjam selama',
+                    date: '15 Feb 2024',
+                    status: 'Sudah Dikembalikan',
+                    statusColor: Color(0xFF68B45B),
+                  ),
+                  const SizedBox(height: 8),
+                  Center(
+                    child: Container(
+                      width: 160,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE6E1EF),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            'Laptop',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            'Bintang Audi',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.black54,
-                            ),
-                          ),
+                          Text('Lihat Selengkapnya', style: TextStyle(color: UserUi.blue)),
+                          SizedBox(width: 4),
+                          Icon(Icons.chevron_right_rounded, size: 18, color: UserUi.blue),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Tabs
-              Row(
-                children: [
-                  _buildTab('Riwayat Peminjaman', true),
-                  const SizedBox(width: 8),
-                  _buildTab('Riwayat Perbaikan', false),
+                  ),
                 ],
               ),
-              const SizedBox(height: 20),
-
-              // History List
-              _buildHistoryItem(
-                borrowerName: 'Bintang Audi',
-                date: '28 Maret 2024',
-                status: 'Sedang Dipinjam',
-                statusColor: Colors.blue,
-              ),
-              const SizedBox(height: 12),
-              _buildHistoryItem(
-                borrowerName: 'Melissa Putri',
-                date: '12 Maret - 14 Maret 2024',
-                status: 'Sudah Dikembalikan',
-                statusColor: Colors.green,
-              ),
-              const SizedBox(height: 12),
-              _buildHistoryItem(
-                borrowerName: 'Budi Agung',
-                date: '15 Feb 2024',
-                status: 'Sudah Dikembalikan',
-                statusColor: Colors.green,
-              ),
-              const SizedBox(height: 24),
-
-              // View All Link
-              Align(
-                alignment: Alignment.center,
-                child: TextButton(
-                  onPressed: () {},
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Lihat Selengkapnya',
-                        style: TextStyle(color: Colors.blue),
-                      ),
-                      Icon(Icons.chevron_right, color: Colors.blue),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Generate QR Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    // Generate QR code
-                  },
-                  icon: const Icon(Icons.qr_code),
-                  label: const Text('Generate QR Barang'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.purple,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildTab(String label, bool isActive) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: isActive ? Colors.blue : Colors.grey[200],
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 12,
-            color: isActive ? Colors.white : Colors.black54,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-      ),
-    );
-  }
+class _ScanTab extends StatelessWidget {
+  const _ScanTab({required this.text, this.active = false});
 
-  Widget _buildHistoryItem({
-    required String borrowerName,
-    required String date,
-    required String status,
-    required Color statusColor,
-  }) {
+  final String text;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      height: 34,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[300]!),
+        color: active ? UserUi.blue : const Color(0xFFFBE1A4),
+        borderRadius: BorderRadius.circular(18),
       ),
+      alignment: Alignment.center,
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: Colors.grey[300],
-            child: const Icon(Icons.person, color: Colors.grey),
+          Text(
+            text,
+            style: TextStyle(fontSize: 12, color: active ? Colors.white : Colors.black87),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  borrowerName,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  date,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Colors.black54,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              status,
-              style: TextStyle(
-                fontSize: 11,
-                color: statusColor,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
+          if (!active) ...[
+            const SizedBox(width: 8),
+            const Text('1'),
+            const SizedBox(width: 2),
+            const Icon(Icons.chevron_right_rounded, size: 18),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+class _InnerTab extends StatelessWidget {
+  const _InnerTab({required this.text, this.active = false});
+
+  final String text;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 32,
+      decoration: BoxDecoration(
+        color: active ? UserUi.blue : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: UserUi.softBorder),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        text,
+        style: TextStyle(fontSize: 12, color: active ? Colors.white : Colors.black87),
       ),
     );
   }

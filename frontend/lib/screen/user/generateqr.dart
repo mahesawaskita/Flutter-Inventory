@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+
 import 'user_ui.dart';
 
 class GenerateQrUser extends StatelessWidget {
@@ -7,55 +8,89 @@ class GenerateQrUser extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return UserPageScaffold(
-      title: 'Generate QR',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            height: 220,
-            decoration: BoxDecoration(
+      child: UserFramedPage(
+        title: 'Generate QR Scanner',
+        topIcon: const Icon(Icons.qr_code_2_rounded, size: 46, color: Color(0xFF545163)),
+        child: Column(
+          children: [
+            UserSectionCard(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.all(10),
+                    child: UserInfoTile(
+                      leading: UserProductThumb(icon: Icons.laptop_mac_rounded),
+                      title: 'Laptop',
+                    ),
+                  ),
+                  Container(height: 1, color: UserUi.softBorder),
+                  const Padding(
+                    padding: EdgeInsets.all(10),
+                    child: Row(
+                      children: [
+                        Icon(Icons.list_alt_rounded, color: Color(0xFF52B2F1)),
+                        SizedBox(width: 8),
+                        Text('Kategori', style: TextStyle(fontSize: 13)),
+                      ],
+                    ),
+                  ),
+                  Container(height: 1, color: UserUi.softBorder),
+                  const Padding(
+                    padding: EdgeInsets.all(10),
+                    child: Row(
+                      children: [
+                        Icon(Icons.memory_rounded, color: Color(0xFF52B2F1)),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Elektronik',
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                        Icon(Icons.chevron_right_rounded),
+                      ],
+                    ),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(10, 0, 10, 10),
+                    child: UserTextInputMock(
+                      text: 'Laptop merek honor keluaran tahun 2019 dengan layar 12 inci.',
+                      muted: true,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              width: 90,
+              height: 66,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8F2F7),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: UserUi.frameBorder, width: 3),
+              ),
+              child: const Icon(Icons.laptop_mac_rounded, size: 40, color: Color(0xFF4460C8)),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: 126,
+              height: 126,
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: UserUi.border, width: 2),
+              alignment: Alignment.center,
+              child: const Icon(Icons.qr_code_2_rounded, size: 112),
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Icon(Icons.qr_code_2_rounded, size: 120, color: UserUi.textMuted),
-                SizedBox(height: 8),
-                Text('QR Barang', style: TextStyle(fontWeight: FontWeight.w900)),
-              ],
+            const SizedBox(height: 8),
+            const Text('QR code untuk barang Laptop', style: TextStyle(fontSize: 13, color: UserUi.textMuted)),
+            const SizedBox(height: 12),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 92),
+              child: UserPrimaryButton(text: 'Cetak QR Code'),
             ),
-          ),
-          const SizedBox(height: 12),
-          const UserSearchField(hintText: 'Cari barang untuk dibuat QR...'),
-          const SizedBox(height: 12),
-          UserListCard(
-            title: 'Laptop',
-            subtitle: 'Klik untuk generate QR',
-            leadingIcon: Icons.laptop_rounded,
-            trailingChip: const UserChip(
-              text: 'Generate',
-              background: UserUi.primary,
-              foreground: Colors.white,
-            ),
-            onTap: () {},
-          ),
-          const SizedBox(height: 10),
-          UserListCard(
-            title: 'Printer',
-            subtitle: 'Klik untuk generate QR',
-            leadingIcon: Icons.print_rounded,
-            trailingChip: const UserChip(
-              text: 'Generate',
-              background: UserUi.primary,
-              foreground: Colors.white,
-            ),
-            onTap: () {},
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
-
