@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class DetailPeminjamanBarangUser extends StatelessWidget {
   @override
@@ -255,7 +255,7 @@ class DetailPeminjamanBarangUser extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/49x40"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -384,7 +384,7 @@ class DetailPeminjamanBarangUser extends StatelessWidget {
                   height: 23,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/23x23"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -415,7 +415,7 @@ class DetailPeminjamanBarangUser extends StatelessWidget {
                   height: 43,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/43x43"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -529,7 +529,7 @@ class DetailPeminjamanBarangUser extends StatelessWidget {
                   height: 22,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/22x22"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -543,7 +543,7 @@ class DetailPeminjamanBarangUser extends StatelessWidget {
                   height: 13,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/13x13"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -557,7 +557,7 @@ class DetailPeminjamanBarangUser extends StatelessWidget {
                   height: 19,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/21x19"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -617,7 +617,7 @@ class DetailPeminjamanBarangUser extends StatelessWidget {
                   height: 20,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/20x20"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -666,7 +666,7 @@ class DetailPeminjamanBarangUser extends StatelessWidget {
                   height: 23,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/24x23"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -698,7 +698,7 @@ class DetailPeminjamanBarangUser extends StatelessWidget {
                   height: 58,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/82x58"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -711,3 +711,4 @@ class DetailPeminjamanBarangUser extends StatelessWidget {
     );
   }
 }
+

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class DetailPerbaikanUser extends StatelessWidget {
   @override
@@ -136,7 +136,7 @@ class DetailPerbaikanUser extends StatelessWidget {
                   height: 51,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/63x51"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -295,7 +295,7 @@ class DetailPerbaikanUser extends StatelessWidget {
                   height: 51,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/63x51"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -341,7 +341,7 @@ class DetailPerbaikanUser extends StatelessWidget {
                   height: 51,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/63x51"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -554,7 +554,7 @@ class DetailPerbaikanUser extends StatelessWidget {
                   height: 62,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/62x62"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -567,3 +567,4 @@ class DetailPerbaikanUser extends StatelessWidget {
     );
   }
 }
+

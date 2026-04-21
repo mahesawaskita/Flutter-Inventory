@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class StatusBarangUser extends StatelessWidget {
   @override
@@ -229,7 +229,7 @@ class StatusBarangUser extends StatelessWidget {
                   height: 35,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/35x35"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -404,7 +404,7 @@ class StatusBarangUser extends StatelessWidget {
                   height: 33,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/32x33"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -418,7 +418,7 @@ class StatusBarangUser extends StatelessWidget {
                   height: 33,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/32x33"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -486,7 +486,7 @@ class StatusBarangUser extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/49x40"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -815,7 +815,7 @@ class StatusBarangUser extends StatelessWidget {
                   height: 47,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/47x47"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -952,7 +952,7 @@ class StatusBarangUser extends StatelessWidget {
                   height: 42,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/42x42"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -966,7 +966,7 @@ class StatusBarangUser extends StatelessWidget {
                   height: 58,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/58x58"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -1154,7 +1154,7 @@ class StatusBarangUser extends StatelessWidget {
                   height: 12,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/12x12"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -1217,7 +1217,7 @@ class StatusBarangUser extends StatelessWidget {
                   height: 12,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/12x12"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -1295,7 +1295,7 @@ class StatusBarangUser extends StatelessWidget {
                   height: 12,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/12x12"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -1358,7 +1358,7 @@ class StatusBarangUser extends StatelessWidget {
                   height: 12,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/12x12"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -1387,7 +1387,7 @@ class StatusBarangUser extends StatelessWidget {
                   height: 16,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/16x16"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -1614,7 +1614,7 @@ class StatusBarangUser extends StatelessWidget {
                   height: 25,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/25x25"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -1627,3 +1627,4 @@ class StatusBarangUser extends StatelessWidget {
     );
   }
 }
+

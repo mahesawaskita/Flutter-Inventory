@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class LaporanQrScannerUser extends StatelessWidget {
   @override
@@ -160,7 +160,7 @@ class LaporanQrScannerUser extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/49x40"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -313,7 +313,7 @@ class LaporanQrScannerUser extends StatelessWidget {
                   height: 126,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/126x126"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -413,7 +413,7 @@ class LaporanQrScannerUser extends StatelessWidget {
                   height: 29,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/29x29"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -525,7 +525,7 @@ class LaporanQrScannerUser extends StatelessWidget {
                   height: 29,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/29x29"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -538,3 +538,4 @@ class LaporanQrScannerUser extends StatelessWidget {
     );
   }
 }
+

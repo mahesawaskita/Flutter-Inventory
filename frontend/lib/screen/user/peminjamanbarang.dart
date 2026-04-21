@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class PeminjamanBarangUser extends StatelessWidget {
   @override
@@ -376,7 +376,7 @@ class PeminjamanBarangUser extends StatelessWidget {
                   height: 25,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/30x25"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -390,7 +390,7 @@ class PeminjamanBarangUser extends StatelessWidget {
                   height: 24,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/27x24"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -404,7 +404,7 @@ class PeminjamanBarangUser extends StatelessWidget {
                   height: 17,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/19x17"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -418,7 +418,7 @@ class PeminjamanBarangUser extends StatelessWidget {
                   height: 24,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/26x24"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -432,7 +432,7 @@ class PeminjamanBarangUser extends StatelessWidget {
                   height: 26,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/24x26"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -447,7 +447,7 @@ class PeminjamanBarangUser extends StatelessWidget {
                   height: 23,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/23x23"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -461,7 +461,7 @@ class PeminjamanBarangUser extends StatelessWidget {
                   height: 34,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/34x34"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -951,7 +951,7 @@ class PeminjamanBarangUser extends StatelessWidget {
                   height: 32,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/32x32"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -965,7 +965,7 @@ class PeminjamanBarangUser extends StatelessWidget {
                   height: 25,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/25x25"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -978,3 +978,4 @@ class PeminjamanBarangUser extends StatelessWidget {
     );
   }
 }
+

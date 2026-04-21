@@ -41,14 +41,15 @@ class _LoginPageState extends State<LoginPage> {
               painter: _TopLeftWedgePainter(),
             ),
           ),
-          Positioned(
-            bottom: -24,
-            right: -16,
-            child: CustomPaint(
-              size: const Size(160, 140),
-              painter: _BottomRightStripesPainter(),
-            ),
-          ),
+          // Yellow stripe removed
+          // Positioned(
+          //   bottom: -24,
+          //   right: -16,
+          //   child: CustomPaint(
+          //     size: const Size(160, 140),
+          //     painter: _BottomRightStripesPainter(),
+          //   ),
+          // ),
           SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {

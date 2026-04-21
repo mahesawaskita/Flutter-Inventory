@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class DashboardUser extends StatelessWidget {
   @override
@@ -349,7 +349,7 @@ class DashboardUser extends StatelessWidget {
                   height: 62,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/62x62"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -362,3 +362,4 @@ class DashboardUser extends StatelessWidget {
     );
   }
 }
+

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class DetailPengembalianBarangUser extends StatelessWidget {
   @override
@@ -103,7 +103,7 @@ class DetailPengembalianBarangUser extends StatelessWidget {
                           height: 68,
                           decoration: BoxDecoration(
                             image: DecorationImage(
-                              image: NetworkImage("https://placehold.co/68x68"),
+                              image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                               fit: BoxFit.cover,
                             ),
                           ),
@@ -276,7 +276,7 @@ class DetailPengembalianBarangUser extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/49x40"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -357,7 +357,7 @@ class DetailPengembalianBarangUser extends StatelessWidget {
                   height: 23,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/23x23"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -482,7 +482,7 @@ class DetailPengembalianBarangUser extends StatelessWidget {
                   height: 22,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/22x22"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -496,7 +496,7 @@ class DetailPengembalianBarangUser extends StatelessWidget {
                   height: 13,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/13x13"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -510,7 +510,7 @@ class DetailPengembalianBarangUser extends StatelessWidget {
                   height: 13,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/13x13"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -524,7 +524,7 @@ class DetailPengembalianBarangUser extends StatelessWidget {
                   height: 20,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/20x20"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -584,7 +584,7 @@ class DetailPengembalianBarangUser extends StatelessWidget {
                   height: 20,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/20x20"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -632,7 +632,7 @@ class DetailPengembalianBarangUser extends StatelessWidget {
                   height: 30,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/30x30"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -713,7 +713,7 @@ class DetailPengembalianBarangUser extends StatelessWidget {
                   height: 59,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/84x59"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -727,7 +727,7 @@ class DetailPengembalianBarangUser extends StatelessWidget {
                   height: 35,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/35x35"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -740,3 +740,4 @@ class DetailPengembalianBarangUser extends StatelessWidget {
     );
   }
 }
+

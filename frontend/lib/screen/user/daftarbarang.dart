@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class DaftarBarangUser extends StatelessWidget {
   const DaftarBarangUser({super.key});
@@ -282,11 +282,10 @@ class DaftarBarangUser extends StatelessWidget {
                   width: 35,
                   height: 35,
                   decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/35x35"),
-                      fit: BoxFit.cover,
-                    ),
+                    color: Colors.blue.shade100,
+                    borderRadius: BorderRadius.circular(8),
                   ),
+                  child: Icon(Icons.category, size: 20, color: Colors.blue),
                 ),
               ),
               Positioned(
@@ -555,11 +554,10 @@ class DaftarBarangUser extends StatelessWidget {
                   width: 49,
                   height: 40,
                   decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/49x40"),
-                      fit: BoxFit.fill,
-                    ),
+                    color: Colors.green.shade100,
+                    borderRadius: BorderRadius.circular(6),
                   ),
+                  child: Icon(Icons.laptop, size: 24, color: Colors.green),
                 ),
               ),
               Positioned(
@@ -902,7 +900,7 @@ class DaftarBarangUser extends StatelessWidget {
                   height: 47,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/47x47"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -1194,7 +1192,7 @@ class DaftarBarangUser extends StatelessWidget {
                   height: 58,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/58x58"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -1284,11 +1282,10 @@ class DaftarBarangUser extends StatelessWidget {
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/42x42"),
-                      fit: BoxFit.cover,
-                    ),
+                    color: Colors.red.shade100,
+                    borderRadius: BorderRadius.circular(8),
                   ),
+                  child: Icon(Icons.print, size: 24, color: Colors.red),
                 ),
               ),
               Positioned(
@@ -1298,11 +1295,10 @@ class DaftarBarangUser extends StatelessWidget {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/38x38"),
-                      fit: BoxFit.cover,
-                    ),
+                    color: Colors.teal.shade100,
+                    borderRadius: BorderRadius.circular(8),
                   ),
+                  child: Icon(Icons.computer, size: 22, color: Colors.teal),
                 ),
               ),
               Positioned(
@@ -1312,11 +1308,10 @@ class DaftarBarangUser extends StatelessWidget {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/38x38"),
-                      fit: BoxFit.cover,
-                    ),
+                    color: Colors.teal.shade100,
+                    borderRadius: BorderRadius.circular(8),
                   ),
+                  child: Icon(Icons.computer, size: 22, color: Colors.teal),
                 ),
               ),
               Positioned(
@@ -1326,11 +1321,10 @@ class DaftarBarangUser extends StatelessWidget {
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/42x42"),
-                      fit: BoxFit.cover,
-                    ),
+                    color: Colors.red.shade100,
+                    borderRadius: BorderRadius.circular(8),
                   ),
+                  child: Icon(Icons.print, size: 24, color: Colors.red),
                 ),
               ),
               Positioned(
@@ -1340,11 +1334,10 @@ class DaftarBarangUser extends StatelessWidget {
                   width: 34,
                   height: 35,
                   decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/34x35"),
-                      fit: BoxFit.cover,
-                    ),
+                    color: Colors.blue.shade100,
+                    borderRadius: BorderRadius.circular(6),
                   ),
+                  child: Icon(Icons.category, size: 20, color: Colors.blue),
                 ),
               ),
               Positioned(
@@ -1354,11 +1347,10 @@ class DaftarBarangUser extends StatelessWidget {
                   width: 29,
                   height: 30,
                   decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/29x30"),
-                      fit: BoxFit.cover,
-                    ),
+                    color: Colors.amber.shade100,
+                    borderRadius: BorderRadius.circular(5),
                   ),
+                  child: Icon(Icons.filter_list, size: 16, color: Colors.amber.shade700),
                 ),
               ),
             ],
@@ -1368,3 +1360,4 @@ class DaftarBarangUser extends StatelessWidget {
     );
   }
 }
+

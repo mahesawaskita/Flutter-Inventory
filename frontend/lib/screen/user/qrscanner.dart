@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class QrScannerUser extends StatelessWidget {
   @override
@@ -121,7 +121,7 @@ class QrScannerUser extends StatelessWidget {
                   height: 188,
                   decoration: ShapeDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/360x188"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                     shape: RoundedRectangleBorder(
@@ -192,7 +192,7 @@ class QrScannerUser extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/49x40"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -206,7 +206,7 @@ class QrScannerUser extends StatelessWidget {
                   height: 45,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/55x45"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -564,7 +564,7 @@ class QrScannerUser extends StatelessWidget {
                   height: 45,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/55x45"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -627,7 +627,7 @@ class QrScannerUser extends StatelessWidget {
                   height: 45,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/55x45"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -707,7 +707,7 @@ class QrScannerUser extends StatelessWidget {
                   height: 12,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/12x12"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -922,7 +922,7 @@ class QrScannerUser extends StatelessWidget {
                   height: 108,
                   decoration: ShapeDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/108x108"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                     shape: RoundedRectangleBorder(
@@ -939,7 +939,7 @@ class QrScannerUser extends StatelessWidget {
                   height: 37,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/37x37"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -953,7 +953,7 @@ class QrScannerUser extends StatelessWidget {
                   height: 20,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/20x20"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -967,7 +967,7 @@ class QrScannerUser extends StatelessWidget {
                   height: 29,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/29x29"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -981,7 +981,7 @@ class QrScannerUser extends StatelessWidget {
                   height: 168,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/168x168"),
+                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -994,3 +994,4 @@ class QrScannerUser extends StatelessWidget {
     );
   }
 }
+
