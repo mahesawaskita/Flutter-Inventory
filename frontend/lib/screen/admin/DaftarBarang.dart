@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/constants/app_assets.dart';
+import 'package:lemigas/constants/app_assets.dart';
 
 class DaftarBarangPage extends StatefulWidget {
   const DaftarBarangPage({super.key});

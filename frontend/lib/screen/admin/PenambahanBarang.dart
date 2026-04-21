@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/constants/app_assets.dart';
+import 'package:lemigas/constants/app_assets.dart';
 
 class PenambahanBarangAdmin extends StatefulWidget {
   const PenambahanBarangAdmin({super.key});

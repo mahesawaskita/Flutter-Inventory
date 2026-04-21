@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/constants/app_assets.dart';
-import 'package:frontend/util/quit_application.dart';
+import 'package:lemigas/constants/app_assets.dart';
+import 'package:lemigas/util/quit_application.dart';
 
 class ProfilPage extends StatelessWidget {
   const ProfilPage({super.key});

@@ -1,27 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:lemigas/constants/app_assets.dart';
 
-class EditBarangAdmin extends StatelessWidget {
-  const EditBarangAdmin({super.key});
-
+class PengajuanPeminjamanUser extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          child: SizedBox(
-            width: constraints.maxWidth,
-            child: FittedBox(
-              fit: BoxFit.fitWidth,
-              alignment: Alignment.topCenter,
-              child: SizedBox(
-                width: 414,
-                height: 896,
-                child: Container(
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(color: const Color(0xFF1A1A1A)),
-                  child: Stack(
-                    children: [
+    return Column(
+      children: [
+        Container(
+          width: 414,
+          height: 896,
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(color: Colors.white),
+          child: Stack(
+            children: [
               Positioned(
                 left: 54.80,
                 top: 78.75,
@@ -33,27 +23,13 @@ class EditBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 160,
-                top: 774,
-                child: Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.splash),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
                 left: 5,
                 top: 116,
                 child: Container(
                   width: 402,
                   height: 652,
                   decoration: ShapeDecoration(
-                    color: const Color(0xFFFFFBFB),
+                    color: const Color(0xFFEDE2F0),
                     shape: RoundedRectangleBorder(
                       side: BorderSide(
                         width: 6,
@@ -71,7 +47,7 @@ class EditBarangAdmin extends StatelessWidget {
                   width: 108,
                   height: 78,
                   decoration: ShapeDecoration(
-                    color: const Color(0xFFFFFBFB),
+                    color: const Color(0xFFFBF0F8),
                     shape: RoundedRectangleBorder(
                       side: BorderSide(
                         width: 3,
@@ -107,24 +83,25 @@ class EditBarangAdmin extends StatelessWidget {
               Positioned(
                 left: 356,
                 top: 140,
-                child: const SizedBox(
+                child: Container(
                   width: 29,
                   height: 31,
-                  child: Icon(
-                    Icons.settings,
-                    size: 26,
-                    color: Color(0xFF8D8D8D),
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage("https://placehold.co/29x31"),
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),
               Positioned(
-                left: 142,
-                top: 159,
+                left: 82,
+                top: 158,
                 child: SizedBox(
-                  width: 149,
+                  width: 250,
                   height: 29,
                   child: Text(
-                    'Edit Barang',
+                    'Pengajuan Peminjaman',
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 20,
@@ -142,8 +119,8 @@ class EditBarangAdmin extends StatelessWidget {
                   height: 67,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage(AppAssets.ebJudul),
-                      fit: BoxFit.contain,
+                      image: NetworkImage("https://placehold.co/67x67"),
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ),
@@ -174,8 +151,8 @@ class EditBarangAdmin extends StatelessWidget {
                   height: 31,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage(AppAssets.ebNama),
-                      fit: BoxFit.contain,
+                      image: NetworkImage("https://placehold.co/47x31"),
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ),
@@ -266,8 +243,8 @@ class EditBarangAdmin extends StatelessWidget {
                   height: 23,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage(AppAssets.ebKategori),
-                      fit: BoxFit.contain,
+                      image: NetworkImage("https://placehold.co/23x23"),
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ),
@@ -456,8 +433,8 @@ class EditBarangAdmin extends StatelessWidget {
                   height: 22,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage(AppAssets.ebElektronik),
-                      fit: BoxFit.contain,
+                      image: NetworkImage("https://placehold.co/22x22"),
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ),
@@ -470,8 +447,8 @@ class EditBarangAdmin extends StatelessWidget {
                   height: 23,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage(AppAssets.ebTersedia),
-                      fit: BoxFit.contain,
+                      image: NetworkImage("https://placehold.co/23x23"),
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ),
@@ -592,8 +569,8 @@ class EditBarangAdmin extends StatelessWidget {
                   height: 26,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage(AppAssets.ebStok),
-                      fit: BoxFit.contain,
+                      image: NetworkImage("https://placehold.co/26x26"),
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ),
@@ -642,8 +619,8 @@ class EditBarangAdmin extends StatelessWidget {
                   height: 23,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage(AppAssets.ebNama),
-                      fit: BoxFit.contain,
+                      image: NetworkImage("https://placehold.co/23x23"),
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ),
@@ -727,8 +704,8 @@ class EditBarangAdmin extends StatelessWidget {
                   height: 25,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage(AppAssets.ebDeskripsi),
-                      fit: BoxFit.contain,
+                      image: NetworkImage("https://placehold.co/25x25"),
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ),
@@ -857,7 +834,7 @@ class EditBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 119,
+                left: 121,
                 top: 712,
                 child: Container(
                   width: 175,
@@ -871,7 +848,7 @@ class EditBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 119,
+                left: 121,
                 top: 712,
                 child: Container(
                   width: 175,
@@ -885,13 +862,13 @@ class EditBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 146,
-                top: 717,
+                left: 148,
+                top: 718,
                 child: SizedBox(
                   width: 119,
                   height: 30,
                   child: Text(
-                    'Edit',
+                    'Konfirmasi',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white,
@@ -910,7 +887,7 @@ class EditBarangAdmin extends StatelessWidget {
                   height: 69,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage(AppAssets.ebLaptop),
+                      image: NetworkImage("https://placehold.co/97x69"),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -924,20 +901,16 @@ class EditBarangAdmin extends StatelessWidget {
                   height: 36,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage(AppAssets.ebTongSampah),
-                      fit: BoxFit.contain,
+                      image: NetworkImage("https://placehold.co/36x36"),
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ),
               ),
             ],
-                  ),
-                ),
-              ),
-            ),
           ),
-        );
-      },
+        ),
+      ],
     );
   }
 }

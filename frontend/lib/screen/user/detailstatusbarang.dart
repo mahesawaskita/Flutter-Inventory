@@ -1,27 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:lemigas/constants/app_assets.dart';
 
-class DetailBarangAdmin extends StatelessWidget {
-  const DetailBarangAdmin({super.key});
-
+class DetailStatusBarangUser extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          child: SizedBox(
-            width: constraints.maxWidth,
-            child: FittedBox(
-              fit: BoxFit.fitWidth,
-              alignment: Alignment.topCenter,
-              child: SizedBox(
-                width: 414,
-                height: 896,
-                child: Container(
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(color: const Color(0xFF1A1A1A)),
-                  child: Stack(
-                    children: [
+    return Column(
+      children: [
+        Container(
+          width: 414,
+          height: 896,
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(color: Colors.white),
+          child: Stack(
+            children: [
               Positioned(
                 left: 54.80,
                 top: 77.75,
@@ -33,17 +23,17 @@ class DetailBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 5,
+                left: 9,
                 top: 116,
                 child: Container(
-                  width: 402,
+                  width: 394,
                   height: 652,
                   decoration: ShapeDecoration(
-                    color: const Color(0xFFFFFBFB),
+                    color: const Color(0xFFEDE2F0),
                     shape: RoundedRectangleBorder(
                       side: BorderSide(
-                        width: 6,
-                        color: const Color(0xFFB0A0A0),
+                        width: 3,
+                        color: const Color(0xFFAC9BAB),
                       ),
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -51,10 +41,10 @@ class DetailBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 150,
+                left: 151,
                 top: 70,
                 child: Container(
-                  width: 108,
+                  width: 106,
                   height: 78,
                   decoration: ShapeDecoration(
                     color: const Color(0xFFFFFBFB),
@@ -72,45 +62,20 @@ class DetailBarangAdmin extends StatelessWidget {
                 left: 185,
                 top: 51,
                 child: Container(
-                  width: 73,
+                  width: 72,
                   height: 66,
                   clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(),
                 ),
               ),
               Positioned(
-                left: 348,
-                top: 135,
-                child: Container(
-                  width: 44,
-                  height: 40,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFD9D9D9),
-                    shape: OvalBorder(),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 356,
-                top: 140,
-                child: Container(
-                  width: 29,
-                  height: 31,
-                  child: const Icon(
-                    Icons.settings,
-                    color: Color(0xFF8D8D8D),
-                    size: 26,
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 134,
-                top: 159,
+                left: 96,
+                top: 163,
                 child: SizedBox(
-                  width: 146,
+                  width: 229,
                   height: 29,
                   child: Text(
-                    'Detail Barang',
+                    'Detail Status Barang',
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 20,
@@ -121,6 +86,16 @@ class DetailBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
+                left: 508.80,
+                top: 54.75,
+                child: Container(
+                  transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(3.11),
+                  width: 32.77,
+                  height: 32.77,
+                  child: Stack(),
+                ),
+              ),
+              Positioned(
                 left: 171,
                 top: 76,
                 child: Container(
@@ -128,384 +103,229 @@ class DetailBarangAdmin extends StatelessWidget {
                   height: 65,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage(AppAssets.dbJudul),
+                      image: NetworkImage("https://placehold.co/65x65"),
                       fit: BoxFit.cover,
                     ),
                   ),
                 ),
               ),
               Positioned(
-                left: 22,
-                top: 197,
+                left: 26,
+                top: 218,
                 child: Container(
-                  width: 370,
+                  width: 362,
                   height: 123,
                   decoration: ShapeDecoration(
-                    color: Colors.white,
+                    color: const Color(0xFFFAF0F8),
                     shape: RoundedRectangleBorder(
                       side: BorderSide(
                         width: 1,
-                        color: const Color(0xFFB1B1B1),
+                        color: const Color(0xFFFAF0F8),
                       ),
                       borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 22,
-                top: 197,
-                child: Container(
-                  width: 370,
-                  height: 48,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFF3EFF4),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFB1B1B1),
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 72,
-                top: 526,
-                child: Container(
-                  width: 320,
-                  height: 36,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFEEE9F0),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFB1B1B1),
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 12,
-                top: 327,
-                child: Container(
-                  width: 389,
-                  height: 41,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFEEEAF1),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(1)),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 12,
-                top: 569,
-                child: Container(
-                  width: 389,
-                  height: 41,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFEEEAF1),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(1)),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 392,
-                top: 245,
-                child: Container(
-                  transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(3.14),
-                  width: 370,
-                  decoration: ShapeDecoration(
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        strokeAlign: BorderSide.strokeAlignCenter,
-                        color: const Color(0xFF9E9E9E),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 392,
-                top: 289,
-                child: Container(
-                  transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(3.14),
-                  width: 370,
-                  decoration: ShapeDecoration(
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        strokeAlign: BorderSide.strokeAlignCenter,
-                        color: const Color(0xFF9E9E9E),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 392,
-                top: 403,
-                child: Container(
-                  transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(3.14),
-                  width: 370,
-                  decoration: ShapeDecoration(
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        strokeAlign: BorderSide.strokeAlignCenter,
-                        color: const Color(0xFF9E9E9E),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 392,
-                top: 444,
-                child: Container(
-                  transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(3.14),
-                  width: 370,
-                  decoration: ShapeDecoration(
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        strokeAlign: BorderSide.strokeAlignCenter,
-                        color: const Color(0xFF9E9E9E),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 392,
-                top: 482,
-                child: Container(
-                  transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(3.14),
-                  width: 370,
-                  decoration: ShapeDecoration(
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        strokeAlign: BorderSide.strokeAlignCenter,
-                        color: const Color(0xFF9E9E9E),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 392,
-                top: 519,
-                child: Container(
-                  transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(3.14),
-                  width: 370,
-                  decoration: ShapeDecoration(
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        strokeAlign: BorderSide.strokeAlignCenter,
-                        color: const Color(0xFF9E9E9E),
-                      ),
                     ),
                   ),
                 ),
               ),
               Positioned(
                 left: 26,
-                top: 198,
+                top: 218,
                 child: Container(
-                  width: 71,
+                  width: 362,
+                  height: 48,
+                  decoration: ShapeDecoration(
+                    color: const Color(0xFFF0EAF6),
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                        width: 1,
+                        color: const Color(0xFFB1B1B1),
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 75,
+                top: 547,
+                child: Container(
+                  width: 313,
+                  height: 36,
+                  decoration: ShapeDecoration(
+                    color: const Color(0xFFFAF0F8),
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                        width: 1,
+                        color: const Color(0xFFB1B1B1),
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 16,
+                top: 348,
+                child: Container(
+                  width: 381,
+                  height: 41,
+                  decoration: ShapeDecoration(
+                    color: const Color(0xFFFAF0F8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(1)),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 16,
+                top: 590,
+                child: Container(
+                  width: 381,
+                  height: 41,
+                  decoration: ShapeDecoration(
+                    color: const Color(0xFFFAF0F8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(1)),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 388,
+                top: 266,
+                child: Container(
+                  transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(3.14),
+                  width: 362,
+                  decoration: ShapeDecoration(
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                        width: 1,
+                        strokeAlign: BorderSide.strokeAlignCenter,
+                        color: const Color(0xFF9E9E9E),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 388,
+                top: 310,
+                child: Container(
+                  transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(3.14),
+                  width: 362,
+                  decoration: ShapeDecoration(
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                        width: 1,
+                        strokeAlign: BorderSide.strokeAlignCenter,
+                        color: const Color(0xFF9E9E9E),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 388,
+                top: 424,
+                child: Container(
+                  transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(3.14),
+                  width: 362,
+                  decoration: ShapeDecoration(
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                        width: 1,
+                        strokeAlign: BorderSide.strokeAlignCenter,
+                        color: const Color(0xFF9E9E9E),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 388,
+                top: 465,
+                child: Container(
+                  transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(3.14),
+                  width: 362,
+                  decoration: ShapeDecoration(
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                        width: 1,
+                        strokeAlign: BorderSide.strokeAlignCenter,
+                        color: const Color(0xFF9E9E9E),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 388,
+                top: 503,
+                child: Container(
+                  transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(3.14),
+                  width: 362,
+                  decoration: ShapeDecoration(
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                        width: 1,
+                        strokeAlign: BorderSide.strokeAlignCenter,
+                        color: const Color(0xFF9E9E9E),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 388,
+                top: 540,
+                child: Container(
+                  transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(3.14),
+                  width: 362,
+                  decoration: ShapeDecoration(
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                        width: 1,
+                        strokeAlign: BorderSide.strokeAlignCenter,
+                        color: const Color(0xFF9E9E9E),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 29,
+                top: 219,
+                child: Container(
+                  width: 70,
                   height: 47,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage(AppAssets.dfLaptop),
+                      image: NetworkImage("https://placehold.co/70x47"),
                       fit: BoxFit.cover,
                     ),
                   ),
                 ),
               ),
               Positioned(
-                left: 26,
-                top: 246,
+                left: 29,
+                top: 267,
                 child: Container(
                   width: 41,
                   height: 43,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage(AppAssets.dbPeminjaman),
+                      image: NetworkImage("https://placehold.co/41x43"),
                       fit: BoxFit.fill,
                     ),
                   ),
                 ),
               ),
               Positioned(
-                left: 32,
-                top: 290,
+                left: 35,
+                top: 311,
                 child: Container(
                   width: 30,
                   height: 30,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage(AppAssets.dbRangeTanggal),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 22,
-                top: 332,
-                child: Container(
-                  width: 31,
-                  height: 31,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.dbDetailPeminjaman),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 18,
-                top: 376,
-                child: ClipOval(
-                  child: Image.asset(
-                    AppAssets.dbnUser,
-                    width: 24,
-                    height: 24,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 20,
-                top: 414,
-                child: SizedBox(
-                  width: 30,
-                  height: 26,
-                  child: Image.asset(
-                    AppAssets.dbnTanggalPinjam,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 19,
-                top: 453,
-                child: SizedBox(
-                  width: 30,
-                  height: 26,
-                  child: Image.asset(
-                    AppAssets.dbnTanggalKembali,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 19,
-                top: 488,
-                child: SizedBox(
-                  width: 28,
-                  height: 28,
-                  child: Image.asset(
-                    AppAssets.dbStatus,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 19,
-                top: 570,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.dbFotoKembali),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 19.40,
-                top: 524.90,
-                child: Container(
-                  transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(-0.10),
-                  width: 40.39,
-                  height: 40.39,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.dbDeskripsi),
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 26,
-                top: 625,
-                child: Container(
-                  width: 145,
-                  height: 69,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFD7D7D7),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFB1B1B1),
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 247,
-                top: 625,
-                child: Container(
-                  width: 145,
-                  height: 69,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFD7D7D7),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFB1B1B1),
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 37,
-                top: 627,
-                child: Container(
-                  width: 119,
-                  height: 67,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.dbLaptopRusak),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 258,
-                top: 627,
-                child: Container(
-                  width: 119,
-                  height: 67,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.dbMonitorRusak),
+                      image: NetworkImage("https://placehold.co/30x30"),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -513,37 +333,197 @@ class DetailBarangAdmin extends StatelessWidget {
               ),
               Positioned(
                 left: 25,
-                top: 623,
+                top: 353,
                 child: Container(
-                  width: 36,
-                  height: 36,
+                  width: 31,
+                  height: 31,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage(AppAssets.dbnTongSampah),
+                      image: NetworkImage("https://placehold.co/31x31"),
                       fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 26,
+                top: 393,
+                child: Container(
+                  width: 29,
+                  height: 30,
+                  clipBehavior: Clip.antiAlias,
+                  decoration: BoxDecoration(),
+                  child: Stack(),
+                ),
+              ),
+              Positioned(
+                left: 16,
+                top: 420,
+                child: Container(
+                  width: 50,
+                  height: 51,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage("https://placehold.co/50x51"),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 25,
+                top: 469,
+                child: Container(
+                  width: 34,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage("https://placehold.co/34x30"),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 23,
+                top: 503,
+                child: Container(
+                  width: 39,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage("https://placehold.co/39x40"),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 23,
+                top: 591,
+                child: Container(
+                  width: 39,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage("https://placehold.co/39x40"),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 22.88,
+                top: 546.08,
+                child: Container(
+                  transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(-0.10),
+                  width: 39.99,
+                  height: 39.99,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage("https://placehold.co/40x40"),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 30,
+                top: 646,
+                child: Container(
+                  width: 142,
+                  height: 69,
+                  decoration: ShapeDecoration(
+                    color: const Color(0xFFD7D7D7),
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                        width: 1,
+                        color: const Color(0xFFB1B1B1),
+                      ),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),
               ),
               Positioned(
                 left: 246,
-                top: 623,
+                top: 646,
                 child: Container(
-                  width: 36,
-                  height: 36,
+                  width: 142,
+                  height: 69,
+                  decoration: ShapeDecoration(
+                    color: const Color(0xFFD7D7D7),
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                        width: 1,
+                        color: const Color(0xFFB1B1B1),
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 40,
+                top: 648,
+                child: Container(
+                  width: 118,
+                  height: 67,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage(AppAssets.dbnTongSampah2),
+                      image: NetworkImage("https://placehold.co/118x67"),
                       fit: BoxFit.cover,
                     ),
                   ),
                 ),
               ),
               Positioned(
-                left: 91,
-                top: 201,
+                left: 256,
+                top: 648,
+                child: Container(
+                  width: 118,
+                  height: 67,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage("https://placehold.co/118x67"),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 28,
+                top: 644,
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage("https://placehold.co/36x36"),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 244,
+                top: 644,
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage("https://placehold.co/36x36"),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 93,
+                top: 222,
                 child: SizedBox(
-                  width: 107,
+                  width: 105,
                   height: 23,
                   child: Text(
                     'Nama Barang',
@@ -558,10 +538,10 @@ class DetailBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 42,
-                top: 336,
+                left: 45,
+                top: 357,
                 child: SizedBox(
-                  width: 171,
+                  width: 168,
                   height: 23,
                   child: Text(
                     'Detail Peminjaman',
@@ -576,10 +556,10 @@ class DetailBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 47,
-                top: 578,
+                left: 50,
+                top: 599,
                 child: SizedBox(
-                  width: 171,
+                  width: 168,
                   height: 23,
                   child: Text(
                     'Foto Pengembalian',
@@ -594,10 +574,10 @@ class DetailBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 58,
-                top: 267,
+                left: 61,
+                top: 288,
                 child: SizedBox(
-                  width: 107,
+                  width: 105,
                   height: 23,
                   child: Text(
                     'Budi Agung',
@@ -612,10 +592,10 @@ class DetailBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 278,
-                top: 376,
+                left: 277,
+                top: 397,
                 child: SizedBox(
-                  width: 107,
+                  width: 104,
                   height: 23,
                   child: Text(
                     'Budi Agung',
@@ -630,10 +610,10 @@ class DetailBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 278,
-                top: 415,
+                left: 277,
+                top: 436,
                 child: SizedBox(
-                  width: 107,
+                  width: 104,
                   height: 23,
                   child: Text(
                     '24 Mar 2024',
@@ -648,10 +628,10 @@ class DetailBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 278,
-                top: 454,
+                left: 277,
+                top: 475,
                 child: SizedBox(
-                  width: 107,
+                  width: 104,
                   height: 23,
                   child: Text(
                     '26 Mar 2024',
@@ -666,10 +646,10 @@ class DetailBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 68,
-                top: 220,
+                left: 71,
+                top: 241,
                 child: SizedBox(
-                  width: 107,
+                  width: 105,
                   height: 23,
                   child: Text(
                     'Laptop',
@@ -684,10 +664,10 @@ class DetailBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 15,
-                top: 247,
+                left: 19,
+                top: 268,
                 child: SizedBox(
-                  width: 174,
+                  width: 170,
                   height: 23,
                   child: Text(
                     'Peminjam',
@@ -702,10 +682,10 @@ class DetailBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 37,
-                top: 376,
+                left: 40,
+                top: 397,
                 child: SizedBox(
-                  width: 156,
+                  width: 153,
                   height: 23,
                   child: Text(
                     'Nama Peminjam',
@@ -720,10 +700,10 @@ class DetailBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 39,
-                top: 415,
+                left: 42,
+                top: 436,
                 child: SizedBox(
-                  width: 156,
+                  width: 153,
                   height: 23,
                   child: Text(
                     'Tanggal Dipinjam',
@@ -738,10 +718,10 @@ class DetailBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 36,
-                top: 454,
+                left: 39,
+                top: 475,
                 child: SizedBox(
-                  width: 156,
+                  width: 153,
                   height: 23,
                   child: Text(
                     'Tanggal Kembali',
@@ -756,10 +736,10 @@ class DetailBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 4,
-                top: 491,
+                left: 8,
+                top: 512,
                 child: SizedBox(
-                  width: 156,
+                  width: 153,
                   height: 23,
                   child: Text(
                     'Status',
@@ -774,10 +754,10 @@ class DetailBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 75,
-                top: 534,
+                left: 78,
+                top: 555,
                 child: SizedBox(
-                  width: 263,
+                  width: 257,
                   height: 23,
                   child: Text(
                     'Laptop rusak LCD retak, perlu perbaikan',
@@ -792,10 +772,10 @@ class DetailBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 258,
-                top: 294,
+                left: 257,
+                top: 315,
                 child: Container(
-                  width: 127,
+                  width: 124,
                   height: 22,
                   decoration: ShapeDecoration(
                     color: const Color(0xFFF49E3D),
@@ -806,10 +786,10 @@ class DetailBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 236,
-                top: 295,
+                left: 235,
+                top: 316,
                 child: SizedBox(
-                  width: 174,
+                  width: 171,
                   height: 23,
                   child: Text(
                     'Terlambat 2 Hari',
@@ -824,10 +804,10 @@ class DetailBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 250,
-                top: 490,
+                left: 249,
+                top: 511,
                 child: Container(
-                  width: 127,
+                  width: 125,
                   height: 22,
                   decoration: ShapeDecoration(
                     color: const Color(0xFFF49E3D),
@@ -839,9 +819,9 @@ class DetailBarangAdmin extends StatelessWidget {
               ),
               Positioned(
                 left: 228,
-                top: 491,
+                top: 512,
                 child: SizedBox(
-                  width: 174,
+                  width: 170,
                   height: 23,
                   child: Text(
                     'Terlambat 2 Hari',
@@ -856,10 +836,10 @@ class DetailBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 62,
-                top: 295,
+                left: 65,
+                top: 316,
                 child: SizedBox(
-                  width: 174,
+                  width: 170,
                   height: 23,
                   child: Text(
                     '24 Mar 2024 - 26 Mar 2024',
@@ -874,10 +854,10 @@ class DetailBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 380,
-                top: 369,
+                left: 377,
+                top: 390,
                 child: SizedBox(
-                  width: 5,
+                  width: 4,
                   height: 32,
                   child: Text(
                     '>',
@@ -891,10 +871,10 @@ class DetailBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 380,
-                top: 407,
+                left: 377,
+                top: 428,
                 child: SizedBox(
-                  width: 5,
+                  width: 4,
                   height: 32,
                   child: Text(
                     '>',
@@ -908,10 +888,10 @@ class DetailBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 380,
-                top: 446,
+                left: 377,
+                top: 467,
                 child: SizedBox(
-                  width: 5,
+                  width: 4,
                   height: 32,
                   child: Text(
                     '>',
@@ -925,10 +905,10 @@ class DetailBarangAdmin extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 380,
-                top: 484,
+                left: 377,
+                top: 505,
                 child: SizedBox(
-                  width: 5,
+                  width: 4,
                   height: 32,
                   child: Text(
                     '>',
@@ -937,20 +917,6 @@ class DetailBarangAdmin extends StatelessWidget {
                       fontSize: 24,
                       fontFamily: 'Poppins',
                       fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 160,
-                top: 774,
-                child: Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.splash),
-                      fit: BoxFit.cover,
                     ),
                   ),
                 ),
@@ -958,11 +924,7 @@ class DetailBarangAdmin extends StatelessWidget {
             ],
           ),
         ),
-              ),
-            ),
-          ),
-        );
-      },
+      ],
     );
   }
 }

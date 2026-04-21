@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/constants/app_assets.dart';
-import 'package:frontend/screen/admin/Profil.dart';
+import 'package:lemigas/constants/app_assets.dart';
+import 'package:lemigas/screen/admin/Profil.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
