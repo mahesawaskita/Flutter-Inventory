@@ -1,365 +1,179 @@
 ﻿import 'package:flutter/material.dart';
+import 'user_ui.dart';
 
 class DashboardUser extends StatelessWidget {
+  const DashboardUser({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: 414,
-          height: 896,
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(color: Colors.white),
-          child: Stack(
+    return UserPageScaffold(
+      title: 'Dashboard',
+      showBack: false,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _GreetingCard(
+            name: 'Muhammad Riza',
+            employeeNo: '2390343091',
+            role: 'User',
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'Menu',
+            style: TextStyle(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 10),
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 1.15,
             children: [
-              Positioned(
-                left: 159,
-                top: 285,
-                child: Container(
-                  width: 101,
-                  height: 88,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFFEF8FA),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 3,
-                        color: const Color(0xFFB0A0A0),
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
+              _MenuTile(
+                icon: Icons.inventory_2_outlined,
+                label: 'Daftar\nBarang',
+                onTap: () {},
               ),
-              Positioned(
-                left: 97,
-                top: 429,
-                child: Container(
-                  width: 95,
-                  height: 90,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFFEF8FA),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 3,
-                        color: const Color(0xFFB0A0A0),
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
+              _MenuTile(
+                icon: Icons.fact_check_outlined,
+                label: 'Status\nBarang',
+                onTap: () {},
               ),
-              Positioned(
-                left: 221,
-                top: 430,
-                child: Container(
-                  width: 98,
-                  height: 90,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFFEF8FA),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 3,
-                        color: const Color(0xFFB0A0A0),
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
+              _MenuTile(
+                icon: Icons.qr_code_scanner_rounded,
+                label: 'QR\nScanner',
+                onTap: () {},
               ),
-              Positioned(
-                left: 286,
-                top: 285,
-                child: Container(
-                  width: 98,
-                  height: 79,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFFEF8FA),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 3,
-                        color: const Color(0xFFB0A0A0),
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 286,
-                top: 333,
-                child: SizedBox(
-                  width: 104,
-                  height: 23,
-                  child: Text(
-                    'Status Barang',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: const Color(0xFF1A1A1A),
-                      fontSize: 11,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 158,
-                top: 332,
-                child: SizedBox(
-                  width: 106,
-                  height: 21,
-                  child: Text(
-                    'Daftar\nbarang',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: const Color(0xFF1A1A1A),
-                      fontSize: 11,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 94,
-                top: 471,
-                child: SizedBox(
-                  width: 101,
-                  height: 20,
-                  child: Text(
-                    'Barcode\nScanner',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: const Color(0xFF1A1A1A),
-                      fontSize: 11,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 231,
-                top: 466,
-                child: SizedBox(
-                  width: 78,
-                  height: 22,
-                  child: Text(
-                    'Peminjaman Barang',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: const Color(0xFF1A1A1A),
-                      fontSize: 11,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 304,
-                top: 269,
-                child: Container(
-                  width: 71,
-                  height: 68,
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(),
-                  child: Stack(),
-                ),
-              ),
-              Positioned(
-                left: 110,
-                top: 408,
-                child: Container(
-                  width: 69,
-                  height: 58,
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(),
-                  child: Stack(),
-                ),
-              ),
-              Positioned(
-                left: 177,
-                top: 269,
-                child: Container(
-                  width: 71,
-                  height: 63,
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(),
-                  child: Stack(),
-                ),
-              ),
-              Positioned(
-                left: 251,
-                top: 405,
-                child: Container(
-                  width: 53,
-                  height: 65,
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(),
-                  child: Stack(),
-                ),
-              ),
-              Positioned(
-                left: 9,
-                top: 55,
-                child: Container(
-                  width: 394,
-                  height: 102,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFFDF7F9),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 35,
-                top: 80,
-                child: Container(
-                  width: 53,
-                  height: 53,
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(),
-                  child: Stack(),
-                ),
-              ),
-              Positioned(
-                left: 97,
-                top: 79,
-                child: SizedBox(
-                  width: 168,
-                  height: 55,
-                  child: Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: 'Hi, \n',
-                          style: TextStyle(
-                            color: const Color(0xFF1A1A1A),
-                            fontSize: 16,
-                            fontStyle: FontStyle.italic,
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                        TextSpan(
-                          text: 'Muhammad Riza\n',
-                          style: TextStyle(
-                            color: const Color(0xFF1A1A1A),
-                            fontSize: 16,
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 310,
-                top: 69,
-                child: Container(
-                  width: 9,
-                  height: 9,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFF8C00FF),
-                    shape: OvalBorder(),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 329,
-                top: 63,
-                child: SizedBox(
-                  width: 57,
-                  height: 17,
-                  child: Text(
-                    'User',
-                    style: TextStyle(
-                      color: const Color(0xFF8C00FF),
-                      fontSize: 14,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 293,
-                top: 91,
-                child: SizedBox(
-                  width: 112,
-                  height: 30,
-                  child: Text(
-                    'No. Karyawan\n    2390343091',
-                    style: TextStyle(
-                      color: const Color(0xFF1A1A1A),
-                      fontSize: 13,
-                      fontStyle: FontStyle.italic,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 34,
-                top: 275,
-                child: Container(
-                  width: 98,
-                  height: 102,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFFEF8FA),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 3,
-                        color: const Color(0xFFB0A0A0),
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 44,
-                top: 330,
-                child: SizedBox(
-                  width: 78,
-                  height: 22,
-                  child: Text(
-                    'Kembalian Barang',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 11,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 52,
-                top: 264,
-                child: Container(
-                  width: 62,
-                  height: 62,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: Icon(Icons.image, size: 20, color: Colors.grey.shade400),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
+              _MenuTile(
+                icon: Icons.assignment_outlined,
+                label: 'Peminjaman\nBarang',
+                onTap: () {},
               ),
             ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
+class _GreetingCard extends StatelessWidget {
+  const _GreetingCard({
+    required this.name,
+    required this.employeeNo,
+    required this.role,
+  });
+
+  final String name;
+  final String employeeNo;
+  final String role;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFFDF7F9),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 22,
+            backgroundColor: Colors.white,
+            child: Icon(Icons.person_rounded, color: UserUi.primary.withValues(alpha: 0.9)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  const TextSpan(
+                    text: 'Hi,\n',
+                    style: TextStyle(fontStyle: FontStyle.italic),
+                  ),
+                  TextSpan(
+                    text: '$name\n',
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  TextSpan(
+                    text: 'No. Karyawan $employeeNo',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                      color: UserUi.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF8C00FF),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(role, style: const TextStyle(color: Color(0xFF8C00FF))),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MenuTile extends StatelessWidget {
+  const _MenuTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xFFFEF8FA),
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFB0A0A0), width: 2),
+          ),
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 36, color: UserUi.primary),
+              const SizedBox(height: 10),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
