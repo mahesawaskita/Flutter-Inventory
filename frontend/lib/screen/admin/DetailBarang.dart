@@ -93,7 +93,7 @@ class DetailBarangAdmin extends StatelessWidget {
               Positioned(
                 left: 356,
                 top: 140,
-                child: Container(
+                child: SizedBox(
                   width: 29,
                   height: 31,
                   child: const Icon(
