@@ -8,40 +8,31 @@ class ProfilUser extends StatelessWidget {
   Widget build(BuildContext context) {
     return UserPageScaffold(
       title: 'Profil',
-      showBack: false,
-      actions: [
-        TextButton(
-          onPressed: () {},
-          child: const Text('Edit Profil'),
-        ),
-      ],
+      showBack: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _ProfileHeader(
-            name: 'Muhammad Riza',
-            employeeNo: '2390343091',
+          _ProfileHeader(name: 'Muhammad Riza', employeeNo: '2390343091', role: 'User'),
+          const SizedBox(height: 14),
+          _ProfileInfoCard(
             email: 'production@gmail.com',
             phone: '+62 858 2563',
-            role: 'User',
-            joined: '2024',
             jobTitle: 'Staff Gudang',
+            joined: '2024',
           ),
           const SizedBox(height: 14),
-          const Text('Menu Profil', style: TextStyle(fontWeight: FontWeight.w800)),
-          const SizedBox(height: 10),
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             mainAxisSpacing: 12,
             crossAxisSpacing: 12,
-            childAspectRatio: 2.6,
+            childAspectRatio: 2.3,
             children: [
               _MenuCard(icon: Icons.badge_outlined, title: 'Data\nPribadi', onTap: () {}),
               _MenuCard(icon: Icons.lock_outline_rounded, title: 'Data\nPassword', onTap: () {}),
               _MenuCard(icon: Icons.history_rounded, title: 'Riwayat\nAktivitas', onTap: () {}),
-              _MenuCard(icon: Icons.logout_rounded, title: 'Logout', onTap: () {}),
+              _MenuCard(icon: Icons.power_settings_new_rounded, title: 'Logout', onTap: () {}),
             ],
           ),
         ],
@@ -54,20 +45,81 @@ class _ProfileHeader extends StatelessWidget {
   const _ProfileHeader({
     required this.name,
     required this.employeeNo,
-    required this.email,
-    required this.phone,
     required this.role,
-    required this.joined,
-    required this.jobTitle,
   });
 
   final String name;
   final String employeeNo;
+  final String role;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFFDF3FB),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            radius: 26,
+            backgroundColor: Colors.white,
+            child: Icon(Icons.person_rounded, color: UserUi.primary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: Text(name, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16))),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD5D2DD),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text('Edit Profil', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(color: Color(0xFF07FF02), shape: BoxShape.circle),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(role, style: const TextStyle(fontSize: 13)),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text('No. $employeeNo', style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileInfoCard extends StatelessWidget {
+  const _ProfileInfoCard({
+    required this.email,
+    required this.phone,
+    required this.jobTitle,
+    required this.joined,
+  });
+
   final String email;
   final String phone;
-  final String role;
-  final String joined;
   final String jobTitle;
+  final String joined;
 
   @override
   Widget build(BuildContext context) {
@@ -78,40 +130,10 @@ class _ProfileHeader extends StatelessWidget {
       ),
       padding: const EdgeInsets.all(12),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              const CircleAvatar(
-                radius: 26,
-                backgroundColor: Colors.white,
-                child: Icon(Icons.person_rounded, color: UserUi.primary),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(name, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(color: Color(0xFF07FF02), shape: BoxShape.circle),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(role, style: const TextStyle(fontSize: 13)),
-                        const SizedBox(width: 12),
-                        Text('No. $employeeNo', style: const TextStyle(fontSize: 12, color: UserUi.textMuted)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
+          const Text('Menu Profil', style: TextStyle(fontWeight: FontWeight.w900)),
+          const SizedBox(height: 10),
           _InfoRow(label: 'Email', value: email),
           const SizedBox(height: 6),
           _InfoRow(label: 'No. Telepon', value: phone),
@@ -137,7 +159,7 @@ class _InfoRow extends StatelessWidget {
       children: [
         Text(label, style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12)),
         const Spacer(),
-        Text(value, style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12, fontWeight: FontWeight.w600)),
+        Text(value, style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12)),
       ],
     );
   }

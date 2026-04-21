@@ -17,40 +17,21 @@ class DashboardUser extends StatelessWidget {
             employeeNo: '2390343091',
             role: 'User',
           ),
-          const SizedBox(height: 14),
-          const Text(
-            'Menu',
-            style: TextStyle(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 18),
           GridView.count(
-            crossAxisCount: 2,
+            crossAxisCount: 3,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 1.15,
+            mainAxisSpacing: 18,
+            crossAxisSpacing: 18,
+            childAspectRatio: 0.92,
             children: [
-              _MenuTile(
-                icon: Icons.inventory_2_outlined,
-                label: 'Daftar\nBarang',
-                onTap: () {},
-              ),
-              _MenuTile(
-                icon: Icons.fact_check_outlined,
-                label: 'Status\nBarang',
-                onTap: () {},
-              ),
-              _MenuTile(
-                icon: Icons.qr_code_scanner_rounded,
-                label: 'QR\nScanner',
-                onTap: () {},
-              ),
-              _MenuTile(
-                icon: Icons.assignment_outlined,
-                label: 'Peminjaman\nBarang',
-                onTap: () {},
-              ),
+              _MenuTile(icon: Icons.assignment_return_rounded, label: 'Kembalian\nBarang', onTap: () {}),
+              _MenuTile(icon: Icons.favorite_rounded, label: 'Daftar\nbarang', onTap: () {}),
+              _MenuTile(icon: Icons.receipt_long_rounded, label: 'Status Barang', onTap: () {}),
+              _MenuTile(icon: Icons.qr_code_2_rounded, label: 'Barcode\nScanner', onTap: () {}),
+              _MenuTile(icon: Icons.local_shipping_rounded, label: 'Peminjaman\nBarang', onTap: () {}),
+              const SizedBox.shrink(),
             ],
           ),
         ],
@@ -157,7 +138,7 @@ class _MenuTile extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFB0A0A0), width: 2),
+            border: Border.all(color: UserUi.frameBorder, width: 2),
           ),
           padding: const EdgeInsets.all(12),
           child: Column(

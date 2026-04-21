@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/screen/user/daftarbarang.dart';
+import 'package:frontend/screen/user/statusbarang.dart';
 void main() {
   runApp(const MyApp());
 }
@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const DaftarBarangUser(),
+      home: const StatusBarangUser (),
     );
   }
 }
