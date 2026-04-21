@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import '../../constants/user_assets.dart';
+import 'package:frontend/constants/user_assets.dart';
 
-class DetailQRScannerUser extends StatelessWidget {
+
+class DetailPeminjamanBarangUser extends StatelessWidget {
   final String itemName;
   final String borrowerName;
-  final String status;
 
-  const DetailQRScannerUser({
+  const DetailPeminjamanBarangUser({
     this.itemName = 'Laptop',
     this.borrowerName = 'Bintang Audi',
-    this.status = 'Sedang Dipinjam',
   });
 
   @override
@@ -24,7 +23,7 @@ class DetailQRScannerUser extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Detail QR Scanner',
+          'Detail Peminjaman',
           style: TextStyle(
             color: Colors.black,
             fontSize: 18,
@@ -40,33 +39,37 @@ class DetailQRScannerUser extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // QR Result Display
+              // Item Image
               Container(
-                padding: const EdgeInsets.all(20),
+                height: 200,
                 decoration: BoxDecoration(
-                  color: Colors.green[50],
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.green[200]!),
+                  color: Colors.grey[100],
                 ),
-                child: Column(
-                  children: [
-                    Icon(Icons.check_circle, color: Colors.green, size: 60),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'QR Code Berhasil Dibaca!',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w700,
-                        color: Colors.green,
-                      ),
-                    ),
-                  ],
+                child: Image.asset(
+                  UserAssets.peminjamanImage22,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey[200],
+                      child: const Icon(Icons.image, size: 80),
+                    );
+                  },
                 ),
               ),
               const SizedBox(height: 20),
               
-              // Item Info
+              // Borrowing Details
+              Text(
+                itemName,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -77,52 +80,24 @@ class DetailQRScannerUser extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      itemName,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w700,
-                      ),
+                    _DetailRow(
+                      label: 'Nama Peminjam',
+                      value: borrowerName,
                     ),
-                    const SizedBox(height: 16),
-                    _DetailRow(label: 'Nama Peminjam', value: borrowerName),
                     const Divider(),
-                    _DetailRow(label: 'Tanggal Pinjam', value: '28 Maret 2024'),
+                    _DetailRow(
+                      label: 'Tanggal Peminjaman',
+                      value: '24 Maret 2024',
+                    ),
                     const Divider(),
-                    _DetailRow(label: 'Durasi Pinjam', value: '5 Hari'),
+                    _DetailRow(
+                      label: 'Tanggal Harus Kembali',
+                      value: '1 Mei 2024',
+                    ),
                     const Divider(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Status',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            status,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w600,
-                              color: Colors.blue,
-                            ),
-                          ),
-                        ),
-                      ],
+                    _DetailRow(
+                      label: 'Sisa Waktu Peminjaman',
+                      value: '5 hari',
                     ),
                   ],
                 ),
@@ -130,9 +105,9 @@ class DetailQRScannerUser extends StatelessWidget {
               
               const SizedBox(height: 20),
               
-              // Riwayat List
+              // Riwayat Peminjaman
               const Text(
-                'Riwayat Pemindaian',
+                'Riwayat Peminjaman',
                 style: TextStyle(
                   fontSize: 14,
                   fontFamily: 'Poppins',
@@ -152,14 +127,23 @@ class DetailQRScannerUser extends StatelessWidget {
                   children: [
                     _RiwayatItem(
                       date: '28 Maret 2024',
-                      time: '10:30 AM',
-                      action: 'Pemindaian Sukses',
+                      borrower: 'Bintang Audi',
+                      status: 'Sedang Dipinjam',
+                      statusColor: Colors.blue,
                     ),
                     const Divider(),
                     _RiwayatItem(
-                      date: '27 Maret 2024',
-                      time: '02:15 PM',
-                      action: 'Pemindaian Sukses',
+                      date: '14 Maret 2024',
+                      borrower: 'Melissa Putri',
+                      status: 'Sudah Dikembalikan',
+                      statusColor: Colors.green,
+                    ),
+                    const Divider(),
+                    _RiwayatItem(
+                      date: '15 Februari 2024',
+                      borrower: 'Budi Agung',
+                      status: 'Sudah Dikembalikan',
+                      statusColor: Colors.green,
                     ),
                   ],
                 ),
@@ -178,7 +162,10 @@ class _DetailRow extends StatelessWidget {
   final String label;
   final String value;
 
-  const _DetailRow({required this.label, required this.value});
+  const _DetailRow({
+    required this.label,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -211,13 +198,15 @@ class _DetailRow extends StatelessWidget {
 
 class _RiwayatItem extends StatelessWidget {
   final String date;
-  final String time;
-  final String action;
+  final String borrower;
+  final String status;
+  final Color statusColor;
 
   const _RiwayatItem({
     required this.date,
-    required this.time,
-    required this.action,
+    required this.borrower,
+    required this.status,
+    required this.statusColor,
   });
 
   @override
@@ -239,7 +228,7 @@ class _RiwayatItem extends StatelessWidget {
                 ),
               ),
               Text(
-                time,
+                borrower,
                 style: TextStyle(
                   fontSize: 11,
                   fontFamily: 'Poppins',
@@ -251,16 +240,16 @@ class _RiwayatItem extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.2),
+              color: statusColor.withOpacity(0.2),
               borderRadius: BorderRadius.circular(6),
             ),
-            child: const Text(
-              'Sukses',
+            child: Text(
+              status,
               style: TextStyle(
                 fontSize: 10,
                 fontFamily: 'Poppins',
                 fontWeight: FontWeight.w600,
-                color: Colors.green,
+                color: statusColor,
               ),
             ),
           ),
@@ -271,7 +260,7 @@ class _RiwayatItem extends StatelessWidget {
 }
 import 'package:flutter/material.dart';
 
-class DetailQrScannerUser extends StatelessWidget {
+class DetailPeminjamanBarangUser extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -315,7 +304,7 @@ class DetailQrScannerUser extends StatelessWidget {
                 top: 132,
                 child: Container(
                   width: 389,
-                  height: 500,
+                  height: 551,
                   decoration: ShapeDecoration(
                     color: const Color(0xFFEDE2F0),
                     shape: RoundedRectangleBorder(
@@ -358,23 +347,37 @@ class DetailQrScannerUser extends StatelessWidget {
               ),
               Positioned(
                 left: 172,
-                top: 101,
+                top: 95,
                 child: Container(
                   width: 69,
                   height: 58,
                   clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(),
-                  child: Stack(),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        left: 0,
+                        top: 0,
+                        child: Container(
+                          width: 67,
+                          height: 70,
+                          clipBehavior: Clip.antiAlias,
+                          decoration: BoxDecoration(),
+                          child: Stack(),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               Positioned(
-                left: 112,
+                left: 65,
                 top: 172,
                 child: SizedBox(
-                  width: 224,
+                  width: 284,
                   height: 29,
                   child: Text(
-                    'Detail QR Scanner',
+                    'Detail Peminjaman Barang',
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 20,
@@ -385,13 +388,13 @@ class DetailQrScannerUser extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 27,
-                top: 214,
+                left: 22,
+                top: 215,
                 child: Container(
-                  width: 359,
-                  height: 348,
+                  width: 369,
+                  height: 83,
                   decoration: ShapeDecoration(
-                    color: const Color(0xFFFAF0F8),
+                    color: const Color(0xFFFCF9FD),
                     shape: RoundedRectangleBorder(
                       side: BorderSide(
                         width: 1,
@@ -403,19 +406,103 @@ class DetailQrScannerUser extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 32,
-                top: 375,
+                left: 22,
+                top: 215,
                 child: Container(
-                  width: 348,
-                  height: 155,
+                  width: 369,
+                  height: 50,
                   decoration: ShapeDecoration(
-                    color: const Color(0xFFFAF0F8),
+                    color: const Color(0xFFFCF9FD),
                     shape: RoundedRectangleBorder(
                       side: BorderSide(
                         width: 1,
                         color: const Color(0xFFC5C5C5),
                       ),
                       borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 28,
+                top: 331,
+                child: Container(
+                  width: 359,
+                  height: 50,
+                  decoration: ShapeDecoration(
+                    color: const Color(0xFFFAF3FB),
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                        width: 1,
+                        color: const Color(0xFFC5C5C5),
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 28,
+                top: 381,
+                child: Container(
+                  width: 359,
+                  height: 73,
+                  decoration: ShapeDecoration(
+                    color: const Color(0xFFFAF3FB),
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                        width: 1,
+                        color: const Color(0xFFC5C5C5),
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 48,
+                top: 422,
+                child: Container(
+                  width: 322,
+                  height: 26,
+                  decoration: ShapeDecoration(
+                    color: const Color(0xFFF0E6F3),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 28,
+                top: 454,
+                child: Container(
+                  width: 359,
+                  height: 66,
+                  decoration: ShapeDecoration(
+                    color: const Color(0xFFFAF3FB),
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                        width: 1,
+                        color: const Color(0xFFC5C5C5),
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 38,
+                top: 484,
+                child: Container(
+                  width: 340,
+                  height: 29,
+                  decoration: ShapeDecoration(
+                    color: const Color(0xFFF1E8F3),
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                        width: 1,
+                        color: const Color(0xFFC5C5C5),
+                      ),
+                      borderRadius: BorderRadius.circular(5),
                     ),
                   ),
                 ),
@@ -430,120 +517,6 @@ class DetailQrScannerUser extends StatelessWidget {
                     image: DecorationImage(
                       image: NetworkImage("https://placehold.co/49x40"),
                       fit: BoxFit.fill,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 198,
-                top: 290,
-                child: Container(
-                  width: 163,
-                  height: 27,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFFEE9C3),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 48,
-                top: 291,
-                child: Container(
-                  width: 143,
-                  height: 27,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFF3280FF),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 207,
-                top: 294,
-                child: SizedBox(
-                  width: 121,
-                  height: 32,
-                  child: Text(
-                    'Riwayat Perbaikan',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 12,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 57,
-                top: 295,
-                child: SizedBox(
-                  width: 154,
-                  height: 32,
-                  child: Text(
-                    'Riwayat Peminjaman',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 343,
-                top: 286,
-                child: SizedBox(
-                  width: 5,
-                  height: 32,
-                  child: Text(
-                    '>',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 24,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 32,
-                top: 331,
-                child: Container(
-                  width: 348,
-                  height: 36,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFE8DFED),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFC5C5C5),
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 48,
-                top: 340,
-                child: SizedBox(
-                  width: 154,
-                  height: 32,
-                  child: Text(
-                    'Riwayat Peminjaman',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 12,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -567,12 +540,12 @@ class DetailQrScannerUser extends StatelessWidget {
               ),
               Positioned(
                 left: 86,
-                top: 241,
+                top: 242,
                 child: SizedBox(
-                  width: 184,
+                  width: 195,
                   height: 32,
                   child: Text(
-                    'Bintang Audi',
+                    'Elektronik',
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 13,
@@ -583,197 +556,110 @@ class DetailQrScannerUser extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 96,
-                top: 379,
+                left: 63,
+                top: 270,
                 child: SizedBox(
-                  width: 184,
+                  width: 195,
                   height: 32,
-                  child: Text(
-                    'Bintang Audi',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w400,
+                  child: Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'Stok ',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 13,
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                        TextSpan(
+                          text: '10 Tersedia',
+                          style: TextStyle(
+                            color: const Color(0xFF00D46F),
+                            fontSize: 13,
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
               Positioned(
-                left: 86,
+                left: 28,
+                top: 305,
+                child: SizedBox(
+                  width: 195,
+                  height: 32,
+                  child: Text(
+                    'Informasi Peminjaman',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 13,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 22,
                 top: 265,
-                child: SizedBox(
-                  width: 184,
-                  height: 32,
-                  child: Text(
-                    'Batas Pengembalian 28 Maret 2024',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 10,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 96,
-                top: 403,
-                child: SizedBox(
-                  width: 184,
-                  height: 32,
-                  child: Text(
-                    '26 Maret - 28 Maret 2024',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 10,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 96,
-                top: 430,
-                child: SizedBox(
-                  width: 184,
-                  height: 32,
-                  child: Text(
-                    'Melissa Putri',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 96,
-                top: 454,
-                child: SizedBox(
-                  width: 184,
-                  height: 32,
-                  child: Text(
-                    '12 Maret - 14 Maret 2024',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 10,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 96,
-                top: 481,
-                child: SizedBox(
-                  width: 184,
-                  height: 32,
-                  child: Text(
-                    'Budi Agung',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 96,
-                top: 505,
-                child: SizedBox(
-                  width: 184,
-                  height: 32,
-                  child: Text(
-                    '15 Feb 2024',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 10,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 283,
-                top: 265,
-                child: SizedBox(
-                  width: 223,
-                  height: 32,
-                  child: Text(
-                    '2 hari lagi',
-                    style: TextStyle(
-                      color: const Color(0xFF878787),
-                      fontSize: 10,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 268,
-                top: 266,
                 child: Container(
-                  width: 12,
-                  height: 12,
+                  width: 369,
+                  decoration: ShapeDecoration(
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                        width: 1,
+                        strokeAlign: BorderSide.strokeAlignCenter,
+                        color: const Color(0xFFC5C5C5),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 28,
+                top: 418,
+                child: Container(
+                  width: 358,
+                  decoration: ShapeDecoration(
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                        width: 1,
+                        strokeAlign: BorderSide.strokeAlignCenter,
+                        color: const Color(0xFFC5C5C5),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 34,
+                top: 268,
+                child: Container(
+                  width: 23,
+                  height: 23,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/12x12"),
+                      image: NetworkImage("https://placehold.co/23x23"),
                       fit: BoxFit.cover,
                     ),
                   ),
                 ),
               ),
               Positioned(
-                left: 32,
-                top: 425,
-                child: Container(
-                  width: 348,
-                  decoration: ShapeDecoration(
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        strokeAlign: BorderSide.strokeAlignCenter,
-                        color: const Color(0xFFC5C5C5),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 32,
-                top: 477,
-                child: Container(
-                  width: 348,
-                  decoration: ShapeDecoration(
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        strokeAlign: BorderSide.strokeAlignCenter,
-                        color: const Color(0xFFC5C5C5),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 259,
-                top: 528,
+                left: 365,
+                top: 264,
                 child: SizedBox(
                   width: 5,
                   height: 32,
                   child: Text(
                     '>',
                     style: TextStyle(
-                      color: const Color(0xFF329CFA),
+                      color: Colors.black,
                       fontSize: 24,
                       fontFamily: 'Poppins',
                       fontWeight: FontWeight.w400,
@@ -782,186 +668,8 @@ class DetailQrScannerUser extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 146,
-                top: 537,
-                child: SizedBox(
-                  width: 132,
-                  height: 32,
-                  child: Text(
-                    'Lihat Selengkapnya',
-                    style: TextStyle(
-                      color: const Color(0xFF329CFA),
-                      fontSize: 11,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 272,
-                top: 386,
-                child: Container(
-                  width: 99,
-                  height: 18,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFB0D8A6),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 259,
-                top: 437,
-                child: Container(
-                  width: 112,
-                  height: 18,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFB0D8A6),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 259,
-                top: 487,
-                child: Container(
-                  width: 112,
-                  height: 18,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFCFCEEA),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 278,
-                top: 387,
-                child: SizedBox(
-                  width: 184,
-                  height: 32,
-                  child: Text(
-                    'Sedang Dipinjam',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 10,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 266,
-                top: 438,
-                child: SizedBox(
-                  width: 184,
-                  height: 32,
-                  child: Text(
-                    'Sudah Dipinjamkan',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 10,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 264,
-                top: 488,
-                child: SizedBox(
-                  width: 184,
-                  height: 32,
-                  child: Text(
-                    'Sudah Dikembalikan',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 10,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 339,
-                top: 334,
-                child: Container(
-                  width: 29,
-                  height: 29,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/29x29"),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 35,
-                top: 573,
-                child: Container(
-                  width: 345,
-                  height: 43,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFF4A3D8F),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 35,
-                top: 573,
-                child: Container(
-                  width: 345,
-                  height: 36,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFF796EC3),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 89,
-                top: 577,
-                child: SizedBox(
-                  width: 239,
-                  height: 23,
-                  child: Text(
-                    'Generate QR Barang',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 71,
-                top: 579,
-                child: Container(
-                  width: 25,
-                  height: 25,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/25x25"),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 44,
-                top: 378,
+                left: 38,
+                top: 335,
                 child: Container(
                   width: 43,
                   height: 43,
@@ -974,29 +682,284 @@ class DetailQrScannerUser extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 44,
-                top: 429,
+                left: 92,
+                top: 337,
+                child: SizedBox(
+                  width: 184,
+                  height: 32,
+                  child: Text(
+                    'Bintang Audi',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 13,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 81,
+                top: 388,
+                child: SizedBox(
+                  width: 184,
+                  height: 32,
+                  child: Text(
+                    'Tanggal Peminjaman',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 13,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 76,
+                top: 459,
+                child: SizedBox(
+                  width: 184,
+                  height: 32,
+                  child: Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'Catatan ',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 13,
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                        TextSpan(
+                          text: '(Opsional)',
+                          style: TextStyle(
+                            color: const Color(0xFF8B8B8B),
+                            fontSize: 13,
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 81,
+                top: 425,
+                child: SizedBox(
+                  width: 184,
+                  height: 32,
+                  child: Text(
+                    '24 April 2024',
+                    style: TextStyle(
+                      color: const Color(0xFF7C7694),
+                      fontSize: 13,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 92,
+                top: 359,
+                child: SizedBox(
+                  width: 184,
+                  height: 32,
+                  child: Text(
+                    '+ Tambah Nama',
+                    style: TextStyle(
+                      color: const Color(0xFF868BC6),
+                      fontSize: 11,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 48,
+                top: 388,
                 child: Container(
-                  width: 43,
-                  height: 44,
+                  width: 22,
+                  height: 22,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/43x44"),
+                      image: NetworkImage("https://placehold.co/22x22"),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 57,
+                top: 428,
+                child: Container(
+                  width: 13,
+                  height: 13,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage("https://placehold.co/13x13"),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 48,
+                top: 460,
+                child: Container(
+                  width: 21,
+                  height: 19,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage("https://placehold.co/21x19"),
                       fit: BoxFit.fill,
                     ),
                   ),
                 ),
               ),
               Positioned(
-                left: 44,
-                top: 481,
+                left: 48,
+                top: 489,
+                child: SizedBox(
+                  width: 269,
+                  height: 38,
+                  child: Text(
+                    'Masukkan catatan peminjaman barang...',
+                    style: TextStyle(
+                      color: const Color(0xFF8B8B8B),
+                      fontSize: 13,
+                      fontFamily: 'Phetsarath',
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 260,
+                top: 424,
                 child: Container(
-                  width: 43,
-                  height: 45,
+                  width: 108,
+                  height: 22,
+                  decoration: ShapeDecoration(
+                    color: const Color(0xFFFBEBD2),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 292,
+                top: 425,
+                child: SizedBox(
+                  width: 69,
+                  height: 32,
+                  child: Text(
+                    '1 Mei 2024',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 13,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 267,
+                top: 426,
+                child: Container(
+                  width: 20,
+                  height: 20,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage("https://placehold.co/43x45"),
-                      fit: BoxFit.fill,
+                      image: NetworkImage("https://placehold.co/20x20"),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 26,
+                top: 523,
+                child: Container(
+                  width: 359,
+                  height: 130,
+                  decoration: ShapeDecoration(
+                    color: const Color(0xFFFAF3FB),
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                        width: 1,
+                        color: const Color(0xFFC5C5C5),
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 68,
+                top: 526,
+                child: SizedBox(
+                  width: 195,
+                  height: 20,
+                  child: Text(
+                    'Foto Barang',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 13,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 39,
+                top: 523,
+                child: Container(
+                  width: 24,
+                  height: 23,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage("https://placehold.co/24x23"),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 132,
+                top: 558,
+                child: Container(
+                  width: 145,
+                  height: 80,
+                  decoration: ShapeDecoration(
+                    color: const Color(0xFFD7D7D7),
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                        width: 1,
+                        color: const Color(0xFFB1B1B1),
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 170,
+                top: 572,
+                child: Container(
+                  width: 82,
+                  height: 58,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage("https://placehold.co/82x58"),
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ),
