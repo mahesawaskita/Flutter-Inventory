@@ -267,29 +267,3 @@ class _TopLeftWedgePainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-/// Dua garis diagonal paralel di pojok kanan bawah (mockup).
-class _BottomRightStripesPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white
-      ..strokeWidth = 12
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    const gap = 22.0;
-    void drawStripe(double offset) {
-      canvas.drawLine(
-        Offset(size.width * 0.15 + offset, size.height),
-        Offset(size.width + offset, size.height * 0.08),
-        paint,
-      );
-    }
-
-    drawStripe(0);
-    drawStripe(gap);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}

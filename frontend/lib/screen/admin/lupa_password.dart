@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/constants/app_assets.dart';
-import 'package:frontend/screen/admin/AdminDashboard.dart';
-import 'package:frontend/screen/admin/lupa_password.dart';
-import 'package:frontend/screen/admin/Register.dart';
+import 'package:frontend/screen/admin/BuatPasswordBaru.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+// ════════════════════════════════════════════════════════════════════════════
+//  LUPA PASSWORD PAGE
+// ════════════════════════════════════════════════════════════════════════════
+class LupaPasswordPage extends StatefulWidget {
+  const LupaPasswordPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<LupaPasswordPage> createState() => _LupaPasswordPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+class _LupaPasswordPageState extends State<LupaPasswordPage> {
+  final TextEditingController _emailController = TextEditingController();
 
   static const _bg = Color(0xFF1A1A1A);
   static const _navyField = Color(0xFF002147);
@@ -21,8 +21,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
-    _usernameController.dispose();
-    _passwordController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
@@ -60,16 +59,14 @@ class _LoginPageState extends State<LoginPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        SizedBox(
-                          height: MediaQuery.paddingOf(context).top > 20 ? 24 : 40,
-                        ),
+                        SizedBox(height: MediaQuery.paddingOf(context).top > 20 ? 24 : 40),
                         _buildLogo(),
                         const SizedBox(height: 28),
                         _buildTitle(),
                         const SizedBox(height: 40),
-                        _buildCard(context),
+                        _buildCard(),
                         const SizedBox(height: 28),
-                        _buildBottomButtons(context),
+                        _buildBottomButtons(),
                         const SizedBox(height: 32),
                       ],
                     ),
@@ -85,7 +82,7 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _buildLogo() {
     return Image.asset(
-      AppAssets.login,
+      AppAssets.lupaPassword,
       width: 132,
       height: 132,
       fit: BoxFit.contain,
@@ -100,8 +97,9 @@ class _LoginPageState extends State<LoginPage> {
   Widget _buildTitle() {
     return RichText(
       textAlign: TextAlign.center,
-      text: const TextSpan(
-        children: [
+      text: TextSpan(
+        style: DefaultTextStyle.of(context).style,
+        children: const [
           TextSpan(
             text: 'TELE ',
             style: TextStyle(
@@ -119,7 +117,7 @@ class _LoginPageState extends State<LoginPage> {
               fontSize: 32,
               fontWeight: FontWeight.w900,
               fontStyle: FontStyle.normal,
-              color: _brandYellow,
+              color: Color(0xFFFFEB3B),
               letterSpacing: 1.2,
               height: 1.1,
             ),
@@ -129,10 +127,10 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildCard(BuildContext context) {
+  Widget _buildCard() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(22, 26, 22, 22),
+      padding: const EdgeInsets.fromLTRB(22, 26, 22, 28),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
@@ -145,11 +143,9 @@ class _LoginPageState extends State<LoginPage> {
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text(
-            'LOGIN',
-            textAlign: TextAlign.center,
+            'Lupa Password?',
             style: TextStyle(
               fontSize: 19,
               fontWeight: FontWeight.w900,
@@ -157,56 +153,16 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
           const SizedBox(height: 20),
-          _buildField(
-            controller: _usernameController,
-            hintText: '*Username*',
-          ),
-          const SizedBox(height: 14),
-          _buildField(
-            controller: _passwordController,
-            hintText: '*Password*',
-            obscureText: true,
-          ),
-          const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerRight,
-            child: InkWell(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (context) => const LupaPasswordPage(),
-                  ),
-                );
-              },
-              borderRadius: BorderRadius.circular(8),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-                child: Text(
-                  'Lupa Password ?',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 13,
-                    color: Colors.black87,
-                    decoration: TextDecoration.underline,
-                    decorationThickness: 1.2,
-                  ),
-                ),
-              ),
-            ),
-          ),
+          _buildEmailField(),
         ],
       ),
     );
   }
 
-  Widget _buildField({
-    required TextEditingController controller,
-    required String hintText,
-    bool obscureText = false,
-  }) {
+  Widget _buildEmailField() {
     return TextField(
-      controller: controller,
-      obscureText: obscureText,
+      controller: _emailController,
+      keyboardType: TextInputType.emailAddress,
       cursorColor: Colors.white70,
       style: const TextStyle(
         color: Colors.white,
@@ -216,7 +172,7 @@ class _LoginPageState extends State<LoginPage> {
       decoration: InputDecoration(
         filled: true,
         fillColor: _navyField,
-        hintText: hintText,
+        hintText: '*Email Address*',
         hintStyle: TextStyle(
           color: Colors.white.withValues(alpha: 0.65),
           fontSize: 15,
@@ -231,29 +187,30 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildBottomButtons(BuildContext context) {
+  Widget _buildBottomButtons() {
     return Row(
       children: [
         Expanded(
           child: _pillButton(
-            label: 'REGISTER',
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (context) => const RegisterPage(),
-                ),
-              );
-            },
+            label: 'Kembali',
+            onTap: () => Navigator.of(context).pop(),
           ),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: _pillButton(
-            label: 'Login',
+            label: 'Lanjut',
             onTap: () {
-              Navigator.of(context).pushReplacement(
+              final email = _emailController.text.trim();
+              if (email.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Masukkan email terlebih dahulu')),
+                );
+                return;
+              }
+              Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (context) => const AdminDashboard(),
+                  builder: (context) => const CreatePasswordPage(),
                 ),
               );
             },
@@ -291,6 +248,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
+/// Segitiga putih besar di pojok kiri atas (mockup).
 class _TopLeftWedgePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -299,10 +257,12 @@ class _TopLeftWedgePainter extends CustomPainter {
       ..lineTo(size.width * 0.95, 0)
       ..lineTo(0, size.height * 0.92)
       ..close();
-    canvas.drawPath(path, Paint()..color = Colors.white);
+    canvas.drawPath(
+      path,
+      Paint()..color = Colors.white,
+    );
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-
