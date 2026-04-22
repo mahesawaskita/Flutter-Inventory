@@ -15,6 +15,8 @@ class UserUi {
   static const softBorder = Color(0xFFC6B7C5);
   static const textMuted = Color(0xFF7E7484);
   static const textLight = Color(0xFFAEA4B0);
+  static const productThumbBackground = Color(0xFFE4E8FF);
+  static const productThumbIconColor = Color(0xFF4460C8);
 }
 
 class UserPageScaffold extends StatelessWidget {
@@ -366,7 +368,7 @@ class UserProductThumb extends StatelessWidget {
   const UserProductThumb({
     super.key,
     required this.icon,
-    this.background = Color(0xFFE4E8FF),
+    this.background = UserUi.productThumbBackground,
     this.size = 44,
   });
 
@@ -383,7 +385,7 @@ class UserProductThumb extends StatelessWidget {
         color: background,
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Icon(icon, color: const Color(0xFF4460C8), size: size * .62),
+      child: Icon(icon, color: UserUi.productThumbIconColor, size: size * .62),
     );
   }
 }
@@ -438,7 +440,7 @@ class UserHistoryRow extends StatelessWidget {
           ),
           UserPill(
             text: status,
-            background: statusColor.withOpacity(.22),
+            background: statusColor.withValues(alpha: 0.22),
             foreground: statusColor,
           ),
         ],
