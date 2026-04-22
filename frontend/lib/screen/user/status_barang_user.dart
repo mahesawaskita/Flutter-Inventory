@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 
 import 'user_ui.dart';
 
-class StatusBarangUserScreen extends StatelessWidget {
+class StatusBarangUserScreen extends StatefulWidget {
   const StatusBarangUserScreen({super.key});
 
+  @override
+  State<StatusBarangUserScreen> createState() => _StatusBarangUserScreenState();
+}
+
+class _StatusBarangUserScreenState extends State<StatusBarangUserScreen> {
   @override
   Widget build(BuildContext context) {
     final items = <({IconData icon, String name, String borrower, String status, String due, String late, Color color})>[

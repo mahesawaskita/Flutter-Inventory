@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 
 import 'user_ui.dart';
 
-class ProfileUserScreen extends StatelessWidget {
+class ProfileUserScreen extends StatefulWidget {
   const ProfileUserScreen({super.key});
 
+  @override
+  State<ProfileUserScreen> createState() => _ProfileUserScreenState();
+}
+
+class _ProfileUserScreenState extends State<ProfileUserScreen> {
   @override
   Widget build(BuildContext context) {
     final menus = <({IconData icon, String title})>[

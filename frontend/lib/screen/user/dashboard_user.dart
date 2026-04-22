@@ -2,8 +2,15 @@ import 'package:flutter/material.dart';
 
 import 'user_ui.dart';
 
-class DashboardUserScreen extends StatelessWidget {
+class DashboardUserScreen extends StatefulWidget {
   const DashboardUserScreen({super.key});
+
+  @override
+  State<DashboardUserScreen> createState() => _DashboardUserScreenState();
+}
+
+class _DashboardUserScreenState extends State<DashboardUserScreen> {
+  int? _selectedMenuIndex;
 
   @override
   Widget build(BuildContext context) {
@@ -78,28 +85,61 @@ class DashboardUserScreen extends StatelessWidget {
                 alignment: WrapAlignment.center,
                 spacing: 28,
                 runSpacing: 54,
-                children: menus.map((menu) {
+                children: menus.asMap().entries.map((entry) {
+                  int index = entry.key;
+                  var menu = entry.value;
+                  bool isSelected = _selectedMenuIndex == index;
+
                   return SizedBox(
                     width: 98,
-                    child: Column(
-                      children: [
-                        Container(
-                          width: 98,
-                          height: 98,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFDF7FB),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: UserUi.frameBorder, width: 3),
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedMenuIndex = index;
+                        });
+                        // Navigasi atau aksi sesuai menu yang dipilih
+                        _handleMenuTap(menu.title);
+                      },
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 98,
+                            height: 98,
+                            decoration: BoxDecoration(
+                              color: isSelected ? const Color(0xFFE8DCEB) : const Color(0xFFFDF7FB),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isSelected ? UserUi.frameBorder : UserUi.frameBorder,
+                                width: 3,
+                              ),
+                              boxShadow: isSelected
+                                  ? [
+                                      BoxShadow(
+                                        color: UserUi.frameFill.withValues(alpha: 0.5),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: Icon(
+                              menu.icon,
+                              size: 52,
+                              color: isSelected ? const Color(0xFF8A20F7) : const Color(0xFF33343D),
+                            ),
                           ),
-                          child: Icon(menu.icon, size: 52, color: const Color(0xFF33343D)),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          menu.title,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
-                        ),
-                      ],
+                          const SizedBox(height: 8),
+                          Text(
+                            menu.title,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: isSelected ? FontWeight.w900 : FontWeight.w800,
+                              color: isSelected ? const Color(0xFF8A20F7) : Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 }).toList(),
@@ -109,5 +149,21 @@ class DashboardUserScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _handleMenuTap(String menuTitle) {
+    // Tambahkan navigasi atau aksi sesuai menu yang dipilih
+    debugPrint('Menu "$menuTitle" dipilih');
+    
+    // Contoh navigasi bisa ditambahkan di sini:
+    // switch (menuTitle) {
+    //   case 'Kembalian\nBarang':
+    //     Navigator.push(context, MaterialPageRoute(builder: (_) => PengembalianBarangPage()));
+    //     break;
+    //   case 'Daftar\nbarang':
+    //     Navigator.push(context, MaterialPageRoute(builder: (_) => DaftarBarangPage()));
+    //     break;
+    //   // ... dan seterusnya
+    // }
   }
 }

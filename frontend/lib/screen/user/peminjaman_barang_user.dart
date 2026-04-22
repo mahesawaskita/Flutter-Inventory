@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 
 import 'user_ui.dart';
 
-class PeminjamanBarangUserScreen extends StatelessWidget {
+class PeminjamanBarangUserScreen extends StatefulWidget {
   const PeminjamanBarangUserScreen({super.key});
 
+  @override
+  State<PeminjamanBarangUserScreen> createState() => _PeminjamanBarangUserScreenState();
+}
+
+class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen> {
   @override
   Widget build(BuildContext context) {
     final history = <({IconData icon, String name, String date})>[

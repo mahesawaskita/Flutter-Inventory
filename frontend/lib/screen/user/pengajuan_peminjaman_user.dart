@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 
 import 'user_ui.dart';
 
-class PengajuanPeminjamanUserScreen extends StatelessWidget {
+class PengajuanPeminjamanUserScreen extends StatefulWidget {
   const PengajuanPeminjamanUserScreen({super.key});
 
+  @override
+  State<PengajuanPeminjamanUserScreen> createState() => _PengajuanPeminjamanUserScreenState();
+}
+
+class _PengajuanPeminjamanUserScreenState extends State<PengajuanPeminjamanUserScreen> {
   @override
   Widget build(BuildContext context) {
     return UserPageScaffold(

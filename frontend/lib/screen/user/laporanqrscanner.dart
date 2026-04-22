@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 
 import 'user_ui.dart';
 
-class LaporanQrScannerUser extends StatelessWidget {
+class LaporanQrScannerUser extends StatefulWidget {
   const LaporanQrScannerUser({super.key});
 
+  @override
+  State<LaporanQrScannerUser> createState() => _LaporanQrScannerUserState();
+}
+
+class _LaporanQrScannerUserState extends State<LaporanQrScannerUser> {
   @override
   Widget build(BuildContext context) {
     return Stack(

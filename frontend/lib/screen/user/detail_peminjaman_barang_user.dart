@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 
 import 'user_ui.dart';
 
-class DetailPeminjamanBarangUserScreen extends StatelessWidget {
+class DetailPeminjamanBarangUserScreen extends StatefulWidget {
   const DetailPeminjamanBarangUserScreen({super.key});
 
+  @override
+  State<DetailPeminjamanBarangUserScreen> createState() => _DetailPeminjamanBarangUserScreenState();
+}
+
+class _DetailPeminjamanBarangUserScreenState extends State<DetailPeminjamanBarangUserScreen> {
   @override
   Widget build(BuildContext context) {
     return UserPageScaffold(

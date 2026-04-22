@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 
 import 'user_ui.dart';
 
-class GenerateQrUser extends StatelessWidget {
+class GenerateQrUser extends StatefulWidget {
   const GenerateQrUser({super.key});
 
+  @override
+  State<GenerateQrUser> createState() => _GenerateQrUserState();
+}
+
+class _GenerateQrUserState extends State<GenerateQrUser> {
   @override
   Widget build(BuildContext context) {
     return UserPageScaffold(

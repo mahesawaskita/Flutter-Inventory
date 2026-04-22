@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 
 import 'user_ui.dart';
 
-class PengembalianBarangUserScreen extends StatelessWidget {
+class PengembalianBarangUserScreen extends StatefulWidget {
   const PengembalianBarangUserScreen({super.key});
 
+  @override
+  State<PengembalianBarangUserScreen> createState() => _PengembalianBarangUserScreenState();
+}
+
+class _PengembalianBarangUserScreenState extends State<PengembalianBarangUserScreen> {
   @override
   Widget build(BuildContext context) {
     final dipinjam = <({IconData icon, String name, String borrower, String due, String meta, String action, Color actionColor, bool showDetail, bool late})>[
