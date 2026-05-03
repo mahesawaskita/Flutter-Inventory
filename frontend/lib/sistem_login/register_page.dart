@@ -15,6 +15,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   bool isLoading = false;
 
+  // ✅ Disesuaikan dengan AuthService.register() yang return Map
   void handleRegister() async {
     if (passwordController.text != confirmController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -25,21 +26,23 @@ class _RegisterPageState extends State<RegisterPage> {
 
     setState(() => isLoading = true);
 
-    bool success = await AuthService.register(
-      usernameController.text,
+    // AuthService.register() sekarang return Map {success, message}
+    final result = await AuthService.register(
+      usernameController.text.trim(),
       passwordController.text,
     );
 
+    if (!mounted) return;
     setState(() => isLoading = false);
 
-    if (success) {
+    if (result['success'] == true) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Register berhasil")),
+        const SnackBar(content: Text("Register berhasil, silakan login")),
       );
       Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Register gagal")),
+        SnackBar(content: Text(result['message'] ?? "Register gagal")),
       );
     }
   }
@@ -51,15 +54,11 @@ class _RegisterPageState extends State<RegisterPage> {
         child: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Color(0xFF1A1A1A),
-                Color(0xFF000000),
-              ],
+              colors: [Color(0xFF1A1A1A), Color(0xFF000000)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
           ),
-
           child: SingleChildScrollView(
             child: ConstrainedBox(
               constraints: BoxConstraints(
@@ -70,33 +69,34 @@ class _RegisterPageState extends State<RegisterPage> {
                 children: [
                   const SizedBox(height: 40),
 
-                  // 🔰 LOGO
                   Image.asset(
                     'assets/logo.png',
                     height: 120,
+                    errorBuilder: (_, __, ___) => const Icon(
+                      Icons.inventory_2_outlined,
+                      size: 100,
+                      color: Colors.yellow,
+                    ),
                   ),
 
                   const SizedBox(height: 20),
 
-                  // 🔰 TELE MATIKA
                   RichText(
                     text: const TextSpan(
                       children: [
                         TextSpan(
                           text: 'TELE ',
                           style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold),
                         ),
                         TextSpan(
                           text: 'MATIKA',
                           style: TextStyle(
-                            color: Colors.yellow,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
+                              color: Colors.yellow,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
@@ -104,7 +104,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
                   const SizedBox(height: 40),
 
-                  // 🔰 CARD REGISTER
                   Container(
                     padding: const EdgeInsets.all(20),
                     margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -117,11 +116,8 @@ class _RegisterPageState extends State<RegisterPage> {
                         const Text(
                           "REGISTRATION",
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
+                              fontWeight: FontWeight.bold, fontSize: 16),
                         ),
-
                         const SizedBox(height: 20),
 
                         // USERNAME
@@ -186,7 +182,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
                   const SizedBox(height: 30),
 
-                  // 🔰 BUTTON BAWAH
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -196,26 +191,19 @@ class _RegisterPageState extends State<RegisterPage> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 30, vertical: 12),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
+                              borderRadius: BorderRadius.circular(20)),
                         ),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        child: const Text(
-                          "Kembali",
-                          style: TextStyle(color: Colors.black),
-                        ),
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text("Kembali",
+                            style: TextStyle(color: Colors.black)),
                       ),
-
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(
                               horizontal: 30, vertical: 12),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
+                              borderRadius: BorderRadius.circular(20)),
                         ),
                         onPressed: isLoading ? null : handleRegister,
                         child: isLoading
@@ -223,14 +211,10 @@ class _RegisterPageState extends State<RegisterPage> {
                                 height: 20,
                                 width: 20,
                                 child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.black,
-                                ),
+                                    strokeWidth: 2, color: Colors.black),
                               )
-                            : const Text(
-                                "Register",
-                                style: TextStyle(color: Colors.black),
-                              ),
+                            : const Text("Register",
+                                style: TextStyle(color: Colors.black)),
                       ),
                     ],
                   ),
