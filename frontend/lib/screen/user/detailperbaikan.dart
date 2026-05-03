@@ -1,10 +1,5 @@
 import 'package:flutter/material.dart';
 
-<<<<<<< HEAD
-class DetailPerbaikanUser extends StatelessWidget {
-  const DetailPerbaikanUser({super.key});
-
-=======
 import 'user_ui.dart';
 
 class DetailPerbaikanUser extends StatefulWidget {
@@ -15,7 +10,6 @@ class DetailPerbaikanUser extends StatefulWidget {
 }
 
 class _DetailPerbaikanUserState extends State<DetailPerbaikanUser> {
->>>>>>> 10f9c2930719f31f6da0da358a8ff35c3fb218ab
   @override
   Widget build(BuildContext context) {
     final items = <({String title, String date, String status, Color color, bool active})>[

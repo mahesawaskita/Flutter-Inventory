@@ -1,10 +1,5 @@
 import 'package:flutter/material.dart';
 
-<<<<<<< HEAD
-class GenerateQrScannerUser extends StatelessWidget {
-  const GenerateQrScannerUser({super.key});
-
-=======
 import 'user_ui.dart';
 
 class GenerateQrUser extends StatefulWidget {
@@ -15,7 +10,6 @@ class GenerateQrUser extends StatefulWidget {
 }
 
 class _GenerateQrUserState extends State<GenerateQrUser> {
->>>>>>> 10f9c2930719f31f6da0da358a8ff35c3fb218ab
   @override
   Widget build(BuildContext context) {
     return UserPageScaffold(
@@ -104,5 +98,4 @@ class _GenerateQrUserState extends State<GenerateQrUser> {
       ),
     );
   }
-}
 }

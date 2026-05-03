@@ -1,10 +1,5 @@
 import 'package:flutter/material.dart';
 
-<<<<<<< HEAD
-class DetailQrScannerUser extends StatelessWidget {
-  const DetailQrScannerUser({super.key});
-
-=======
 import 'user_ui.dart';
 
 class DetailQrScannerUser extends StatefulWidget {
@@ -15,7 +10,6 @@ class DetailQrScannerUser extends StatefulWidget {
 }
 
 class _DetailQrScannerUserState extends State<DetailQrScannerUser> {
->>>>>>> 10f9c2930719f31f6da0da358a8ff35c3fb218ab
   @override
   Widget build(BuildContext context) {
     return UserPageScaffold(
