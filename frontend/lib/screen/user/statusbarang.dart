@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class StatusBarangUser extends StatelessWidget {
+  const StatusBarangUser({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Column(

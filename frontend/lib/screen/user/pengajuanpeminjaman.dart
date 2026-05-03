@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class PengajuanPeminjamanUser extends StatelessWidget {
+  const PengajuanPeminjamanUser({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Column(

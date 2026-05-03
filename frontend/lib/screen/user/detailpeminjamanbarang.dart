@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class DetailPeminjamanBarangUser extends StatelessWidget {
+  const DetailPeminjamanBarangUser({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Column(

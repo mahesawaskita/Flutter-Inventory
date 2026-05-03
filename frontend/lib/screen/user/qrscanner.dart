@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class QrScannerUser extends StatelessWidget {
+  const QrScannerUser({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Column(

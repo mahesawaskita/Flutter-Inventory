@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class DetailStatusBarangUser extends StatelessWidget {
+  const DetailStatusBarangUser({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Column(

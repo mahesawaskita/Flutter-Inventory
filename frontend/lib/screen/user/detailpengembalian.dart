@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class DetailPengembalianBarangUser extends StatelessWidget {
+  const DetailPengembalianBarangUser({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Column(
