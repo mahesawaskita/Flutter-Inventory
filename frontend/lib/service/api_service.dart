@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:3000'; // untuk emulator Android
+  static const String baseUrl = 'http://10.0.2.2:3000'; // untuk emulator Android
 
   /// Ambil daftar item dari API
   static Future<List<dynamic>> getItems(String token) async {
