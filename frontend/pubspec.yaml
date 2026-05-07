@@ -62,6 +62,13 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/image/admin/
+    - assets/image/admin/PenambahanBarang/
+    - assets/image/admin/editbarang/
+    - assets/image/admin/detailbarang/
+    - assets/image/admin/detailpenambahanbarang/
+    - assets/image/admin/daftarbarang/
+    - assets/image/admin/statusbarang/
+    - assets/image/admin/profil/
     - assets/image/user/
 
   # An image asset can refer to one or more resolution-specific "variants", see

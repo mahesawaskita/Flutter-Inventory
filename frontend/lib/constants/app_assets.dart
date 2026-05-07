@@ -1,6 +1,6 @@
-/// Path aset — harus mengarah ke file nyata di folder [assets/image/].
+/// Path aset — harus mengarah ke file nyata di folder [assets/image/admin/].
 abstract final class AppAssets {
-  static const _root = 'assets/image';
+  static const _root = 'assets/image/admin';
 
   // Auth & splash
   static const splash = '$_root/splash_logo.png';
