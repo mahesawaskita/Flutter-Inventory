@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
-
+import 'package:frontend/screen/user/daftar_barang_user.dart';
+import 'package:frontend/screen/user/peminjaman_barang_user.dart';
+import 'package:frontend/screen/user/pengembalian_barang_user.dart';
+import 'package:frontend/screen/user/qr_scanner_user.dart';
+import 'package:frontend/screen/user/status_barang_user.dart';
+import 'package:frontend/service/auth_service.dart';
 import 'user_ui.dart';
 
 class DashboardUserScreen extends StatefulWidget {
@@ -11,12 +16,24 @@ class DashboardUserScreen extends StatefulWidget {
 
 class _DashboardUserScreenState extends State<DashboardUserScreen> {
   int? _selectedMenuIndex;
+  String _username = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUsername();
+  }
+
+  Future<void> _loadUsername() async {
+    final username = await AuthService.getUsername();
+    if (mounted) setState(() => _username = username ?? '');
+  }
 
   @override
   Widget build(BuildContext context) {
     final menus = <({IconData icon, String title})>[
       (icon: Icons.sync_alt_rounded, title: 'Kembalian\nBarang'),
-      (icon: Icons.favorite_rounded, title: 'Daftar\nbarang'),
+      (icon: Icons.favorite_rounded, title: 'Daftar\nBarang'),
       (icon: Icons.receipt_long_rounded, title: 'Status Barang'),
       (icon: Icons.qr_code_scanner_rounded, title: 'Barcode\nScanner'),
       (icon: Icons.local_shipping_rounded, title: 'Peminjaman\nBarang'),
@@ -29,6 +46,7 @@ class _DashboardUserScreenState extends State<DashboardUserScreen> {
           padding: const EdgeInsets.fromLTRB(8, 24, 8, 24),
           child: Column(
             children: [
+              // ===== HEADER =====
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
                 decoration: BoxDecoration(
@@ -47,15 +65,15 @@ class _DashboardUserScreenState extends State<DashboardUserScreen> {
                       child: const Icon(Icons.person, size: 40, color: Color(0xFF5C678A)),
                     ),
                     const SizedBox(width: 14),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Hi,', style: TextStyle(fontSize: 15, fontStyle: FontStyle.italic)),
-                          SizedBox(height: 2),
+                          const Text('Hi,', style: TextStyle(fontSize: 15, fontStyle: FontStyle.italic)),
+                          const SizedBox(height: 2),
                           Text(
-                            'Muhammad Riza',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                            _username.isEmpty ? '...' : _username,
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
                           ),
                         ],
                       ),
@@ -71,16 +89,15 @@ class _DashboardUserScreenState extends State<DashboardUserScreen> {
                             Text('User', style: TextStyle(fontSize: 14, color: Color(0xFF8A20F7))),
                           ],
                         ),
-                        SizedBox(height: 8),
-                        Text('No. Karyawan', style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic)),
-                        SizedBox(height: 4),
-                        Text('2390343091', style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic)),
                       ],
                     ),
                   ],
                 ),
               ),
+
               const SizedBox(height: 120),
+
+              // ===== MENU =====
               Wrap(
                 alignment: WrapAlignment.center,
                 spacing: 28,
@@ -94,10 +111,7 @@ class _DashboardUserScreenState extends State<DashboardUserScreen> {
                     width: 98,
                     child: GestureDetector(
                       onTap: () {
-                        setState(() {
-                          _selectedMenuIndex = index;
-                        });
-                        // Navigasi atau aksi sesuai menu yang dipilih
+                        setState(() => _selectedMenuIndex = index);
                         _handleMenuTap(menu.title);
                       },
                       child: Column(
@@ -109,7 +123,7 @@ class _DashboardUserScreenState extends State<DashboardUserScreen> {
                               color: isSelected ? const Color(0xFFE8DCEB) : const Color(0xFFFDF7FB),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: isSelected ? UserUi.frameBorder : UserUi.frameBorder,
+                                color: UserUi.frameBorder,
                                 width: 3,
                               ),
                               boxShadow: isSelected
@@ -152,18 +166,27 @@ class _DashboardUserScreenState extends State<DashboardUserScreen> {
   }
 
   void _handleMenuTap(String menuTitle) {
-    // Tambahkan navigasi atau aksi sesuai menu yang dipilih
-    debugPrint('Menu "$menuTitle" dipilih');
-    
-    // Contoh navigasi bisa ditambahkan di sini:
-    // switch (menuTitle) {
-    //   case 'Kembalian\nBarang':
-    //     Navigator.push(context, MaterialPageRoute(builder: (_) => PengembalianBarangPage()));
-    //     break;
-    //   case 'Daftar\nbarang':
-    //     Navigator.push(context, MaterialPageRoute(builder: (_) => DaftarBarangPage()));
-    //     break;
-    //   // ... dan seterusnya
-    // }
+    switch (menuTitle) {
+      case 'Kembalian\nBarang':
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const PengembalianBarangUserScreen()));
+        break;
+      case 'Daftar\nBarang':
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const DaftarBarangUserScreen()));
+        break;
+      case 'Status Barang':
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const StatusBarangUserScreen()));
+        break;
+      case 'Barcode\nScanner':
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const QRScannerUserScreen()));
+        break;
+      case 'Peminjaman\nBarang':
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const PeminjamanBarangUserScreen()));
+        break;
+    }
   }
 }

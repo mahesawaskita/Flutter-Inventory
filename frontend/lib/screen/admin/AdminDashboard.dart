@@ -1,9 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/constants/app_assets.dart';
+import 'package:frontend/screen/admin/DaftarBarang.dart';
+import 'package:frontend/screen/admin/PenambahanBarang.dart';
 import 'package:frontend/screen/admin/Profil.dart';
+import 'package:frontend/screen/admin/StatusBarang.dart';
+import 'package:frontend/service/auth_service.dart';
 
-class AdminDashboard extends StatelessWidget {
+class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
+
+  @override
+  State<AdminDashboard> createState() => _AdminDashboardState();
+}
+
+class _AdminDashboardState extends State<AdminDashboard> {
+  String _username = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUsername();
+  }
+
+  Future<void> _loadUsername() async {
+    final username = await AuthService.getUsername();
+    if (mounted) setState(() => _username = username ?? '');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +37,6 @@ class AdminDashboard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              
               // ===== HEADER (tap → profil) =====
               Material(
                 color: Colors.grey[300],
@@ -49,14 +70,11 @@ class AdminDashboard extends StatelessWidget {
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
+                            children: [
+                              const Text('Hi,', style: TextStyle(fontSize: 14)),
                               Text(
-                                'Hi,',
-                                style: TextStyle(fontSize: 14),
-                              ),
-                              Text(
-                                'Muhammad Riza',
-                                style: TextStyle(
+                                _username.isEmpty ? '...' : _username,
+                                style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -64,21 +82,15 @@ class AdminDashboard extends StatelessWidget {
                             ],
                           ),
                         ),
-                        Column(
+                        const Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Row(
-                              children: const [
+                              children: [
                                 Icon(Icons.circle, color: Colors.green, size: 10),
                                 SizedBox(width: 6),
                                 Text('Admin'),
                               ],
-                            ),
-                            const SizedBox(height: 6),
-                            const Text(
-                              'No. Karyawan\n2390343091',
-                              textAlign: TextAlign.right,
-                              style: TextStyle(fontSize: 12),
                             ),
                           ],
                         ),
@@ -109,14 +121,26 @@ class AdminDashboard extends StatelessWidget {
                   _buildMenuItem(
                     title: "Penambahan\nBarang",
                     assetPath: AppAssets.dashShoppingCart,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const PenambahanBarangAdmin()),
+                    ),
                   ),
                   _buildMenuItem(
-                    title: "Daftar\nbarang",
+                    title: "Daftar\nBarang",
                     assetPath: AppAssets.dashWishlist,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const DaftarBarangPage()),
+                    ),
                   ),
                   _buildMenuItem(
                     title: "Status Barang",
                     assetPath: AppAssets.dashStatusBarang,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const StatusBarangAdmin()),
+                    ),
                   ),
                 ],
               ),
@@ -127,52 +151,53 @@ class AdminDashboard extends StatelessWidget {
     );
   }
 
-  // ===== WIDGET MENU ITEM =====
-  Widget _buildMenuItem({required String title, required String assetPath}) {
-    return Container(
-      width: 100,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey[300],
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 4,
-            offset: const Offset(2, 3),
-          )
-        ],
-      ),
-      child: Column(
-        children: [
-          
-          // ICON
-          Container(
-            height: 50,
-            width: 50,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white,
+  Widget _buildMenuItem({
+    required String title,
+    required String assetPath,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 100,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.grey[300],
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 4,
+              offset: const Offset(2, 3),
+            )
+          ],
+        ),
+        child: Column(
+          children: [
+            Container(
+              height: 50,
+              width: 50,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Padding(
+                padding: const EdgeInsets.all(6),
+                child: Image.asset(assetPath, fit: BoxFit.contain),
+              ),
             ),
-            clipBehavior: Clip.antiAlias,
-            child: Padding(
-              padding: const EdgeInsets.all(6),
-              child: Image.asset(assetPath, fit: BoxFit.contain),
+            const SizedBox(height: 10),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
-
-          const SizedBox(height: 10),
-
-          // TEXT
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          )
-        ],
+          ],
+        ),
       ),
     );
   }

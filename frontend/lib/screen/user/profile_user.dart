@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/service/auth_service.dart';
+import 'package:frontend/sistem_login/login_page.dart';
 
 import 'user_ui.dart';
 
@@ -10,13 +12,37 @@ class ProfileUserScreen extends StatefulWidget {
 }
 
 class _ProfileUserScreenState extends State<ProfileUserScreen> {
+  String _username = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUsername();
+  }
+
+  Future<void> _loadUsername() async {
+    final username = await AuthService.getUsername();
+    if (mounted) setState(() => _username = username ?? '');
+  }
+
+  Future<void> _handleLogout() async {
+    await AuthService.logout();
+    if (mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+        (_) => false,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final menus = <({IconData icon, String title})>[
-      (icon: Icons.badge_rounded, title: 'Data\nPribadi'),
-      (icon: Icons.lock_rounded, title: 'Data\nPassword'),
-      (icon: Icons.history_toggle_off_rounded, title: 'Riwayat\nAktivitas'),
-      (icon: Icons.logout_rounded, title: 'Logout'),
+    final menus = <({IconData icon, String title, VoidCallback? onTap})>[
+      (icon: Icons.badge_rounded, title: 'Data\nPribadi', onTap: null),
+      (icon: Icons.lock_rounded, title: 'Data\nPassword', onTap: null),
+      (icon: Icons.history_toggle_off_rounded, title: 'Riwayat\nAktivitas', onTap: null),
+      (icon: Icons.logout_rounded, title: 'Logout', onTap: _handleLogout),
     ];
 
     return UserPageScaffold(
@@ -42,21 +68,22 @@ class _ProfileUserScreenState extends State<ProfileUserScreen> {
                   child: const Icon(Icons.person, size: 42, color: Color(0xFF5C678A)),
                 ),
                 const SizedBox(width: 14),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Muhammad Riza', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-                      SizedBox(height: 4),
-                      Row(
+                      Text(
+                        _username.isEmpty ? '...' : _username,
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                      ),
+                      const SizedBox(height: 4),
+                      const Row(
                         children: [
                           Icon(Icons.circle, size: 9, color: Color(0xFF17E700)),
                           SizedBox(width: 8),
                           Text('User', style: TextStyle(fontSize: 13)),
                         ],
                       ),
-                      SizedBox(height: 4),
-                      Text('No. 2390343091', style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic)),
                     ],
                   ),
                 ),
@@ -98,32 +125,45 @@ class _ProfileUserScreenState extends State<ProfileUserScreen> {
             spacing: 16,
             runSpacing: 16,
             children: menus.map((menu) {
-              return Container(
-                width: (MediaQuery.of(context).size.width - 40) / 2,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  color: UserUi.card,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 54,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(.6),
-                        borderRadius: BorderRadius.circular(10),
+              return GestureDetector(
+                onTap: menu.onTap,
+                child: Container(
+                  width: (MediaQuery.of(context).size.width - 40) / 2,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: UserUi.card,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 54,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(.6),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          menu.icon,
+                          size: 28,
+                          color: menu.title == 'Logout'
+                              ? Colors.red
+                              : const Color(0xFF6099E9),
+                        ),
                       ),
-                      child: Icon(menu.icon, size: 28, color: const Color(0xFF6099E9)),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Text(
-                        menu.title,
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          menu.title,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
+                            color: menu.title == 'Logout' ? Colors.red : null,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             }).toList(),
@@ -148,14 +188,12 @@ class _ProfileLine extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: Text(label, style: const TextStyle(fontSize: 15, fontStyle: FontStyle.italic)),
+          flex: 2,
+          child: Text(label, style: const TextStyle(fontSize: 13, color: Colors.black54)),
         ),
         Expanded(
-          child: Text(
-            value,
-            textAlign: TextAlign.right,
-            style: const TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
-          ),
+          flex: 3,
+          child: Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
         ),
       ],
     );

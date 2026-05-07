@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/constants/app_assets.dart';
-import 'package:frontend/util/quit_application.dart';
+import 'package:frontend/service/auth_service.dart';
+import 'package:frontend/sistem_login/login_page.dart';
 
 class ProfilPage extends StatelessWidget {
   const ProfilPage({super.key});
@@ -191,7 +192,16 @@ class ProfilPage extends StatelessWidget {
                   _menuItem(
                     'Logout',
                     AppAssets.pfLogout,
-                    onTap: quitApplication,
+                    onTap: () async {
+                      await AuthService.logout();
+                      if (context.mounted) {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LoginPage()),
+                          (_) => false,
+                        );
+                      }
+                    },
                   ),
                 ],
               ),
