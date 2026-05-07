@@ -91,3 +91,36 @@ exports.register = async (req, res) => {
     });
   });
 };
+
+// ✅ REGISTER ADMIN — hanya bisa dipakai jika belum ada admin sama sekali
+exports.registerAdmin = async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ message: 'Username dan password wajib diisi' });
+  }
+
+  db.query('SELECT id FROM users WHERE role = ?', ['admin'], async (err, result) => {
+    if (err) return res.status(500).json({ message: 'Server error' });
+
+    if (result.length > 0) {
+      return res.status(403).json({ message: 'Admin sudah ada, tidak bisa mendaftar lagi' });
+    }
+
+    db.query('SELECT id FROM users WHERE username = ?', [username], async (err2, result2) => {
+      if (err2) return res.status(500).json({ message: 'Server error' });
+
+      if (result2.length > 0) {
+        return res.status(400).json({ message: 'Username sudah digunakan' });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const sql = 'INSERT INTO users (username, password, role) VALUES (?, ?, ?)';
+
+      db.query(sql, [username, hashedPassword, 'admin'], (err3) => {
+        if (err3) return res.status(500).json({ message: 'Gagal register admin' });
+        res.json({ message: 'Register admin berhasil' });
+      });
+    });
+  });
+};
