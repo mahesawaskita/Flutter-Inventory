@@ -14,6 +14,12 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
   int _activeTab = 0;
   final _searchController = TextEditingController();
 
+  // Quick-add form state
+  final _quickNameController = TextEditingController();
+  final _quickDescController = TextEditingController();
+  int _quickStock = 10;
+  Map<String, dynamic>? _quickCategory;
+
   List<Map<String, dynamic>> _items = [];
   List<Map<String, dynamic>> _categories = [];
   bool _isLoading = true;
@@ -44,6 +50,8 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
   @override
   void dispose() {
     _searchController.dispose();
+    _quickNameController.dispose();
+    _quickDescController.dispose();
     super.dispose();
   }
 
@@ -60,6 +68,10 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
             _items = items.map((e) => Map<String, dynamic>.from(e)).toList();
             _categories = cats.map((e) => Map<String, dynamic>.from(e)).toList();
             _adminUsername = uname ?? 'Admin';
+            // Set default quick category jika belum dipilih
+            if (_quickCategory == null && _categories.isNotEmpty) {
+              _quickCategory = _categories.first;
+            }
           });
         }
       }
@@ -87,6 +99,40 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
       'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
     ];
     return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
+  }
+
+  void _showCategoryPicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Text('Pilih Kategori',
+                  style: TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.bold)),
+            ),
+            ..._categories.map((cat) => ListTile(
+                  title: Text(cat['name'].toString()),
+                  trailing: _quickCategory?['id'] == cat['id']
+                      ? const Icon(Icons.check, color: Color(0xFF3998FC))
+                      : null,
+                  onTap: () {
+                    setState(() => _quickCategory = cat);
+                    Navigator.pop(context);
+                  },
+                )),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
   }
 
   // ─────────────────────────────────────────────
@@ -465,20 +511,27 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
                 ),
               ),
               const SizedBox(width: 8),
-              Container(
-                height: 40,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF3998FC),
-                  borderRadius: BorderRadius.circular(22),
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const DetailPenambahanBarangAdmin(),
+                  ),
                 ),
-                child: const Center(
-                  child: Text('Detail',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600)),
+                child: Container(
+                  height: 40,
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF3998FC),
+                    borderRadius: BorderRadius.circular(22),
+                  ),
+                  child: const Center(
+                    child: Text('Detail',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600)),
+                  ),
                 ),
               ),
             ],
@@ -550,20 +603,34 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Nama Barang field
-                          Container(
+                          SizedBox(
                             height: 34,
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                  color: const Color(0xFFDDDDDD)),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            alignment: Alignment.centerLeft,
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 8),
-                            child: const Text(
-                              'Nama Barang',
-                              style: TextStyle(
-                                  fontSize: 13, color: Color(0xFFBBBBBB)),
+                            child: TextField(
+                              controller: _quickNameController,
+                              style: const TextStyle(fontSize: 13),
+                              decoration: InputDecoration(
+                                hintText: 'Nama Barang',
+                                hintStyle: const TextStyle(
+                                    fontSize: 13, color: Color(0xFFBBBBBB)),
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 8),
+                                isDense: true,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                  borderSide: const BorderSide(
+                                      color: Color(0xFFDDDDDD)),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                  borderSide: const BorderSide(
+                                      color: Color(0xFFDDDDDD)),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                  borderSide: const BorderSide(
+                                      color: Color(0xFF3998FC), width: 1.5),
+                                ),
+                              ),
                             ),
                           ),
 
@@ -572,54 +639,67 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
                           // Category chip + counter row
                           Row(
                             children: [
-                              // Chip
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFE3F0FF),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                      color: const Color(0xFF3998FC)
-                                          .withOpacity(0.4)),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      _categories.isNotEmpty
-                                          ? _categories.first['name']
-                                              .toString()
-                                          : 'Elektronik',
-                                      style: const TextStyle(
-                                          fontSize: 11,
-                                          color: Color(0xFF3998FC),
-                                          fontWeight: FontWeight.w500),
-                                    ),
-                                    const SizedBox(width: 3),
-                                    const Icon(Icons.close,
-                                        size: 11, color: Colors.red),
-                                  ],
+                              // Chip — tap untuk ganti kategori
+                              GestureDetector(
+                                onTap: _showCategoryPicker,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE3F0FF),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                        color: const Color(0xFF3998FC)
+                                            .withOpacity(0.4)),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        _quickCategory?['name']?.toString() ??
+                                            (_categories.isNotEmpty
+                                                ? _categories.first['name']
+                                                    .toString()
+                                                : 'Elektronik'),
+                                        style: const TextStyle(
+                                            fontSize: 11,
+                                            color: Color(0xFF3998FC),
+                                            fontWeight: FontWeight.w500),
+                                      ),
+                                      const SizedBox(width: 3),
+                                      // X = reset stok ke 0
+                                      GestureDetector(
+                                        onTap: () => setState(
+                                            () => _quickStock = 0),
+                                        child: const Icon(Icons.close,
+                                            size: 11, color: Colors.red),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 6),
-                              // Count
-                              const Text('10',
-                                  style: TextStyle(
+                              // Stok count (dinamis)
+                              Text('$_quickStock',
+                                  style: const TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
                                       color: Color(0xFF222222))),
                               const SizedBox(width: 5),
-                              // + button
-                              Container(
-                                width: 22,
-                                height: 22,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF3998FC),
-                                  borderRadius: BorderRadius.circular(5),
+                              // + button — tambah stok
+                              GestureDetector(
+                                onTap: () =>
+                                    setState(() => _quickStock++),
+                                child: Container(
+                                  width: 22,
+                                  height: 22,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF3998FC),
+                                    borderRadius: BorderRadius.circular(5),
+                                  ),
+                                  child: const Icon(Icons.add,
+                                      color: Colors.white, size: 14),
                                 ),
-                                child: const Icon(Icons.add,
-                                    color: Colors.white, size: 14),
                               ),
                             ],
                           ),
@@ -641,19 +721,34 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
 
                 const SizedBox(height: 10),
 
-                // Description placeholder
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 8),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xFFDDDDDD)),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Text(
-                    'Contoh: Laptop merek Asus ROG Core i9 dengan RAM 8',
-                    style: TextStyle(
+                // Description field
+                TextField(
+                  controller: _quickDescController,
+                  maxLines: 2,
+                  style: const TextStyle(fontSize: 12),
+                  decoration: InputDecoration(
+                    hintText:
+                        'Contoh: Laptop merek Asus ROG Core i9 dengan RAM 8',
+                    hintStyle: const TextStyle(
                         fontSize: 11, color: Color(0xFFBBBBBB)),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 8),
+                    isDense: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide:
+                          const BorderSide(color: Color(0xFFDDDDDD)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide:
+                          const BorderSide(color: Color(0xFFDDDDDD)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: const BorderSide(
+                          color: Color(0xFF3998FC), width: 1.5),
+                    ),
                   ),
                 ),
 
