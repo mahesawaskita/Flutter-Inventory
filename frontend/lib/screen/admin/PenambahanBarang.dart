@@ -13,26 +13,25 @@ class PenambahanBarangAdmin extends StatefulWidget {
 class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
   int _activeTab = 0;
   final _searchController = TextEditingController();
-  final _nameController = TextEditingController();
-  final _descController = TextEditingController();
 
   List<Map<String, dynamic>> _items = [];
   List<Map<String, dynamic>> _categories = [];
   bool _isLoading = true;
+  String _adminUsername = 'Admin';
 
-  // Stats computed from items list
   int get _totalItems => _items.length;
   int get _newToday => _items.where((item) {
-        final raw = item['created_at']?.toString() ?? '';
-        final dt = DateTime.tryParse(raw);
+        final dt = DateTime.tryParse(item['created_at']?.toString() ?? '');
         if (dt == null) return false;
         final now = DateTime.now();
-        return dt.year == now.year && dt.month == now.month && dt.day == now.day;
+        return dt.year == now.year &&
+            dt.month == now.month &&
+            dt.day == now.day;
       }).length;
   int get _pendingRestock =>
-      _items.where((item) => (item['stock'] as int? ?? 0) < 5).length;
-  int get _damaged => _items.where((item) {
-        final c = (item['condition'] ?? '').toString().toLowerCase();
+      _items.where((i) => (i['stock'] as int? ?? 0) < 5).length;
+  int get _damaged => _items.where((i) {
+        final c = (i['condition'] ?? '').toString().toLowerCase();
         return c == 'rusak' || c == 'perlu perbaikan';
       }).length;
 
@@ -45,8 +44,6 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
   @override
   void dispose() {
     _searchController.dispose();
-    _nameController.dispose();
-    _descController.dispose();
     super.dispose();
   }
 
@@ -54,72 +51,76 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
     setState(() => _isLoading = true);
     try {
       final token = await AuthService.getToken();
+      final uname = await AuthService.getUsername();
       if (token != null) {
         final items = await ApiService.getItems(token);
         final cats = await ApiService.getCategories(token);
-        setState(() {
-          _items = items.map((e) => Map<String, dynamic>.from(e)).toList();
-          _categories = cats.map((e) => Map<String, dynamic>.from(e)).toList();
-        });
+        if (mounted) {
+          setState(() {
+            _items = items.map((e) => Map<String, dynamic>.from(e)).toList();
+            _categories = cats.map((e) => Map<String, dynamic>.from(e)).toList();
+            _adminUsername = uname ?? 'Admin';
+          });
+        }
       }
-    } catch (_) {
-      // tampilkan data kosong, user bisa refresh
-    } finally {
+    } catch (_) {}
+    finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
   String _categoryName(dynamic catId) {
     if (catId == null) return '-';
-    final match = _categories.firstWhere(
+    final m = _categories.firstWhere(
       (c) => c['id'].toString() == catId.toString(),
       orElse: () => {'name': '-'},
     );
-    return match['name']?.toString() ?? '-';
+    return m['name']?.toString() ?? '-';
   }
 
   String _formatDate(String? raw) {
     if (raw == null) return '-';
     final dt = DateTime.tryParse(raw);
     if (dt == null) return '-';
-    const m = [
+    const months = [
       'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
       'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
     ];
-    return '${dt.day} ${m[dt.month - 1]} ${dt.year}';
+    return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
   }
 
   // ─────────────────────────────────────────────
-  // BUILD
+  // ROOT BUILD
   // ─────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F7),
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: _loadData,
-                color: const Color(0xFF3998FC),
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    children: [
-                      _buildStats(),
-                      _buildTabBar(),
-                      _activeTab == 0 ? _buildAddTab() : _buildHistoryTab(),
-                      const SizedBox(height: 24),
-                    ],
-                  ),
+      backgroundColor: const Color(0xFFF5F5F7),
+      body: Column(
+        children: [
+          _buildHeader(),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _loadData,
+              color: const Color(0xFF3998FC),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildStatsGrid(),
+                    _buildTabBar(),
+                    if (_activeTab == 0) _buildAddFormContent(),
+                    _buildHistorySection(),
+                    _buildLanjutButton(),
+                    const SizedBox(height: 24),
+                  ],
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -131,66 +132,98 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
   Widget _buildHeader() {
     return Container(
       color: const Color(0xFF1A1A1A),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.of(context).maybePop(),
-            child: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
-          ),
-          const SizedBox(width: 12),
-          Stack(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.shopping_cart,
-                    color: Colors.white, size: 22),
-              ),
-              Positioned(
-                right: 0,
-                top: 0,
-                child: Container(
-                  width: 14,
-                  height: 14,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF00FFD0),
-                    shape: BoxShape.circle,
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            // Top row: back + settings
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back,
+                        color: Colors.white, size: 22),
+                    onPressed: () => Navigator.of(context).maybePop(),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                   ),
-                  child: const Icon(Icons.add, color: Colors.black, size: 10),
-                ),
+                  GestureDetector(
+                    onTap: () {},
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF333333),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.settings,
+                          color: Color(0xFF888888), size: 20),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-          const SizedBox(width: 10),
-          const Expanded(
-            child: Text(
-              'Penambahan Barang',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold),
             ),
-          ),
-          const Icon(Icons.settings, color: Color(0xFF888888), size: 24),
-        ],
+            // Cart icon + title
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Column(
+                children: [
+                  Stack(
+                    children: [
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.shopping_cart,
+                            color: Colors.white, size: 30),
+                      ),
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          width: 18,
+                          height: 18,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF00FFD0),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.add,
+                              color: Colors.black, size: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Penambahan Barang',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   // ─────────────────────────────────────────────
-  // STATS
+  // STATS GRID
   // ─────────────────────────────────────────────
 
-  Widget _buildStats() {
+  Widget _buildStatsGrid() {
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.all(12),
-      margin: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.fromLTRB(12, 14, 12, 14),
       child: Column(
         children: [
           Row(
@@ -198,49 +231,50 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
               Expanded(
                 child: _statCard(
                   icon: Icons.shopping_cart_outlined,
+                  iconBg: const Color(0xFFDDEEFF),
                   iconColor: const Color(0xFF3998FC),
-                  bgColor: const Color(0xFFE3F0FF),
                   title: 'Total Barang\nTersedia',
-                  value: _totalItems.toString(),
+                  mainValue: _totalItems.toString(),
+                  sideValue: _totalItems.toString(),
                   subtitle: '+5% sejak minggu lalu',
-                  subtitleColor: Colors.green,
+                  subtitleColor: const Color(0xFF2DB55D),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Expanded(
                 child: _statCard(
                   icon: Icons.inventory_2_outlined,
+                  iconBg: const Color(0xFFFFEDD5),
                   iconColor: Colors.orange,
-                  bgColor: const Color(0xFFFFF3E0),
                   title: 'Barang Baru\nHari Ini',
-                  value: _newToday.toString(),
+                  mainValue: _newToday.toString(),
                   subtitle: 'Terakhir Ditambah 5 jam lalu',
                   subtitleColor: Colors.grey,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Row(
             children: [
               Expanded(
                 child: _statCard(
-                  icon: Icons.autorenew,
+                  icon: Icons.local_shipping_outlined,
+                  iconBg: const Color(0xFFFFF8DC),
                   iconColor: Colors.amber,
-                  bgColor: const Color(0xFFFFFDE7),
                   title: 'Pending Restok',
-                  value: _pendingRestock.toString(),
+                  mainValue: _pendingRestock.toString(),
                   subtitle: '',
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Expanded(
                 child: _statCard(
                   icon: Icons.warning_amber_rounded,
+                  iconBg: const Color(0xFFFFE5E5),
                   iconColor: Colors.red,
-                  bgColor: const Color(0xFFFDE8E8),
                   title: 'Barang Rusak/\nPerlu Perbaikan',
-                  value: _damaged.toString(),
+                  mainValue: _damaged.toString(),
                   subtitle: '',
                 ),
               ),
@@ -253,10 +287,11 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
 
   Widget _statCard({
     required IconData icon,
+    required Color iconBg,
     required Color iconColor,
-    required Color bgColor,
     required String title,
-    required String value,
+    required String mainValue,
+    String? sideValue,
     required String subtitle,
     Color subtitleColor = Colors.grey,
   }) {
@@ -267,18 +302,21 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 6,
-              offset: const Offset(0, 2))
+            color: Colors.black.withOpacity(0.07),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Icon box
           Container(
-            width: 36,
-            height: 36,
-            decoration:
-                BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(8)),
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+                color: iconBg, borderRadius: BorderRadius.circular(8)),
             child: Icon(icon, color: iconColor, size: 20),
           ),
           const SizedBox(width: 8),
@@ -286,19 +324,49 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: const TextStyle(
-                        fontSize: 10, color: Colors.grey, height: 1.3)),
-                Text(value,
-                    style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1A1A1A))),
+                // Title + side value (small, inline)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 9,
+                          color: Colors.grey,
+                          height: 1.3,
+                        ),
+                      ),
+                    ),
+                    if (sideValue != null)
+                      Text(
+                        sideValue,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF333333),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                // Main large value
+                Text(
+                  mainValue,
+                  style: const TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1A1A1A),
+                    height: 1.1,
+                  ),
+                ),
                 if (subtitle.isNotEmpty)
-                  Text(subtitle,
-                      style: TextStyle(fontSize: 9, color: subtitleColor),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
+                  Text(
+                    subtitle,
+                    style: TextStyle(fontSize: 9, color: subtitleColor),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
               ],
             ),
           ),
@@ -314,6 +382,7 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
   Widget _buildTabBar() {
     return Container(
       color: Colors.white,
+      margin: const EdgeInsets.only(top: 4),
       child: Row(
         children: [
           _tab(0, 'Tambah Barang'),
@@ -323,19 +392,21 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
     );
   }
 
-  Widget _tab(int index, String label) {
-    final active = _activeTab == index;
+  Widget _tab(int idx, String label) {
+    final active = _activeTab == idx;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _activeTab = index),
+        onTap: () => setState(() => _activeTab = idx),
+        behavior: HitTestBehavior.opaque,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 13),
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color:
-                    active ? const Color(0xFF3998FC) : Colors.transparent,
-                width: 3,
+                color: active
+                    ? const Color(0xFF3998FC)
+                    : Colors.transparent,
+                width: 2.5,
               ),
             ),
           ),
@@ -346,8 +417,9 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
               fontSize: 13,
               fontWeight:
                   active ? FontWeight.bold : FontWeight.normal,
-              color:
-                  active ? const Color(0xFF3998FC) : Colors.grey,
+              color: active
+                  ? const Color(0xFF3998FC)
+                  : const Color(0xFF888888),
             ),
           ),
         ),
@@ -356,71 +428,72 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
   }
 
   // ─────────────────────────────────────────────
-  // TAB 0 — TAMBAH BARANG
+  // ADD FORM CONTENT (Tab 0)
   // ─────────────────────────────────────────────
 
-  Widget _buildAddTab() {
+  Widget _buildAddFormContent() {
     return Padding(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
       child: Column(
         children: [
-          // Search row
+          // ── Search row ──
           Row(
             children: [
               Expanded(
                 child: Container(
-                  height: 38,
+                  height: 40,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(22),
                     border: Border.all(color: const Color(0xFFDDDDDD)),
                   ),
                   child: TextField(
                     controller: _searchController,
+                    onChanged: (_) => setState(() {}),
                     style: const TextStyle(fontSize: 13),
                     decoration: const InputDecoration(
                       hintText: 'Cari barang, kategori...',
                       hintStyle:
                           TextStyle(fontSize: 12, color: Colors.grey),
-                      prefixIcon: Icon(Icons.search, size: 18, color: Colors.grey),
+                      prefixIcon: Icon(Icons.search,
+                          size: 18, color: Colors.grey),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 10),
+                      contentPadding:
+                          EdgeInsets.symmetric(vertical: 11),
                     ),
                   ),
                 ),
               ),
               const SizedBox(width: 8),
-              GestureDetector(
-                onTap: () {
-                  // navigate to detail search (placeholder)
-                },
-                child: Container(
-                  height: 38,
-                  padding: const EdgeInsets.symmetric(horizontal: 18),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF3998FC),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Center(
-                    child: Text('Detail',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600)),
-                  ),
+              Container(
+                height: 40,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF3998FC),
+                  borderRadius: BorderRadius.circular(22),
+                ),
+                child: const Center(
+                  child: Text('Detail',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600)),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
 
-          // Form card
+          const SizedBox(height: 10),
+
+          // ── Quick-add card ──
           Container(
-            padding: const EdgeInsets.all(14),
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE8E8E8)),
+              border: Border.all(color: const Color(0xFFEEEEEE)),
               boxShadow: [
                 BoxShadow(
                     color: Colors.black.withOpacity(0.04),
@@ -436,74 +509,73 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
                   children: [
                     // Photo area
                     GestureDetector(
-                      onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                      onTap: () =>
+                          ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                            content: Text('Fitur upload foto segera hadir')),
+                            content:
+                                Text('Fitur upload foto segera hadir')),
                       ),
                       child: Container(
-                        width: 88,
+                        width: 86,
                         height: 80,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF5F5F5),
+                          color: const Color(0xFFF3F3F3),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                              color: const Color(0xFFDDDDDD), width: 1.5),
+                              color: const Color(0xFFDDDDDD), width: 1),
                         ),
                         child: const Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.camera_alt_outlined,
-                                size: 26, color: Colors.grey),
+                                size: 28, color: Color(0xFF999999)),
                             SizedBox(height: 4),
                             Text(
                               'Tambahkan\nFoto Barang',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                   fontSize: 9,
-                                  color: Colors.grey,
+                                  color: Color(0xFF999999),
                                   height: 1.4),
                             ),
                           ],
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
 
-                    // Right side fields
+                    // Right column
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Nama Barang field
                           Container(
-                            height: 36,
+                            height: 34,
                             decoration: BoxDecoration(
                               border: Border.all(
                                   color: const Color(0xFFDDDDDD)),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(6),
                             ),
-                            child: TextField(
-                              controller: _nameController,
-                              style: const TextStyle(fontSize: 13),
-                              decoration: const InputDecoration(
-                                hintText: 'Nama Barang',
-                                hintStyle: TextStyle(
-                                    fontSize: 13, color: Colors.grey),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 9),
-                                isDense: true,
-                              ),
+                            alignment: Alignment.centerLeft,
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 8),
+                            child: const Text(
+                              'Nama Barang',
+                              style: TextStyle(
+                                  fontSize: 13, color: Color(0xFFBBBBBB)),
                             ),
                           ),
+
                           const SizedBox(height: 8),
 
-                          // Category chip + stock counter
+                          // Category chip + counter row
                           Row(
                             children: [
+                              // Chip
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 4),
+                                    horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFE3F0FF),
                                   borderRadius: BorderRadius.circular(20),
@@ -516,43 +588,49 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
                                   children: [
                                     Text(
                                       _categories.isNotEmpty
-                                          ? _categories[0]['name']
+                                          ? _categories.first['name']
+                                              .toString()
                                           : 'Elektronik',
                                       style: const TextStyle(
-                                          fontSize: 12,
+                                          fontSize: 11,
                                           color: Color(0xFF3998FC),
                                           fontWeight: FontWeight.w500),
                                     ),
-                                    const SizedBox(width: 4),
+                                    const SizedBox(width: 3),
                                     const Icon(Icons.close,
-                                        size: 12, color: Colors.red),
+                                        size: 11, color: Colors.red),
                                   ],
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 6),
+                              // Count
                               const Text('10',
                                   style: TextStyle(
                                       fontSize: 14,
-                                      fontWeight: FontWeight.bold)),
-                              const SizedBox(width: 4),
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF222222))),
+                              const SizedBox(width: 5),
+                              // + button
                               Container(
-                                width: 24,
-                                height: 24,
+                                width: 22,
+                                height: 22,
                                 decoration: BoxDecoration(
                                   color: const Color(0xFF3998FC),
                                   borderRadius: BorderRadius.circular(5),
                                 ),
                                 child: const Icon(Icons.add,
-                                    color: Colors.white, size: 16),
+                                    color: Colors.white, size: 14),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 6),
+
+                          const SizedBox(height: 5),
+
                           Text(
                             'Stok Perkiraan: $_totalItems',
                             style: const TextStyle(
-                                fontSize: 11,
-                                color: Colors.grey,
+                                fontSize: 10,
+                                color: Color(0xFF999999),
                                 fontStyle: FontStyle.italic),
                           ),
                         ],
@@ -560,29 +638,26 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
 
-                // Description field
+                const SizedBox(height: 10),
+
+                // Description placeholder
                 Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 8),
                   decoration: BoxDecoration(
                     border: Border.all(color: const Color(0xFFDDDDDD)),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                  child: TextField(
-                    controller: _descController,
-                    maxLines: 2,
-                    style: const TextStyle(fontSize: 12),
-                    decoration: const InputDecoration(
-                      hintText:
-                          'Contoh: Laptop merek Asus ROG Core i9 dengan RAM 8',
-                      hintStyle:
-                          TextStyle(fontSize: 11, color: Colors.grey),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.all(10),
-                    ),
+                  child: const Text(
+                    'Contoh: Laptop merek Asus ROG Core i9 dengan RAM 8',
+                    style: TextStyle(
+                        fontSize: 11, color: Color(0xFFBBBBBB)),
                   ),
                 ),
-                const SizedBox(height: 14),
+
+                const SizedBox(height: 12),
 
                 // Tambah Barang button
                 SizedBox(
@@ -601,26 +676,30 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8)),
-                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 12),
                     ),
                     child: const Text('Tambah Barang',
                         style: TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.bold)),
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
             ),
           ),
+
+          const SizedBox(height: 12),
         ],
       ),
     );
   }
 
   // ─────────────────────────────────────────────
-  // TAB 1 — HISTORY PENAMBAHAN
+  // HISTORY SECTION
   // ─────────────────────────────────────────────
 
-  Widget _buildHistoryTab() {
+  Widget _buildHistorySection() {
     final query = _searchController.text.toLowerCase();
     final filtered = _items.where((item) {
       if (query.isEmpty) return true;
@@ -629,124 +708,101 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
       return name.contains(query) || cat.contains(query);
     }).toList()
       ..sort((a, b) {
-        final dA =
-            DateTime.tryParse(a['created_at']?.toString() ?? '') ?? DateTime(2000);
-        final dB =
-            DateTime.tryParse(b['created_at']?.toString() ?? '') ?? DateTime(2000);
+        final dA = DateTime.tryParse(
+                a['created_at']?.toString() ?? '') ??
+            DateTime(2000);
+        final dB = DateTime.tryParse(
+                b['created_at']?.toString() ?? '') ??
+            DateTime(2000);
         return dB.compareTo(dA);
       });
 
     return Padding(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Riwayat Penambahan Stok',
             style: TextStyle(
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF1A1A1A)),
           ),
-          const SizedBox(height: 10),
-          if (_isLoading)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(40),
-                child:
-                    CircularProgressIndicator(color: Color(0xFF3998FC)),
-              ),
-            )
-          else if (filtered.isEmpty)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(40),
-                child: Text(
-                  _items.isEmpty
-                      ? 'Belum ada data barang'
-                      : 'Tidak ada hasil untuk "$query"',
-                  style: const TextStyle(color: Colors.grey),
-                ),
-              ),
-            )
-          else
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE8E8E8)),
-              ),
-              child: Column(
-                children: [
-                  // Table header
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 8),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF5F5F5),
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(12)),
-                    ),
-                    child: const Row(
-                      children: [
-                        Expanded(
-                            flex: 3,
-                            child: Text('Nama Barang',
-                                style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold))),
-                        Expanded(
-                            flex: 2,
-                            child: Text('Kategori',
-                                style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold))),
-                        Expanded(
-                            flex: 2,
-                            child: Text('Ditambahkan\nTanggal',
-                                style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold))),
-                        SizedBox(
-                          width: 32,
-                          child: Text('Jum',
-                              textAlign: TextAlign.center,
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFEEEEEE)),
+            ),
+            child: Column(
+              children: [
+                // ── Table header ──
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 8),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFF5F5F5),
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(10)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Expanded(
+                          flex: 3,
+                          child: Text('Nama Barang',
                               style: TextStyle(
                                   fontSize: 10,
-                                  fontWeight: FontWeight.bold)),
-                        ),
-                      ],
-                    ),
+                                  fontWeight: FontWeight.bold))),
+                      Expanded(
+                          flex: 2,
+                          child: Text('Kategori',
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold))),
+                      Expanded(
+                          flex: 3,
+                          child: Text('Ditambahkan\nOleh',
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold))),
+                      Expanded(
+                          flex: 3,
+                          child: Text('Ditambahkan\nTanggal',
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold))),
+                      SizedBox(
+                        width: 30,
+                        child: Text('Jum',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold)),
+                      ),
+                    ],
                   ),
-
-                  // Rows
-                  ...filtered.take(15).map(_buildHistoryRow),
-                ],
-              ),
-            ),
-          const SizedBox(height: 16),
-
-          // Lanjut button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const DetailPenambahanBarangAdmin(),
                 ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3998FC),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
-                padding: const EdgeInsets.symmetric(vertical: 13),
-              ),
-              child: const Text('Lanjut',
-                  style: TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.bold)),
+
+                // ── Rows ──
+                if (_isLoading)
+                  const Padding(
+                    padding: EdgeInsets.all(32),
+                    child: Center(
+                        child: CircularProgressIndicator(
+                            color: Color(0xFF3998FC))),
+                  )
+                else if (filtered.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.all(28),
+                    child: Center(
+                        child: Text('Belum ada data barang',
+                            style: TextStyle(color: Colors.grey))),
+                  )
+                else
+                  ...filtered.take(20).map(_buildHistoryRow),
+              ],
             ),
           ),
         ],
@@ -756,56 +812,109 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
 
   Widget _buildHistoryRow(Map<String, dynamic> item) {
     final catName = _categoryName(item['category_id']);
-    final dateStr = _formatDate(item['created_at']?.toString());
+    final date = _formatDate(item['created_at']?.toString());
     final stock = item['stock']?.toString() ?? '0';
     final name = item['name']?.toString() ?? '-';
 
     return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: const BoxDecoration(
         border: Border(
-            bottom: BorderSide(color: Color(0xFFF0F0F0), width: 1)),
+            bottom: BorderSide(color: Color(0xFFF2F2F2), width: 1)),
       ),
+      padding:
+          const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       child: Row(
         children: [
+          // Nama Barang + icon
           Expanded(
             flex: 3,
             child: Row(
               children: [
-                const Icon(Icons.inventory_2_outlined,
-                    size: 13, color: Color(0xFF3998FC)),
+                Container(
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEEEEEE),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Icon(Icons.devices,
+                      size: 13, color: Colors.grey),
+                ),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(name,
                       style: const TextStyle(
-                          fontSize: 11, fontWeight: FontWeight.w500),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500),
                       overflow: TextOverflow.ellipsis),
                 ),
               ],
             ),
           ),
+          // Kategori
           Expanded(
             flex: 2,
             child: Text(catName,
-                style:
-                    const TextStyle(fontSize: 11, color: Colors.grey),
+                style: const TextStyle(
+                    fontSize: 10, color: Color(0xFF555555)),
                 overflow: TextOverflow.ellipsis),
           ),
+          // Ditambahkan Oleh
           Expanded(
-            flex: 2,
-            child: Text(dateStr,
-                style:
-                    const TextStyle(fontSize: 10, color: Colors.grey)),
+            flex: 3,
+            child: Text(_adminUsername,
+                style: const TextStyle(
+                    fontSize: 10, color: Color(0xFF555555)),
+                overflow: TextOverflow.ellipsis),
           ),
+          // Tanggal
+          Expanded(
+            flex: 3,
+            child: Text(date,
+                style: const TextStyle(
+                    fontSize: 10, color: Color(0xFF555555))),
+          ),
+          // Jumlah
           SizedBox(
-            width: 32,
+            width: 30,
             child: Text(stock,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.bold)),
+                    fontSize: 11, fontWeight: FontWeight.bold)),
           ),
         ],
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────
+  // LANJUT BUTTON
+  // ─────────────────────────────────────────────
+
+  Widget _buildLanjutButton() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 14, 12, 0),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const DetailPenambahanBarangAdmin(),
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF3998FC),
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+          ),
+          child: const Text('Lanjut',
+              style:
+                  TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+        ),
       ),
     );
   }
