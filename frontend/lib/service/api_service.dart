@@ -66,4 +66,31 @@ class ApiService {
 
     return response.statusCode == 200;
   }
+
+  /// Ambil daftar kategori dari API
+  static Future<List<dynamic>> getCategories(String token) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/categories'),
+      headers: {'Authorization': token},
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    return [];
+  }
+
+  /// Tambah kategori baru
+  static Future<bool> createCategory(String token, String name) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/categories'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token,
+      },
+      body: jsonEncode({'name': name}),
+    );
+
+    return response.statusCode == 200;
+  }
 }

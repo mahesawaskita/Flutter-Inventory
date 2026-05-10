@@ -10,17 +10,25 @@ exports.getItems = (req, res) => {
 
 // 🔹 CREATE ITEM
 exports.createItem = (req, res) => {
-  const { category_id, name, description, stock, condition } = req.body;
+  const { category_id, name, description, stock, condition, price } = req.body;
+
+  if (!name || name.trim() === '') {
+    return res.status(400).json({ message: 'Nama barang wajib diisi' });
+  }
 
   const sql = `
-    INSERT INTO items (category_id, name, description, stock, \`condition\`)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO items (category_id, name, description, stock, \`condition\`, price)
+    VALUES (?, ?, ?, ?, ?, ?)
   `;
 
-  db.query(sql, [category_id, name, description, stock, condition], (err) => {
-    if (err) return res.status(500).json(err);
-    res.json({ message: 'Item berhasil ditambahkan' });
-  });
+  db.query(
+    sql,
+    [category_id || null, name.trim(), description || '', stock || 0, condition || 'Tersedia', price || 0],
+    (err, result) => {
+      if (err) return res.status(500).json({ message: 'Gagal menambahkan barang', error: err.message });
+      res.json({ message: 'Item berhasil ditambahkan', id: result.insertId });
+    }
+  );
 };
 
 // 🔹 UPDATE ITEM

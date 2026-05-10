@@ -10,6 +10,8 @@ class PenambahanBarangAdmin extends StatefulWidget {
 }
 
 class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
+  int _activeTab = 0;
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -2018,11 +2020,13 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
                   ),
                 ),
               ),
+              // Dynamic tab underline
               Positioned(
-                left: 36,
+                left: _activeTab == 0 ? 36 : 148,
                 top: 376,
-                child: Container(
-                  width: 86,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: _activeTab == 0 ? 86 : 163,
                   height: 3,
                   decoration: ShapeDecoration(
                     color: const Color(0xFF3998FC),
@@ -2033,24 +2037,111 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
                 ),
               ),
 
-              // Tombol "Tambah Barang" — navigasi ke form tambah barang
-              Positioned(
-                left: 245,
-                top: 522,
-                child: GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const DetailPenambahanBarangAdmin(),
-                    ),
-                  ),
+              // Cover tab 0 content (Tambah Barang form) when History tab active
+              if (_activeTab == 1)
+                Positioned(
+                  left: 7,
+                  top: 400,
                   child: Container(
-                    width: 142,
-                    height: 30,
+                    width: 400,
+                    height: 170,
+                    color: const Color(0xFF1A1A1A),
+                  ),
+                ),
+
+              // Cover tab 1 content (History) when Tambah Barang tab active
+              if (_activeTab == 0)
+                Positioned(
+                  left: 7,
+                  top: 550,
+                  child: Container(
+                    width: 400,
+                    height: 190,
+                    color: const Color(0xFF1A1A1A),
+                  ),
+                ),
+
+              // Back button
+              Positioned(
+                left: 0,
+                top: 55,
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).maybePop(),
+                  child: Container(
+                    width: 80,
+                    height: 55,
                     color: Colors.transparent,
                   ),
                 ),
               ),
+
+              // Tab 0: Tambah Barang
+              Positioned(
+                left: 23,
+                top: 351,
+                child: GestureDetector(
+                  onTap: () => setState(() => _activeTab = 0),
+                  child: Container(
+                    width: 111,
+                    height: 36,
+                    color: Colors.transparent,
+                  ),
+                ),
+              ),
+
+              // Tab 1: History Penambahan
+              Positioned(
+                left: 134,
+                top: 351,
+                child: GestureDetector(
+                  onTap: () => setState(() => _activeTab = 1),
+                  child: Container(
+                    width: 163,
+                    height: 36,
+                    color: Colors.transparent,
+                  ),
+                ),
+              ),
+
+              // "Tambah Barang" blue button (tab 0 only)
+              if (_activeTab == 0)
+                Positioned(
+                  left: 245,
+                  top: 522,
+                  child: GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const DetailPenambahanBarangAdmin(),
+                      ),
+                    ),
+                    child: Container(
+                      width: 142,
+                      height: 30,
+                      color: Colors.transparent,
+                    ),
+                  ),
+                ),
+
+              // "Lanjut" button (tab 1 only)
+              if (_activeTab == 1)
+                Positioned(
+                  left: 119,
+                  top: 723,
+                  child: GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const DetailPenambahanBarangAdmin(),
+                      ),
+                    ),
+                    child: Container(
+                      width: 175,
+                      height: 30,
+                      color: Colors.transparent,
+                    ),
+                  ),
+                ),
             ],
                   ),
                 ),

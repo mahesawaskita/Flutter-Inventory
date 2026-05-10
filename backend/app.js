@@ -4,11 +4,13 @@ const authMiddleware = require('./middleware/authMiddleware');
 const db = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const itemRoutes = require('./routes/itemRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
 
 
 app.use(express.json());
 
 app.use('/api/items', itemRoutes);
+app.use('/api/categories', categoryRoutes);
 
 app.get('/users', authMiddleware, (req, res) => {
   db.query('SELECT * FROM users', (err, result) => {
