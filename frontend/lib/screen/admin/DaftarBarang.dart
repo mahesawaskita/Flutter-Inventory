@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/constants/app_assets.dart';
+import 'package:frontend/screen/admin/EditBarang.dart';
 
 class DaftarBarangPage extends StatefulWidget {
   const DaftarBarangPage({super.key});
@@ -676,7 +677,12 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
                   shape: const CircleBorder(),
                   clipBehavior: Clip.antiAlias,
                   child: InkWell(
-                    onTap: () {},
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const EditBarangAdmin(),
+                      ),
+                    ),
                     child: const Padding(
                       padding: EdgeInsets.all(8),
                       child: Icon(

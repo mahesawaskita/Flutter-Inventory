@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/constants/app_assets.dart';
+import 'package:frontend/screen/admin/TambahBarang.dart';
 
 class PenambahanBarangAdmin extends StatefulWidget {
   const PenambahanBarangAdmin({super.key});
@@ -2028,6 +2029,25 @@ class _PenambahanBarangAdminState extends State<PenambahanBarangAdmin> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15),
                     ),
+                  ),
+                ),
+              ),
+
+              // Tombol "Tambah Barang" — navigasi ke form tambah barang
+              Positioned(
+                left: 245,
+                top: 522,
+                child: GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const DetailPenambahanBarangAdmin(),
+                    ),
+                  ),
+                  child: Container(
+                    width: 142,
+                    height: 30,
+                    color: Colors.transparent,
                   ),
                 ),
               ),

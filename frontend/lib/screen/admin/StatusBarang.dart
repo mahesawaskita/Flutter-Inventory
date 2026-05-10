@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/constants/app_assets.dart';
+import 'package:frontend/screen/admin/DetailBarang.dart';
 
 class StatusBarangAdmin extends StatelessWidget {
   const StatusBarangAdmin({super.key});
@@ -1814,6 +1815,61 @@ class StatusBarangAdmin extends StatelessWidget {
                       fit: BoxFit.fill,
                     ),
                   ),
+                ),
+              ),
+
+              // Baris Laptop — tap → detail barang
+              Positioned(
+                left: 26,
+                top: 470,
+                child: GestureDetector(
+                  onTap: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const DetailBarangAdmin())),
+                  child: Container(width: 360, height: 54, color: Colors.transparent),
+                ),
+              ),
+
+              // Baris Monitor — tap → detail barang
+              Positioned(
+                left: 26,
+                top: 523,
+                child: GestureDetector(
+                  onTap: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const DetailBarangAdmin())),
+                  child: Container(width: 360, height: 57, color: Colors.transparent),
+                ),
+              ),
+
+              // Baris Printer — tap → detail barang
+              Positioned(
+                left: 26,
+                top: 576,
+                child: GestureDetector(
+                  onTap: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const DetailBarangAdmin())),
+                  child: Container(width: 360, height: 58, color: Colors.transparent),
+                ),
+              ),
+
+              // Baris Mouse — tap → detail barang
+              Positioned(
+                left: 26,
+                top: 633,
+                child: GestureDetector(
+                  onTap: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const DetailBarangAdmin())),
+                  child: Container(width: 360, height: 57, color: Colors.transparent),
+                ),
+              ),
+
+              // Tombol "Lanjut" — tap → detail barang
+              Positioned(
+                left: 120,
+                top: 704,
+                child: GestureDetector(
+                  onTap: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const DetailBarangAdmin())),
+                  child: Container(width: 175, height: 40, color: Colors.transparent),
                 ),
               ),
             ],
