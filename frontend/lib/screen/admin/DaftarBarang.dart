@@ -12,60 +12,43 @@ class DaftarBarangPage extends StatefulWidget {
 }
 
 class _DaftarBarangPageState extends State<DaftarBarangPage> {
-  // ── Constants ──────────────────────────────
   static const _blue      = Color(0xFF1976D2);
   static const _amberDark = Color(0xFFF9A825);
   static const _red       = Color(0xFFE53935);
   static const int _pageSize = 10;
 
-  // ── State ──────────────────────────────────
   final _searchCtrl = TextEditingController();
-
   List<Map<String, dynamic>> _allItems   = [];
   List<Map<String, dynamic>> _categories = [];
   bool _isLoading   = true;
   bool _sortAsc     = true;
   String? _filterStatus;
-  int _activeCatTab    = 0;
-  int _activeSubTab    = 0;   // second row tabs
-  int _currentPage     = 1;
+  int _activeCatTab = 0;
+  int _activeSubTab = 0;
+  int _currentPage  = 1;
 
-  // Sub-tab labels (displayed in second tab row)
-  static const _subTabLabels = ['Semua', 'Stok ↗', 'Status', 'Tindakan'];
+  static const _subTabLabels = ['Semua', 'Elektronik', 'Stok ↗', 'Status status', 'Tindakan'];
 
   // ── Computed ───────────────────────────────
   String get _searchQuery => _searchCtrl.text.trim().toLowerCase();
 
   List<Map<String, dynamic>> get _filtered {
     var list = List<Map<String, dynamic>>.from(_allItems);
-
     if (_activeCatTab > 0 && _activeCatTab <= _categories.length) {
       final catId = _categories[_activeCatTab - 1]['id'];
-      list = list
-          .where((i) => i['category_id']?.toString() == catId.toString())
-          .toList();
+      list = list.where((i) => i['category_id']?.toString() == catId.toString()).toList();
     }
-
     if (_searchQuery.isNotEmpty) {
-      list = list
-          .where((i) =>
-              (i['name'] ?? '').toString().toLowerCase().contains(_searchQuery))
-          .toList();
+      list = list.where((i) => (i['name'] ?? '').toString().toLowerCase().contains(_searchQuery)).toList();
     }
-
     if (_filterStatus != null) {
-      list = list.where((i) {
-        final s = _itemStatus(i);
-        return s.name == _filterStatus;
-      }).toList();
+      list = list.where((i) => _itemStatus(i).name == _filterStatus).toList();
     }
-
     list.sort((a, b) {
       final sa = (a['stock'] as int? ?? 0);
       final sb = (b['stock'] as int? ?? 0);
       return _sortAsc ? sa.compareTo(sb) : sb.compareTo(sa);
     });
-
     return list;
   }
 
@@ -73,17 +56,13 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
     final all = _filtered;
     final start = (_currentPage - 1) * _pageSize;
     if (start >= all.length) return [];
-    final end = (start + _pageSize).clamp(0, all.length);
-    return all.sublist(start, end);
+    return all.sublist(start, (start + _pageSize).clamp(0, all.length));
   }
 
   int get _totalPages => (_filtered.length / _pageSize).ceil().clamp(1, 9999);
-
   int get _statTotal       => _allItems.length;
-  int get _statHampirHabis =>
-      _allItems.where((i) => _itemStatus(i) == _RowStatus.hampirHabis).length;
-  int get _statHabis =>
-      _allItems.where((i) => _itemStatus(i) == _RowStatus.habis).length;
+  int get _statHampirHabis => _allItems.where((i) => _itemStatus(i) == _RowStatus.hampirHabis).length;
+  int get _statHabis       => _allItems.where((i) => _itemStatus(i) == _RowStatus.habis).length;
 
   // ── Helpers ────────────────────────────────
   _RowStatus _itemStatus(Map<String, dynamic> item) {
@@ -96,44 +75,26 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
   String _categoryName(dynamic catId) {
     if (catId == null) return '-';
     return _categories
-        .firstWhere(
-          (c) => c['id'].toString() == catId.toString(),
-          orElse: () => {'name': '-'},
-        )['name']
+        .firstWhere((c) => c['id'].toString() == catId.toString(), orElse: () => {'name': '-'})['name']
         ?.toString() ?? '-';
   }
 
-  Color _catBg(String catName) {
-    if (catName == 'Aksesoris') return const Color(0xFFFFF9C4);
-    final colors = [
-      const Color(0xFFE3F2FD),
-      const Color(0xFFE8F5E9),
-      const Color(0xFFF3E5F5),
-      const Color(0xFFFFECB3),
-      const Color(0xFFE0F7FA),
-    ];
-    return colors[catName.hashCode.abs() % colors.length];
+  Color _catBg(String n) {
+    if (n == 'Aksesoris') return const Color(0xFFFFF9C4);
+    final c = [const Color(0xFFE3F2FD), const Color(0xFFE8F5E9), const Color(0xFFF3E5F5), const Color(0xFFFFECB3), const Color(0xFFE0F7FA)];
+    return c[n.hashCode.abs() % c.length];
   }
 
-  Color _catFg(String catName) {
-    if (catName == 'Aksesoris') return const Color(0xFFF57F17);
-    final colors = [
-      _blue,
-      const Color(0xFF2E7D32),
-      const Color(0xFF6A1B9A),
-      const Color(0xFFE65100),
-      const Color(0xFF00695C),
-    ];
-    return colors[catName.hashCode.abs() % colors.length];
+  Color _catFg(String n) {
+    if (n == 'Aksesoris') return const Color(0xFFF57F17);
+    final c = [_blue, const Color(0xFF2E7D32), const Color(0xFF6A1B9A), const Color(0xFFE65100), const Color(0xFF00695C)];
+    return c[n.hashCode.abs() % c.length];
   }
 
-  Widget _asset(String path, {double? w, double? h}) {
-    return Image.asset(
-      path, width: w, height: h, fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => Icon(Icons.inventory_2_outlined,
-          size: (w ?? 24) * 0.7, color: Colors.grey),
-    );
-  }
+  Widget _asset(String path, {double? w, double? h}) => Image.asset(
+        path, width: w, height: h, fit: BoxFit.contain,
+        errorBuilder: (_, __, ___) => Icon(Icons.inventory_2_outlined, size: (w ?? 24) * 0.7, color: Colors.grey),
+      );
 
   // ── Lifecycle ──────────────────────────────
   @override
@@ -165,12 +126,8 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
         }
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal memuat data: $e'),
-              backgroundColor: Colors.red),
-        );
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memuat data: $e'), backgroundColor: Colors.red));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -183,9 +140,7 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
         title: const Text('Hapus Barang'),
         content: Text('Yakin ingin menghapus "${item['name']}"?'),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Batal')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(backgroundColor: _red),
@@ -212,8 +167,7 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (_) {
         final options = <String?>[null, 'tersedia', 'hampirHabis', 'habis'];
         final labels  = ['Semua Status', 'Tersedia', 'Hampir Habis', 'Habis'];
@@ -223,19 +177,13 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
             children: [
               const Padding(
                 padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: Text('Filter Status',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                child: Text('Filter Status', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
               ),
               ...List.generate(options.length, (i) => ListTile(
                 title: Text(labels[i]),
-                trailing: _filterStatus == options[i]
-                    ? const Icon(Icons.check, color: _blue)
-                    : null,
+                trailing: _filterStatus == options[i] ? const Icon(Icons.check, color: _blue) : null,
                 onTap: () {
-                  setState(() {
-                    _filterStatus = options[i];
-                    _currentPage = 1;
-                  });
+                  setState(() { _filterStatus = options[i]; _currentPage = 1; });
                   Navigator.pop(context);
                 },
               )),
@@ -254,16 +202,12 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
       builder: (ctx) => AlertDialog(
         title: const Text('Tambah Kategori'),
         content: TextField(
-          controller: ctrl,
-          autofocus: true,
+          controller: ctrl, autofocus: true,
           textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(
-              hintText: 'Nama kategori', border: OutlineInputBorder()),
+          decoration: const InputDecoration(hintText: 'Nama kategori', border: OutlineInputBorder()),
         ),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Batal')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
           ElevatedButton(
             onPressed: () async {
               final name = ctrl.text.trim();
@@ -288,8 +232,7 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (_) => Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -297,17 +240,13 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(item['name']?.toString() ?? '-',
-                style: const TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.bold)),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const Divider(height: 20),
             _detailRow('Kategori', catName),
             _detailRow('Stok', '${item['stock'] ?? 0}'),
             _detailRow('Kondisi', item['condition']?.toString() ?? '-'),
-            _detailRow('Harga', 'Rp ${(item['price'] ?? 0).toString()}'),
             _detailRow('Deskripsi',
-                item['description']?.toString().isNotEmpty == true
-                    ? item['description'].toString()
-                    : '-'),
+                item['description']?.toString().isNotEmpty == true ? item['description'].toString() : '-'),
             const SizedBox(height: 12),
           ],
         ),
@@ -324,42 +263,31 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ── Header ──────────────────────────
-            Container(
-              color: const Color(0xFFF2F4F7),
-              padding: const EdgeInsets.fromLTRB(8, 8, 12, 0),
+            // ── Header (light gray bg) ──
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 8, 12, 4),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Back button
                   IconButton(
-                    icon: const Icon(Icons.arrow_back,
-                        color: Colors.black87, size: 22),
+                    icon: const Icon(Icons.arrow_back, color: Colors.black87, size: 22),
                     onPressed: () => Navigator.of(context).maybePop(),
                   ),
-                  // Centered icon
                   Expanded(
                     child: Center(
                       child: Container(
-                        width: 64,
-                        height: 64,
-                        padding: const EdgeInsets.all(8),
+                        width: 64, height: 64,
+                        padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: Colors.grey.shade300),
-                          boxShadow: [
-                            BoxShadow(
-                                color: Colors.black.withOpacity(0.10),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3)),
-                          ],
+                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.10), blurRadius: 8, offset: const Offset(0, 3))],
                         ),
-                        child: _asset(AppAssets.dfJudul, w: 48, h: 48),
+                        child: _asset(AppAssets.dfJudul, w: 44, h: 44),
                       ),
                     ),
                   ),
-                  // Settings button
                   Material(
                     color: Colors.grey.shade300,
                     shape: const CircleBorder(),
@@ -368,8 +296,7 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
                       onTap: () {},
                       child: Padding(
                         padding: const EdgeInsets.all(9),
-                        child: Icon(Icons.settings_outlined,
-                            size: 20, color: Colors.grey.shade700),
+                        child: Icon(Icons.settings_outlined, size: 20, color: Colors.grey.shade700),
                       ),
                     ),
                   ),
@@ -377,13 +304,12 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
               ),
             ),
 
-            // ── White content panel ──────────────
+            // ── White panel ──
             Expanded(
               child: Container(
-                margin: const EdgeInsets.only(top: 6),
                 decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: RefreshIndicator(
@@ -394,15 +320,11 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
                     children: [
                       // Title
                       const Padding(
-                        padding: EdgeInsets.fromLTRB(16, 18, 16, 0),
+                        padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
                         child: Text('Daftar Barang',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.black87)),
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.black87)),
                       ),
-
                       const SizedBox(height: 14),
 
                       // ── Stats cards ──
@@ -412,55 +334,42 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Expanded(
-                                child: _summaryCard(
-                                  accentColor: _blue,
-                                  subtitleColor: const Color(0xFF42A5F5),
-                                  title: 'Total Barang',
-                                  value: _statTotal.toString(),
-                                  subtitle: '+55 sejak minggu lalu',
-                                  asset: AppAssets.dfTotal,
-                                ),
-                              ),
+                              Expanded(child: _statCard(
+                                accentColor: _blue,
+                                subtitleColor: const Color(0xFF42A5F5),
+                                title: 'Total Barang',
+                                value: '$_statTotal',
+                                subtitle: '+55 sejak\nminggu lalu',
+                                asset: AppAssets.dfTotal,
+                              )),
                               const SizedBox(width: 8),
-                              Expanded(
-                                child: _summaryCard(
-                                  accentColor: _amberDark,
-                                  subtitleColor: _amberDark,
-                                  title: 'Barang Hampir Habis',
-                                  value: _statHampirHabis.toString(),
-                                  subtitle: '3 minggu lalu',
-                                  asset: AppAssets.dfHampirHabis,
-                                ),
-                              ),
+                              Expanded(child: _statCard(
+                                accentColor: _amberDark,
+                                subtitleColor: _amberDark,
+                                title: 'Barang Hampir Habis',
+                                value: '$_statHampirHabis',
+                                subtitle: '3 minggu lalu',
+                                asset: AppAssets.dfHampirHabis,
+                              )),
                               const SizedBox(width: 8),
-                              Expanded(
-                                child: _summaryCard(
-                                  accentColor: _red,
-                                  subtitleColor: _red,
-                                  title: 'Barang Habis',
-                                  value: _statHabis.toString(),
-                                  subtitle: '2 minggu lalu',
-                                  asset: AppAssets.dfBarangHabis,
-                                ),
-                              ),
+                              Expanded(child: _statCard(
+                                accentColor: _red,
+                                subtitleColor: _red,
+                                title: 'Barang\nHabis',
+                                value: '$_statHabis',
+                                subtitle: '2 minggu lalu',
+                                asset: AppAssets.dfBarangHabis,
+                              )),
                             ],
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 12),
 
                       // ── Category tabs ──
                       _buildCategoryTabs(),
-
-                      // Thin divider below tabs
-                      Divider(
-                          height: 1,
-                          thickness: 1,
-                          color: Colors.grey.shade200),
-
-                      const SizedBox(height: 10),
+                      Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
+                      const SizedBox(height: 8),
 
                       // ── Search + Filter + Sortir ──
                       Padding(
@@ -469,138 +378,81 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
                           children: [
                             Expanded(
                               child: SizedBox(
-                                height: 40,
+                                height: 38,
                                 child: TextField(
                                   controller: _searchCtrl,
                                   style: const TextStyle(fontSize: 13),
                                   decoration: InputDecoration(
                                     hintText: 'Cari nama barang...',
-                                    hintStyle: TextStyle(
-                                        color: Colors.grey.shade500,
-                                        fontSize: 13),
-                                    prefixIcon: Icon(Icons.search,
-                                        color: Colors.grey.shade600, size: 20),
+                                    hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+                                    prefixIcon: Icon(Icons.search, color: Colors.grey.shade500, size: 19),
                                     suffixIcon: _searchQuery.isNotEmpty
-                                        ? IconButton(
-                                            icon: const Icon(Icons.clear,
-                                                size: 18),
-                                            onPressed: () =>
-                                                _searchCtrl.clear(),
-                                          )
+                                        ? IconButton(icon: const Icon(Icons.clear, size: 17), onPressed: () => _searchCtrl.clear())
                                         : null,
                                     isDense: true,
                                     filled: true,
-                                    fillColor: const Color(0xFFF5F5F5),
-                                    contentPadding:
-                                        const EdgeInsets.symmetric(
-                                            horizontal: 8, vertical: 10),
-                                    border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(24),
-                                        borderSide: BorderSide.none),
-                                    enabledBorder: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(24),
-                                        borderSide: BorderSide.none),
-                                    focusedBorder: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(24),
-                                        borderSide: const BorderSide(
-                                            color: _blue, width: 1.5)),
+                                    fillColor: const Color(0xFFF0F0F0),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 9),
+                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
+                                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
+                                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: const BorderSide(color: _blue, width: 1.5)),
                                   ),
                                 ),
                               ),
                             ),
                             const SizedBox(width: 8),
-                            _pillAction(
-                              label: _filterStatus == null
-                                  ? 'Filter'
-                                  : 'Filter ✓',
+                            _pillBtn(
+                              label: _filterStatus == null ? 'Filter' : 'Filter ✓',
                               icon: Icons.filter_list_rounded,
                               active: _filterStatus != null,
                               onTap: _showFilterDialog,
                             ),
                             const SizedBox(width: 6),
-                            _pillAction(
-                              label: _sortAsc ? 'Sortir' : 'Sortir ↓',
-                              icon: Icons.sort_rounded,
-                              onTap: () => setState(() {
-                                _sortAsc = !_sortAsc;
-                                _currentPage = 1;
-                              }),
+                            _pillBtn(
+                              label: 'Sortir',
+                              icon: _sortAsc ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                              onTap: () => setState(() { _sortAsc = !_sortAsc; _currentPage = 1; }),
                             ),
                           ],
                         ),
                       ),
-
                       const SizedBox(height: 8),
 
-                      // ── Secondary filter tabs ──
+                      // ── Sub-tabs ──
                       _buildSubTabs(),
-
                       const SizedBox(height: 8),
 
                       // ── Table header ──
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 8, horizontal: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade200,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                          decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(8)),
                           child: Row(
                             children: [
-                              Expanded(
-                                  flex: 22,
-                                  child: _headerCell('Nama Barang')),
-                              Expanded(
-                                  flex: 14,
-                                  child: _headerCell('Kategori')),
-                              Expanded(
-                                  flex: 10,
-                                  child: _headerCell('Stok',
-                                      trailing:
-                                          _sortAsc ? ' ↑' : ' ↓')),
-                              Expanded(
-                                  flex: 16,
-                                  child: _headerCell('Status')),
-                              Expanded(
-                                  flex: 14,
-                                  child: _headerCell('Tindakan')),
+                              Expanded(flex: 4, child: _thCell('Nama Barang')),
+                              Expanded(flex: 2, child: _thCell('Kategori')),
+                              Expanded(flex: 1, child: _thCell('Stok')),
+                              Expanded(flex: 3, child: _thCell('Tindakan')),
                             ],
                           ),
                         ),
                       ),
+                      const SizedBox(height: 4),
 
-                      const SizedBox(height: 6),
-
-                      // ── List / empty / loading ──
+                      // ── List ──
                       Expanded(
                         child: _isLoading
-                            ? const Center(
-                                child: CircularProgressIndicator(
-                                    color: _blue))
+                            ? const Center(child: CircularProgressIndicator(color: _blue))
                             : _page.isEmpty
-                                ? Center(
-                                    child: Text(
-                                      _searchQuery.isNotEmpty
-                                          ? 'Tidak ada hasil untuk "$_searchQuery"'
-                                          : 'Belum ada barang',
-                                      style: TextStyle(
-                                          color: Colors.grey.shade600),
-                                    ),
-                                  )
+                                ? Center(child: Text(
+                                    _searchQuery.isNotEmpty ? 'Tidak ada hasil untuk "$_searchQuery"' : 'Belum ada barang',
+                                    style: TextStyle(color: Colors.grey.shade600)))
                                 : ListView.separated(
-                                    padding:
-                                        const EdgeInsets.fromLTRB(
-                                            12, 0, 12, 8),
+                                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
                                     itemCount: _page.length,
-                                    separatorBuilder: (_, __) =>
-                                        const SizedBox(height: 6),
-                                    itemBuilder: (_, i) =>
-                                        _dataRow(_page[i]),
+                                    separatorBuilder: (_, __) => const SizedBox(height: 6),
+                                    itemBuilder: (_, i) => _dataRow(_page[i]),
                                   ),
                       ),
 
@@ -612,17 +464,11 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
               ),
             ),
 
-            // ── Logo ──
+            // ── Logo footer ──
             Container(
               color: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Center(
-                child: SizedBox(
-                  height: 40,
-                  width: 40,
-                  child: Image.asset(AppAssets.splash, fit: BoxFit.contain),
-                ),
-              ),
+              child: Center(child: SizedBox(height: 40, width: 40, child: Image.asset(AppAssets.splash, fit: BoxFit.contain))),
             ),
           ],
         ),
@@ -637,67 +483,48 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
       height: 40,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 14),
         itemCount: tabs.length + 2,
         separatorBuilder: (_, __) => const SizedBox(width: 4),
-        itemBuilder: (context, i) {
+        itemBuilder: (_, i) {
           if (i == tabs.length + 1) {
-            return Center(
-              child: IconButton(
-                padding: EdgeInsets.zero,
-                constraints:
-                    const BoxConstraints(minWidth: 32, minHeight: 32),
-                icon: Icon(Icons.more_horiz,
-                    color: Colors.grey.shade700, size: 20),
-                onPressed: () {},
-              ),
-            );
+            return Center(child: IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+              icon: Icon(Icons.more_horiz, color: Colors.grey.shade700, size: 20),
+              onPressed: () {},
+            ));
           }
           if (i == tabs.length) {
-            return GestureDetector(
+            return Center(child: GestureDetector(
               onTap: _showAddCategoryDialog,
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Text('+ Tambah Kategori',
-                      style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: _blue)),
-                ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text('+ Tambah Kategori',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: _blue)),
               ),
-            );
+            ));
           }
           final active = i == _activeCatTab;
           return GestureDetector(
-            onTap: () => setState(() {
-              _activeCatTab = i;
-              _currentPage = 1;
-            }),
+            onTap: () => setState(() { _activeCatTab = i; _currentPage = 1; }),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Text(
-                    tabs[i],
-                    style: TextStyle(
-                        fontSize: 13,
-                        fontWeight:
-                            active ? FontWeight.w700 : FontWeight.w500,
-                        color: active
-                            ? Colors.black87
-                            : Colors.grey.shade600),
-                  ),
+                  child: Text(tabs[i],
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                          color: active ? Colors.black87 : Colors.grey.shade600)),
                 ),
                 const SizedBox(height: 6),
                 Container(
                   height: 3,
                   width: active ? 36 : 0,
                   margin: const EdgeInsets.symmetric(horizontal: 10),
-                  decoration: BoxDecoration(
-                      color: _blue,
-                      borderRadius: BorderRadius.circular(2)),
+                  decoration: BoxDecoration(color: _blue, borderRadius: BorderRadius.circular(2)),
                 ),
               ],
             ),
@@ -707,10 +534,10 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
     );
   }
 
-  // ── SECONDARY SUB-TABS ─────────────────────
+  // ── SUB-TABS ───────────────────────────────
   Widget _buildSubTabs() {
     return SizedBox(
-      height: 34,
+      height: 32,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -721,37 +548,20 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
           return GestureDetector(
             onTap: () {
               setState(() => _activeSubTab = i);
-              if (i == 1) {
-                // Stok ↗: toggle sort
-                setState(() {
-                  _sortAsc = !_sortAsc;
-                  _currentPage = 1;
-                });
-              } else if (i == 2) {
-                // Status: open filter
-                _showFilterDialog();
-              }
+              if (i == 2) setState(() { _sortAsc = !_sortAsc; _currentPage = 1; });
+              if (i == 3) _showFilterDialog();
             },
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
               decoration: BoxDecoration(
                 color: active ? Colors.white : Colors.grey.shade100,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                    color: active ? _blue : Colors.grey.shade300,
-                    width: active ? 1.5 : 1),
-                boxShadow: active
-                    ? [
-                        BoxShadow(
-                            color: _blue.withOpacity(0.15),
-                            blurRadius: 4,
-                            offset: const Offset(0, 1))
-                      ]
-                    : null,
+                border: Border.all(color: active ? _blue : Colors.grey.shade300, width: active ? 1.5 : 1),
+                boxShadow: active ? [BoxShadow(color: _blue.withOpacity(0.12), blurRadius: 4)] : null,
               ),
               child: Text(_subTabLabels[i],
                   style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: active ? _blue : Colors.grey.shade600)),
             ),
@@ -769,42 +579,24 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              'Menampilkan ${_page.length} dari ${_filtered.length} barang',
-              style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
-            ),
+            child: Text('Menampilkan ${_page.length} dari ${_filtered.length} barang',
+                style: TextStyle(fontSize: 11, color: Colors.grey.shade700)),
           ),
-          _pageNavBtn(
-            icon: Icons.chevron_left,
-            onTap: _currentPage > 1
-                ? () => setState(() => _currentPage--)
-                : null,
-          ),
-          ...List.generate(
-            _totalPages.clamp(0, 3),
-            (i) => _pageNum('${i + 1}',
-                active: i + 1 == _currentPage,
-                onTap: () => setState(() => _currentPage = i + 1)),
-          ),
+          _pgNavBtn(icon: Icons.chevron_left,
+              onTap: _currentPage > 1 ? () => setState(() => _currentPage--) : null),
+          ...List.generate(_totalPages.clamp(0, 3), (i) => _pgNum('${i + 1}',
+              active: i + 1 == _currentPage, onTap: () => setState(() => _currentPage = i + 1))),
           if (_totalPages > 3) ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 3),
-              child: Text('...',
-                  style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontWeight: FontWeight.w600)),
+              child: Text('...', style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.w600)),
             ),
-            _pageNum('$_totalPages',
+            _pgNum('$_totalPages',
                 active: _currentPage == _totalPages,
-                onTap: () =>
-                    setState(() => _currentPage = _totalPages)),
+                onTap: () => setState(() => _currentPage = _totalPages)),
           ],
-          _pageNavBtn(
-            icon: Icons.chevron_right,
-            onTap: _currentPage < _totalPages
-                ? () => setState(() => _currentPage++)
-                : null,
-          ),
+          _pgNavBtn(icon: Icons.chevron_right,
+              onTap: _currentPage < _totalPages ? () => setState(() => _currentPage++) : null),
         ],
       ),
     );
@@ -823,48 +615,33 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 4,
-              offset: const Offset(0, 1)),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 1))],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Nama Barang
           Expanded(
-            flex: 22,
+            flex: 4,
             child: Row(
               children: [
                 Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(8)),
-                  child: const Icon(Icons.inventory_2_outlined,
-                      size: 20, color: Colors.grey),
+                  width: 34, height: 34,
+                  decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(8)),
+                  child: const Icon(Icons.inventory_2_outlined, size: 18, color: Colors.grey),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 5),
                 Flexible(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(name,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12,
-                              color: Colors.black87),
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Colors.black87),
                           overflow: TextOverflow.ellipsis),
                       GestureDetector(
                         onTap: () => _showItemDetail(item),
                         child: const Text('Informasi',
-                            style: TextStyle(
-                                fontSize: 10,
-                                color: _blue,
-                                decoration: TextDecoration.underline)),
+                            style: TextStyle(fontSize: 10, color: _blue, decoration: TextDecoration.underline)),
                       ),
                     ],
                   ),
@@ -875,20 +652,13 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
 
           // Kategori
           Expanded(
-            flex: 14,
+            flex: 2,
             child: Center(
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                decoration: BoxDecoration(
-                    color: _catBg(catName),
-                    borderRadius: BorderRadius.circular(8)),
-                child: Text(catName,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w600,
-                        color: _catFg(catName)),
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+                decoration: BoxDecoration(color: _catBg(catName), borderRadius: BorderRadius.circular(6)),
+                child: Text(catName, textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: _catFg(catName)),
                     overflow: TextOverflow.ellipsis),
               ),
             ),
@@ -896,59 +666,41 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
 
           // Stok
           Expanded(
-            flex: 10,
-            child: Center(
-              child: Text('$stock',
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w700, fontSize: 13)),
-            ),
+            flex: 1,
+            child: Center(child: Text('$stock', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13))),
           ),
 
-          // Status
+          // Tindakan: status badge + optional % + edit + delete
           Expanded(
-            flex: 16,
-            child: Center(child: _statusBadge(status, stock)),
-          ),
-
-          // Tindakan
-          Expanded(
-            flex: 14,
+            flex: 3,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                _statusBadge(status),
+                if (status == _RowStatus.hampirHabis) ...[
+                  const SizedBox(width: 2),
+                  Text('${(stock / 5 * 100).round()}%',
+                      style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Colors.grey.shade700)),
+                ],
+                const Spacer(),
                 Material(
-                  color: _blue,
-                  shape: const CircleBorder(),
-                  clipBehavior: Clip.antiAlias,
+                  color: _blue, shape: const CircleBorder(), clipBehavior: Clip.antiAlias,
                   child: InkWell(
                     onTap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => EditBarangAdmin(item: item),
-                        ),
-                      );
+                      await Navigator.push(context, MaterialPageRoute(builder: (_) => EditBarangAdmin(item: item)));
                       _loadData();
                     },
-                    child: const Padding(
-                      padding: EdgeInsets.all(7),
-                      child: Icon(Icons.edit_outlined,
-                          size: 15, color: Colors.white),
-                    ),
+                    child: const Padding(padding: EdgeInsets.all(6),
+                        child: Icon(Icons.edit_outlined, size: 13, color: Colors.white)),
                   ),
                 ),
-                const SizedBox(width: 5),
+                const SizedBox(width: 4),
                 Material(
-                  color: _red,
-                  shape: const CircleBorder(),
-                  clipBehavior: Clip.antiAlias,
+                  color: _red, shape: const CircleBorder(), clipBehavior: Clip.antiAlias,
                   child: InkWell(
                     onTap: () => _deleteItem(item),
-                    child: const Padding(
-                      padding: EdgeInsets.all(7),
-                      child: Icon(Icons.delete_outline,
-                          size: 15, color: Colors.white),
-                    ),
+                    child: const Padding(padding: EdgeInsets.all(6),
+                        child: Icon(Icons.delete_outline, size: 13, color: Colors.white)),
                   ),
                 ),
               ],
@@ -960,90 +712,49 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
   }
 
   // ── STATUS BADGE ───────────────────────────
-  Widget _statusBadge(_RowStatus status, int stock) {
+  Widget _statusBadge(_RowStatus status) {
     switch (status) {
       case _RowStatus.tersedia:
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
           decoration: BoxDecoration(
               color: const Color(0xFFE8F5E9),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(6),
               border: Border.all(color: const Color(0xFF43A047))),
           child: const Text('Tersedia',
-              style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF2E7D32))),
+              style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: Color(0xFF2E7D32))),
         );
       case _RowStatus.hampirHabis:
-        final pct = stock / 5;
-        return SizedBox(
-          width: 80,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
-                decoration: BoxDecoration(
-                    color: const Color(0xFFFFF8E1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: _amberDark)),
-                child: const Text('Hampir Habis',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFFE65100))),
-              ),
-              const SizedBox(height: 3),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(3),
-                child: LinearProgressIndicator(
-                  value: pct.clamp(0, 1).toDouble(),
-                  minHeight: 4,
-                  backgroundColor: Colors.grey.shade300,
-                  color: _amberDark,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text('${(pct * 100).round()}%',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 9,
-                      color: Colors.grey.shade700,
-                      fontWeight: FontWeight.w600)),
-            ],
-          ),
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+          decoration: BoxDecoration(
+              color: const Color(0xFFFFF8E1),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: _amberDark)),
+          child: const Text('Hampir Habis',
+              style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: Color(0xFFE65100))),
         );
       case _RowStatus.habis:
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
           decoration: BoxDecoration(
               color: const Color(0xFFFFEBEE),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(6),
               border: Border.all(color: _red)),
           child: const Text('Habis',
-              style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFFC62828))),
+              style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: Color(0xFFC62828))),
         );
     }
   }
 
-  // ── HELPERS ────────────────────────────────
-  Widget _headerCell(String text, {String trailing = ''}) => Center(
-        child: Text('$text$trailing',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700)),
+  // ── SMALL HELPERS ──────────────────────────
+  Widget _thCell(String text) => Center(
+        child: Text(text, textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.grey.shade700)),
       );
 
-  Widget _summaryCard({
+  // Stats card — uses Border.all (uniform) to avoid Flutter borderRadius assertion
+  Widget _statCard({
     required Color accentColor,
     required Color subtitleColor,
     required String title,
@@ -1052,62 +763,32 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
     required String asset,
   }) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(10, 10, 8, 10),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border(
-          left: BorderSide(color: accentColor, width: 4),
-          top: BorderSide(color: Colors.grey.shade200),
-          right: BorderSide(color: Colors.grey.shade200),
-          bottom: BorderSide(color: Colors.grey.shade200),
-        ),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 4,
-              offset: const Offset(0, 2)),
-        ],
+        border: Border.all(color: accentColor.withOpacity(0.45), width: 1.5),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          SizedBox(height: 28, child: _asset(asset, w: 28, h: 28)),
-          const SizedBox(height: 4),
-          Text(title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                  fontSize: 9,
-                  height: 1.2,
-                  color: Colors.grey.shade700,
-                  fontWeight: FontWeight.w500)),
+          SizedBox(height: 26, child: _asset(asset, w: 26, h: 26)),
+          const SizedBox(height: 5),
+          Text(title, maxLines: 2, overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 9, height: 1.2, color: Colors.grey.shade700, fontWeight: FontWeight.w500)),
           const SizedBox(height: 2),
           Text(value,
-              style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.black87)),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black87)),
           const SizedBox(height: 2),
-          Text(subtitle,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                  fontSize: 9,
-                  color: subtitleColor,
-                  fontWeight: FontWeight.w500)),
+          Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 9, color: subtitleColor, fontWeight: FontWeight.w500)),
         ],
       ),
     );
   }
 
-  Widget _pillAction({
-    required String label,
-    required IconData icon,
-    VoidCallback? onTap,
-    bool active = false,
-  }) {
+  Widget _pillBtn({required String label, required IconData icon, VoidCallback? onTap, bool active = false}) {
     return Material(
       color: active ? _blue.withOpacity(0.08) : Colors.grey.shade100,
       borderRadius: BorderRadius.circular(20),
@@ -1118,21 +799,15 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-                color: active ? _blue : Colors.grey.shade300),
+            border: Border.all(color: active ? _blue : Colors.grey.shade300),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon,
-                  size: 15,
-                  color: active ? _blue : Colors.grey.shade700),
+              Icon(icon, size: 14, color: active ? _blue : Colors.grey.shade700),
               const SizedBox(width: 4),
-              Text(label,
-                  style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: active ? _blue : Colors.black87)),
+              Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
+                  color: active ? _blue : Colors.black87)),
             ],
           ),
         ),
@@ -1140,43 +815,30 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
     );
   }
 
-  Widget _pageNavBtn({required IconData icon, VoidCallback? onTap}) =>
-      Padding(
+  Widget _pgNavBtn({required IconData icon, VoidCallback? onTap}) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 2),
         child: Material(
           color: onTap != null ? Colors.grey.shade200 : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(6),
           child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(6),
-            child: Padding(
-              padding: const EdgeInsets.all(4),
-              child: Icon(icon,
-                  size: 18,
-                  color: onTap != null
-                      ? Colors.grey.shade800
-                      : Colors.grey.shade400),
-            ),
+            onTap: onTap, borderRadius: BorderRadius.circular(6),
+            child: Padding(padding: const EdgeInsets.all(4),
+                child: Icon(icon, size: 18, color: onTap != null ? Colors.grey.shade800 : Colors.grey.shade400)),
           ),
         ),
       );
 
-  Widget _pageNum(String n, {bool active = false, VoidCallback? onTap}) =>
-      Padding(
+  Widget _pgNum(String n, {bool active = false, VoidCallback? onTap}) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 2),
         child: Material(
           color: active ? _blue : Colors.grey.shade200,
           borderRadius: BorderRadius.circular(6),
           child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(6),
+            onTap: onTap, borderRadius: BorderRadius.circular(6),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-              child: Text(n,
-                  style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                      color: active ? Colors.white : Colors.black87)),
+              child: Text(n, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12,
+                  color: active ? Colors.white : Colors.black87)),
             ),
           ),
         ),
@@ -1187,18 +849,9 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
-              width: 90,
-              child: Text(label,
-                  style: TextStyle(
-                      fontSize: 13, color: Colors.grey.shade600)),
-            ),
+            SizedBox(width: 90, child: Text(label, style: TextStyle(fontSize: 13, color: Colors.grey.shade600))),
             const Text(': '),
-            Expanded(
-              child: Text(value,
-                  style: const TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w500)),
-            ),
+            Expanded(child: Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500))),
           ],
         ),
       );
