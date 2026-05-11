@@ -330,38 +330,36 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
                       // ── Stats cards ──
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: IntrinsicHeight(
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Expanded(child: _statCard(
-                                accentColor: _blue,
-                                subtitleColor: const Color(0xFF42A5F5),
-                                title: 'Total Barang',
-                                value: '$_statTotal',
-                                subtitle: '+55 sejak\nminggu lalu',
-                                asset: AppAssets.dfTotal,
-                              )),
-                              const SizedBox(width: 8),
-                              Expanded(child: _statCard(
-                                accentColor: _amberDark,
-                                subtitleColor: _amberDark,
-                                title: 'Barang Hampir Habis',
-                                value: '$_statHampirHabis',
-                                subtitle: '3 minggu lalu',
-                                asset: AppAssets.dfHampirHabis,
-                              )),
-                              const SizedBox(width: 8),
-                              Expanded(child: _statCard(
-                                accentColor: _red,
-                                subtitleColor: _red,
-                                title: 'Barang\nHabis',
-                                value: '$_statHabis',
-                                subtitle: '2 minggu lalu',
-                                asset: AppAssets.dfBarangHabis,
-                              )),
-                            ],
-                          ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: _statCard(
+                              accentColor: _blue,
+                              subtitleColor: const Color(0xFF42A5F5),
+                              title: 'Total Barang',
+                              value: '$_statTotal',
+                              subtitle: '+55 sejak minggu lalu',
+                              asset: AppAssets.dfTotal,
+                            )),
+                            const SizedBox(width: 8),
+                            Expanded(child: _statCard(
+                              accentColor: _amberDark,
+                              subtitleColor: _amberDark,
+                              title: 'Barang Hampir Habis',
+                              value: '$_statHampirHabis',
+                              subtitle: '3 minggu lalu',
+                              asset: AppAssets.dfHampirHabis,
+                            )),
+                            const SizedBox(width: 8),
+                            Expanded(child: _statCard(
+                              accentColor: _red,
+                              subtitleColor: _red,
+                              title: 'Barang Habis',
+                              value: '$_statHabis',
+                              subtitle: '2 minggu lalu',
+                              asset: AppAssets.dfBarangHabis,
+                            )),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -772,6 +770,7 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           SizedBox(height: 26, child: _asset(asset, w: 26, h: 26)),
           const SizedBox(height: 5),
