@@ -5,14 +5,15 @@ const {
   getItems,
   createItem,
   updateItem,
-  deleteItem
+  deleteItem,
+  upload,
 } = require('../controllers/itemController');
 
 const authMiddleware = require('../middleware/authMiddleware');
 
 // semua route diproteksi
 router.get('/', authMiddleware, getItems);
-router.post('/', authMiddleware, createItem);
+router.post('/', authMiddleware, upload, createItem);
 router.put('/:id', authMiddleware, updateItem);
 router.delete('/:id', authMiddleware, deleteItem);
 

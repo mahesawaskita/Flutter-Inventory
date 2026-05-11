@@ -16,21 +16,28 @@ class ApiService {
     return jsonDecode(response.body);
   }
 
-  /// Buat item baru di API
+  /// Buat item baru di API (support upload gambar)
   static Future<bool> createItem(
     String token,
-    Map<String, dynamic> data,
-  ) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/api/items'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': token,
-      },
-      body: jsonEncode(data),
-    );
+    Map<String, dynamic> data, {
+    String? imagePath,
+  }) async {
+    final uri = Uri.parse('$baseUrl/api/items');
+    final request = http.MultipartRequest('POST', uri);
 
-    // Debugging log
+    request.headers['Authorization'] = token;
+
+    data.forEach((key, value) {
+      if (value != null) request.fields[key] = value.toString();
+    });
+
+    if (imagePath != null) {
+      request.files.add(await http.MultipartFile.fromPath('image', imagePath));
+    }
+
+    final streamed = await request.send();
+    final response = await http.Response.fromStream(streamed);
+
     print("CREATE STATUS: ${response.statusCode}");
     print("CREATE BODY: ${response.body}");
 

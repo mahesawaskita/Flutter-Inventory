@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/service/api_service.dart';
 import 'package:frontend/service/auth_service.dart';
+import 'package:file_picker/file_picker.dart';
 
 class DetailPenambahanBarangAdmin extends StatefulWidget {
   const DetailPenambahanBarangAdmin({super.key});
@@ -16,7 +18,6 @@ class _DetailPenambahanBarangAdminState
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _stockController = TextEditingController();
-  final _priceController = TextEditingController();
   final _descController = TextEditingController();
 
   List<Map<String, dynamic>> _categories = [];
@@ -24,6 +25,7 @@ class _DetailPenambahanBarangAdminState
   String _selectedCondition = 'Tersedia';
   bool _isLoadingCategories = true;
   bool _isSaving = false;
+  File? _imageFile;
 
   static const _conditions = [
     'Tersedia',
@@ -42,9 +44,24 @@ class _DetailPenambahanBarangAdminState
   void dispose() {
     _nameController.dispose();
     _stockController.dispose();
-    _priceController.dispose();
     _descController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+      );
+      if (result != null && result.files.single.path != null && mounted) {
+        setState(() => _imageFile = File(result.files.single.path!));
+      }
+    } on PlatformException catch (e) {
+      if (mounted) _showError('Gagal buka galeri: ${e.message}');
+    } catch (e) {
+      if (mounted) _showError('Gagal memilih gambar: $e');
+    }
   }
 
   Future<void> _loadCategories() async {
@@ -82,12 +99,11 @@ class _DetailPenambahanBarangAdminState
         'name': _nameController.text.trim(),
         'category_id': _selectedCategory?['id'],
         'stock': int.tryParse(_stockController.text.trim()) ?? 0,
-        'price': double.tryParse(_priceController.text.trim()) ?? 0,
         'description': _descController.text.trim(),
         'condition': _selectedCondition,
       };
 
-      final ok = await ApiService.createItem(token, data);
+      final ok = await ApiService.createItem(token, data, imagePath: _imageFile?.path);
 
       if (!mounted) return;
       if (ok) {
@@ -197,30 +213,55 @@ class _DetailPenambahanBarangAdminState
               _sectionCard(children: [
                 // ── Foto Barang ──
                 GestureDetector(
-                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Fitur upload foto segera hadir')),
-                  ),
+                  onTap: _pickImage,
                   child: Container(
                     width: double.infinity,
-                    height: 100,
+                    height: 150,
                     decoration: BoxDecoration(
                       color: const Color(0xFFF5F5F5),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
                           color: const Color(0xFFCCCCCC), width: 1.5),
                     ),
-                    child: const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.camera_alt_outlined,
-                            size: 32, color: Colors.grey),
-                        SizedBox(height: 6),
-                        Text('Tambahkan Foto Barang',
-                            style: TextStyle(
-                                fontSize: 13, color: Colors.grey)),
-                      ],
-                    ),
+                    clipBehavior: Clip.hardEdge,
+                    child: _imageFile != null
+                        ? Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Image.file(_imageFile!, fit: BoxFit.cover),
+                              Positioned(
+                                top: 6,
+                                right: 6,
+                                child: GestureDetector(
+                                  onTap: () => setState(() => _imageFile = null),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.black54,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    padding: const EdgeInsets.all(4),
+                                    child: const Icon(Icons.close,
+                                        color: Colors.white, size: 18),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        : const Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.camera_alt_outlined,
+                                  size: 36, color: Colors.grey),
+                              SizedBox(height: 8),
+                              Text('Ketuk untuk tambahkan foto',
+                                  style: TextStyle(
+                                      fontSize: 13, color: Colors.grey)),
+                              SizedBox(height: 4),
+                              Text('Kamera atau Galeri',
+                                  style: TextStyle(
+                                      fontSize: 11, color: Color(0xFFAAAAAA))),
+                            ],
+                          ),
                   ),
                 ),
               ]),
@@ -302,45 +343,12 @@ class _DetailPenambahanBarangAdminState
 
               // ── Stok, Status, Harga ──
               _sectionCard(title: 'Detail Stok', children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _fieldLabel('Stok'),
-                          TextFormField(
-                            controller: _stockController,
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly
-                            ],
-                            decoration: _inputDeco('0'),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _fieldLabel('Harga (Rp)'),
-                          TextFormField(
-                            controller: _priceController,
-                            keyboardType:
-                                const TextInputType.numberWithOptions(
-                                    decimal: true),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                  RegExp(r'[\d.]'))
-                            ],
-                            decoration: _inputDeco('0'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                _fieldLabel('Stok'),
+                TextFormField(
+                  controller: _stockController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: _inputDeco('0'),
                 ),
                 const SizedBox(height: 14),
                 _fieldLabel('Status / Kondisi'),

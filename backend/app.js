@@ -8,6 +8,13 @@ const categoryRoutes = require('./routes/categoryRoutes');
 
 
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
+
+// Log setiap request masuk
+app.use((req, res, next) => {
+  console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.path}`);
+  next();
+});
 
 app.use('/api/items', itemRoutes);
 app.use('/api/categories', categoryRoutes);
