@@ -1,943 +1,411 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/constants/app_assets.dart';
+import 'package:flutter/services.dart';
+import 'package:frontend/service/api_service.dart';
+import 'package:frontend/service/auth_service.dart';
 
-class EditBarangAdmin extends StatelessWidget {
-  const EditBarangAdmin({super.key});
+class EditBarangAdmin extends StatefulWidget {
+  final Map<String, dynamic> item;
+
+  const EditBarangAdmin({super.key, required this.item});
+
+  @override
+  State<EditBarangAdmin> createState() => _EditBarangAdminState();
+}
+
+class _EditBarangAdminState extends State<EditBarangAdmin> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _nameController;
+  late final TextEditingController _stockController;
+  late final TextEditingController _descController;
+
+  List<Map<String, dynamic>> _categories = [];
+  Map<String, dynamic>? _selectedCategory;
+  String _selectedCondition = 'Tersedia';
+  bool _isLoadingCategories = true;
+  bool _isSaving = false;
+
+  static const _conditions = [
+    'Tersedia',
+    'Dipinjam',
+    'Rusak',
+    'Perlu Perbaikan',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.item['name']?.toString() ?? '');
+    _stockController = TextEditingController(text: widget.item['stock']?.toString() ?? '0');
+    _descController = TextEditingController(text: widget.item['description']?.toString() ?? '');
+
+    final condition = widget.item['condition']?.toString() ?? 'Tersedia';
+    _selectedCondition = _conditions.contains(condition) ? condition : 'Tersedia';
+
+    _loadCategories();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _stockController.dispose();
+    _descController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      final token = await AuthService.getToken();
+      if (token != null) {
+        final result = await ApiService.getCategories(token);
+        final cats = result.map((e) => Map<String, dynamic>.from(e)).toList();
+        if (mounted) {
+          setState(() {
+            _categories = cats;
+            final itemCatId = widget.item['category_id'];
+            _selectedCategory = cats.firstWhere(
+              (c) => c['id'].toString() == itemCatId.toString(),
+              orElse: () => cats.isNotEmpty ? cats.first : {},
+            );
+            if (_selectedCategory!.isEmpty) _selectedCategory = null;
+          });
+        }
+      }
+    } catch (_) {
+      // kategori tetap kosong
+    } finally {
+      if (mounted) setState(() => _isLoadingCategories = false);
+    }
+  }
+
+  Future<void> _saveItem() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isSaving = true);
+    try {
+      final token = await AuthService.getToken();
+      if (token == null) {
+        _showError('Sesi berakhir. Silakan login ulang.');
+        return;
+      }
+
+      final data = {
+        'name': _nameController.text.trim(),
+        'category_id': _selectedCategory?['id'],
+        'stock': int.tryParse(_stockController.text.trim()) ?? 0,
+        'description': _descController.text.trim(),
+        'condition': _selectedCondition,
+      };
+
+      final id = (widget.item['id'] as num).toInt();
+      final ok = await ApiService.updateItem(token, id, data);
+
+      if (!mounted) return;
+      if (ok) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Barang berhasil diperbarui!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.of(context).pop(true);
+      } else {
+        _showError('Gagal memperbarui barang. Periksa koneksi ke server.');
+      }
+    } catch (e) {
+      if (mounted) _showError('Error: $e');
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: Colors.red),
+    );
+  }
+
+  void _showAddCategoryDialog() {
+    final ctrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Tambah Kategori Baru'),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: const InputDecoration(
+            hintText: 'Nama kategori',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final name = ctrl.text.trim();
+              if (name.isEmpty) return;
+              final token = await AuthService.getToken();
+              if (token == null) return;
+              final ok = await ApiService.createCategory(token, name);
+              if (!ctx.mounted) return;
+              Navigator.pop(ctx);
+              if (ok) {
+                await _loadCategories();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Kategori berhasil ditambahkan'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF3998FC)),
+            child: const Text('Simpan', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          child: SizedBox(
-            width: constraints.maxWidth,
-            child: FittedBox(
-              fit: BoxFit.fitWidth,
-              alignment: Alignment.topCenter,
-              child: SizedBox(
-                width: 414,
-                height: 896,
-                child: Container(
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(color: const Color(0xFF1A1A1A)),
-                  child: Stack(
-                    children: [
-              Positioned(
-                left: 54.80,
-                top: 78.75,
-                child: Container(
-                  transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(3.11),
-                  width: 32.77,
-                  height: 32.77,
-                  child: Stack(),
-                ),
-              ),
-              Positioned(
-                left: 160,
-                top: 774,
-                child: Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.splash),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 5,
-                top: 116,
-                child: Container(
-                  width: 402,
-                  height: 652,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFFFFBFB),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 6,
-                        color: const Color(0xFFB0A0A0),
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 150,
-                top: 70,
-                child: Container(
-                  width: 108,
-                  height: 78,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFFFFBFB),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 3,
-                        color: const Color(0xFFB0A0A0),
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 185,
-                top: 51,
-                child: Container(
-                  width: 73,
-                  height: 66,
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(),
-                ),
-              ),
-              Positioned(
-                left: 348,
-                top: 135,
-                child: Container(
-                  width: 44,
-                  height: 40,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFD9D9D9),
-                    shape: OvalBorder(),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 356,
-                top: 140,
-                child: const SizedBox(
-                  width: 29,
-                  height: 31,
-                  child: Icon(
-                    Icons.settings,
-                    size: 26,
-                    color: Color(0xFF8D8D8D),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 142,
-                top: 159,
-                child: SizedBox(
-                  width: 149,
-                  height: 29,
-                  child: Text(
-                    'Edit Barang',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 20,
-                      fontFamily: 'Paytone One',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 170,
-                top: 75,
-                child: Container(
-                  width: 67,
-                  height: 67,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.ebJudul),
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 22,
-                top: 197,
-                child: Container(
-                  width: 370,
-                  height: 101,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFF1EEF5),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFB1B1B1),
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 31,
-                top: 206,
-                child: Container(
-                  width: 47,
-                  height: 31,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.ebNama),
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 77,
-                top: 209,
-                child: SizedBox(
-                  width: 107,
-                  height: 23,
-                  child: Text(
-                    'Nama Barang',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 14,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 35,
-                top: 241,
-                child: Container(
-                  width: 347,
-                  height: 27,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFA7A7A7),
-                      ),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: -18,
-                top: 245,
-                child: SizedBox(
-                  width: 174,
-                  height: 23,
-                  child: Text(
-                    'Laptop',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 22,
-                top: 308,
-                child: Container(
-                  width: 171,
-                  height: 39,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFE0E8FA),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 200,
-                top: 308,
-                child: Container(
-                  width: 192,
-                  height: 39,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFEFEEF3),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 28,
-                top: 314,
-                child: Container(
-                  width: 23,
-                  height: 23,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.ebKategori),
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 216,
-                top: 314,
-                child: Container(
-                  width: 171,
-                  height: 27,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 193,
-                top: 306,
-                child: SizedBox(
-                  width: 81,
-                  height: 23,
-                  child: Text(
-                    '+',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: const Color(0xFF4DDBFF),
-                      fontSize: 32,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 92,
-                top: 316,
-                child: SizedBox(
-                  width: 174,
-                  height: 23,
-                  child: Text(
-                    '>',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: const Color(0xFF393939),
-                      fontSize: 15,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 26,
-                top: 318,
-                child: SizedBox(
-                  width: 113,
-                  height: 23,
-                  child: Text(
-                    'Kategori',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 248,
-                top: 318,
-                child: SizedBox(
-                  width: 113,
-                  height: 23,
-                  child: Text(
-                    'Tambah Kategori',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 61,
-                top: 320,
-                child: SizedBox(
-                  width: 174,
-                  height: 23,
-                  child: Text(
-                    'Gadget',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: const Color(0xFF393939),
-                      fontSize: 12,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 0,
-                top: 356,
-                child: SizedBox(
-                  width: 113,
-                  height: 23,
-                  child: Text(
-                    'Kategori',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 178,
-                top: 356,
-                child: SizedBox(
-                  width: 113,
-                  height: 23,
-                  child: Text(
-                    'Status',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 22,
-                top: 379,
-                child: Container(
-                  width: 178,
-                  height: 34,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFF5F3F8),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFB1B1B1),
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 214,
-                top: 379,
-                child: Container(
-                  width: 178,
-                  height: 34,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFB1B1B1),
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 28,
-                top: 385,
-                child: Container(
-                  width: 22,
-                  height: 22,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.ebElektronik),
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 221,
-                top: 385,
-                child: Container(
-                  width: 23,
-                  height: 23,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.ebTersedia),
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 31,
-                top: 387,
-                child: SizedBox(
-                  width: 113,
-                  height: 23,
-                  child: Text(
-                    'Elektronik',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 219,
-                top: 387,
-                child: SizedBox(
-                  width: 113,
-                  height: 23,
-                  child: Text(
-                    'Tersedia',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: -17,
-                top: 421,
-                child: SizedBox(
-                  width: 113,
-                  height: 23,
-                  child: Text(
-                    'Stok',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 176,
-                top: 421,
-                child: SizedBox(
-                  width: 113,
-                  height: 23,
-                  child: Text(
-                    'Harga',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 22,
-                top: 444,
-                child: Container(
-                  width: 178,
-                  height: 34,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFF5F3F8),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFB1B1B1),
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 214,
-                top: 444,
-                child: Container(
-                  width: 178,
-                  height: 34,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFF5F3F8),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFB1B1B1),
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 171,
-                top: 448,
-                child: Container(
-                  width: 26,
-                  height: 26,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.ebStok),
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: -52,
-                top: 451,
-                child: SizedBox(
-                  width: 174,
-                  height: 23,
-                  child: Text(
-                    '8',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 177,
-                top: 451,
-                child: SizedBox(
-                  width: 174,
-                  height: 23,
-                  child: Text(
-                    'Rp. 8.000.000',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 26,
-                top: 483,
-                child: Container(
-                  width: 23,
-                  height: 23,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.ebNama),
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 35,
-                top: 486,
-                child: SizedBox(
-                  width: 113,
-                  height: 23,
-                  child: Text(
-                    'Nama Merek',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 22,
-                top: 509,
-                child: Container(
-                  width: 370,
-                  height: 66,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFF5F3F8),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFB1B1B1),
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 26,
-                top: 611,
-                child: Container(
-                  width: 145,
-                  height: 69,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFD7D7D7),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFB1B1B1),
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 33,
-                top: 516,
-                child: SizedBox(
-                  width: 348,
-                  height: 38,
-                  child: Text(
-                    'Laptop merek honor keluaran tahun 2019 dengan layar 12 inci.',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 26,
-                top: 581,
-                child: Container(
-                  width: 25,
-                  height: 25,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.ebDeskripsi),
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 26,
-                top: 583,
-                child: SizedBox(
-                  width: 113,
-                  height: 23,
-                  child: Text(
-                    'Deskripsi',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 386,
-                top: 593,
-                child: Container(
-                  transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(3.14),
-                  width: 260,
-                  decoration: ShapeDecoration(
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        strokeAlign: BorderSide.strokeAlignCenter,
-                        color: const Color(0xFF9E9E9E),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 178,
-                top: 611,
-                child: Container(
-                  width: 214,
-                  height: 69,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFF5F3F8),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFABABAB),
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 267,
-                top: 622,
-                child: Container(
-                  width: 33,
-                  height: 33,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFD9D9D9),
-                    shape: OvalBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFB1B1B1),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 243,
-                top: 606,
-                child: SizedBox(
-                  width: 81,
-                  height: 23,
-                  child: Text(
-                    '+',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: const Color(0xFF04CCFF),
-                      fontSize: 48,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 189,
-                top: 657,
-                child: SizedBox(
-                  width: 190,
-                  height: 23,
-                  child: Text(
-                    '+ Tambah Foto',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: const Color(0xFF494949),
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 386,
-                top: 696,
-                child: Container(
-                  transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(3.14),
-                  width: 364,
-                  decoration: ShapeDecoration(
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        strokeAlign: BorderSide.strokeAlignCenter,
-                        color: const Color(0xFF9E9E9E),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 119,
-                top: 712,
-                child: Container(
-                  width: 175,
-                  height: 40,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFF0E62BC),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 119,
-                top: 712,
-                child: Container(
-                  width: 175,
-                  height: 33,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFF3998FC),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 146,
-                top: 717,
-                child: SizedBox(
-                  width: 119,
-                  height: 30,
-                  child: Text(
-                    'Edit',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 51,
-                top: 611,
-                child: Container(
-                  width: 97,
-                  height: 69,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.ebLaptop),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 136,
-                top: 609,
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.ebTongSampah),
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-                  ),
-                ),
-              ),
-            ),
+    return Scaffold(
+      backgroundColor: const Color(0xFFF2F2F7),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF1A1A1A),
+        foregroundColor: Colors.white,
+        title: const Text(
+          'Edit Barang',
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.grey),
+            onPressed: () {},
           ),
-        );
-      },
+        ],
+      ),
+      body: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _sectionCard(title: 'Informasi Barang', children: [
+                _fieldLabel('Nama Barang *'),
+                TextFormField(
+                  controller: _nameController,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: _inputDeco('Masukkan nama barang...'),
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Nama barang wajib diisi'
+                      : null,
+                ),
+                const SizedBox(height: 14),
+
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _fieldLabel('Kategori'),
+                          _isLoadingCategories
+                              ? const SizedBox(
+                                  height: 48,
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Color(0xFF3998FC),
+                                    ),
+                                  ),
+                                )
+                              : DropdownButtonFormField<Map<String, dynamic>>(
+                                  value: _selectedCategory,
+                                  decoration: _inputDeco('Pilih kategori'),
+                                  items: _categories
+                                      .map((cat) => DropdownMenuItem(
+                                            value: cat,
+                                            child: Text(
+                                              cat['name'].toString(),
+                                              style: const TextStyle(fontSize: 14),
+                                            ),
+                                          ))
+                                      .toList(),
+                                  onChanged: (val) =>
+                                      setState(() => _selectedCategory = val),
+                                ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    ElevatedButton.icon(
+                      onPressed: _showAddCategoryDialog,
+                      icon: const Icon(Icons.add, size: 16),
+                      label: const Text('Tambah', style: TextStyle(fontSize: 12)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF3998FC),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                      ),
+                    ),
+                  ],
+                ),
+              ]),
+
+              const SizedBox(height: 12),
+
+              _sectionCard(title: 'Detail Stok', children: [
+                _fieldLabel('Stok'),
+                TextFormField(
+                  controller: _stockController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: _inputDeco('0'),
+                ),
+                const SizedBox(height: 14),
+                _fieldLabel('Status / Kondisi'),
+                DropdownButtonFormField<String>(
+                  value: _selectedCondition,
+                  decoration: _inputDeco(''),
+                  items: _conditions
+                      .map((c) => DropdownMenuItem(
+                            value: c,
+                            child: Text(c, style: const TextStyle(fontSize: 14)),
+                          ))
+                      .toList(),
+                  onChanged: (val) {
+                    if (val != null) setState(() => _selectedCondition = val);
+                  },
+                ),
+              ]),
+
+              const SizedBox(height: 12),
+
+              _sectionCard(title: 'Deskripsi', children: [
+                TextFormField(
+                  controller: _descController,
+                  maxLines: 4,
+                  decoration: _inputDeco('Masukkan deskripsi barang...'),
+                ),
+              ]),
+
+              const SizedBox(height: 24),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isSaving ? null : _saveItem,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF3998FC),
+                    disabledBackgroundColor:
+                        const Color(0xFF3998FC).withOpacity(0.5),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                  ),
+                  child: _isSaving
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                      : const Text('Simpan Perubahan',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionCard({String? title, required List<Widget> children}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 1))
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (title != null) ...[
+            Text(title,
+                style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1A1A1A))),
+            const SizedBox(height: 12),
+          ],
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _fieldLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Text(text,
+          style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF444444))),
+    );
+  }
+
+  InputDecoration _inputDeco(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(color: Color(0xFFAAAAAA), fontSize: 13),
+      filled: true,
+      fillColor: const Color(0xFFF8F8F8),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xFFDDDDDD)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xFFDDDDDD)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xFF3998FC), width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Colors.red),
+      ),
     );
   }
 }
