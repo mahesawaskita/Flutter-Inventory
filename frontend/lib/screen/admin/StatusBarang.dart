@@ -17,6 +17,7 @@ class _StatusBarangAdminState extends State<StatusBarangAdmin> {
 
   final _searchCtrl = TextEditingController();
   List<Map<String, dynamic>> _allItems = [];
+  List<Map<String, dynamic>> _allLoans = [];
   bool _isLoading = true;
   int _activeTab = 0; // 0: Sedang Dipinjam, 1: History
 
@@ -33,19 +34,28 @@ class _StatusBarangAdminState extends State<StatusBarangAdmin> {
       }).toList();
 
   List<Map<String, dynamic>> get _currentList {
-    var list = _activeTab == 0 ? _dipinjam : _allItems;
-    if (_searchQ.isNotEmpty) {
-      list = list
-          .where((i) => (i['name'] ?? '').toString().toLowerCase().contains(_searchQ))
-          .toList();
+    if (_activeTab == 0) {
+      // Tampilkan item yang kondisinya Dipinjam
+      var list = _dipinjam;
+      if (_searchQ.isNotEmpty) {
+        list = list.where((i) => (i['name'] ?? '').toString().toLowerCase().contains(_searchQ)).toList();
+      }
+      return list;
+    } else {
+      // History: tampilkan loan yang sudah dikembalikan
+      var list = _allLoans.where((l) => l['status'] == 'returned').toList();
+      if (_searchQ.isNotEmpty) {
+        list = list.where((l) => (l['item_name'] ?? '').toString().toLowerCase().contains(_searchQ)).toList();
+      }
+      return list;
     }
-    return list;
   }
 
-  int get _statDipinjam => _dipinjam.length;
+  int get _statDipinjam => _allLoans.where((l) => l['status'] == 'active').length;
   int get _statTersedia =>
       _allItems.where((i) => (i['condition'] ?? '') == 'Tersedia').length;
   int get _statRusak => _rusak.length;
+  int get _statDikembalikan => _allLoans.where((l) => l['status'] == 'returned').length;
 
   // ── Lifecycle ─────────────────────────────
   @override
@@ -67,9 +77,11 @@ class _StatusBarangAdminState extends State<StatusBarangAdmin> {
       final token = await AuthService.getToken();
       if (token != null) {
         final items = await ApiService.getItems(token);
+        final loans = await ApiService.getAllLoans(token);
         if (mounted) {
           setState(() {
             _allItems = items.map((e) => Map<String, dynamic>.from(e)).toList();
+            _allLoans = loans.map((e) => Map<String, dynamic>.from(e)).toList();
           });
         }
       }
@@ -80,6 +92,28 @@ class _StatusBarangAdminState extends State<StatusBarangAdmin> {
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  // Cari loan aktif untuk item tertentu
+  Map<String, dynamic>? _activeLoanForItem(dynamic itemId) {
+    try {
+      return _allLoans.firstWhere(
+        (l) => l['item_id']?.toString() == itemId?.toString() && l['status'] == 'active',
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String _fmtDate(String? s) {
+    if (s == null) return '-';
+    try {
+      final d = DateTime.parse(s);
+      const m = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+      return '${d.day} ${m[d.month - 1]} ${d.year}';
+    } catch (_) {
+      return s;
     }
   }
 
@@ -190,8 +224,8 @@ class _StatusBarangAdminState extends State<StatusBarangAdmin> {
                               bg: const Color(0xFFE1EEF9),
                               iconPath: AppAssets.stTotalKembali,
                               label: 'Total Barang\nDikembalikan',
-                              value: '$_statTersedia',
-                              sub: 'Hari ini $_statTersedia',
+                              value: '$_statDikembalikan',
+                              sub: '$_statTersedia tersedia',
                               subColor: Colors.blue.shade700,
                             )),
                           ],
@@ -270,7 +304,7 @@ class _StatusBarangAdminState extends State<StatusBarangAdmin> {
                             ),
                             const SizedBox(width: 8),
                             OutlinedButton(
-                              onPressed: _currentList.isNotEmpty
+                              onPressed: (_activeTab == 0 && _currentList.isNotEmpty)
                                   ? () => _navigateToDetail(_currentList.first)
                                   : null,
                               style: OutlinedButton.styleFrom(
@@ -318,7 +352,7 @@ class _StatusBarangAdminState extends State<StatusBarangAdmin> {
                                       child: Text(
                                         _activeTab == 0
                                             ? 'Tidak ada barang yang sedang dipinjam'
-                                            : 'Belum ada data',
+                                            : 'Belum ada riwayat pengembalian',
                                         textAlign: TextAlign.center,
                                         style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
                                     ),
@@ -403,29 +437,52 @@ class _StatusBarangAdminState extends State<StatusBarangAdmin> {
   }
 
   // ── DATA ROW ──────────────────────────────
-  Widget _dataRow(Map<String, dynamic> item) {
-    final name = item['name']?.toString() ?? '-';
-    final condition = item['condition']?.toString() ?? '-';
+  Widget _dataRow(Map<String, dynamic> row) {
+    // row bisa berupa item (tab 0) atau loan (tab 1)
+    final isHistoryTab = _activeTab == 1;
 
+    String name;
+    String borrower;
+    String tanggal;
+    String statusText;
     Color statusBg;
     Color statusFg;
-    switch (condition.toLowerCase()) {
-      case 'dipinjam':
-        statusBg = const Color(0xFF57D3C9);
-        statusFg = Colors.white;
-        break;
-      case 'rusak':
-      case 'perlu perbaikan':
-        statusBg = const Color(0xFFFE6F51);
-        statusFg = Colors.white;
-        break;
-      case 'tersedia':
-        statusBg = const Color(0xFF4CAF50);
-        statusFg = Colors.white;
-        break;
-      default:
-        statusBg = Colors.grey.shade300;
-        statusFg = Colors.black87;
+    Map<String, dynamic>? itemForNav;
+
+    if (isHistoryTab) {
+      // row adalah loan record
+      name = row['item_name']?.toString() ?? '-';
+      borrower = row['username']?.toString() ?? '-';
+      tanggal = _fmtDate(row['borrow_date']?.toString());
+      statusText = 'Kembali';
+      statusBg = const Color(0xFF57D3C9);
+      statusFg = Colors.white;
+      itemForNav = null;
+    } else {
+      // row adalah item record
+      itemForNav = row;
+      name = row['name']?.toString() ?? '-';
+      final loan = _activeLoanForItem(row['id']);
+      borrower = loan?['username']?.toString() ?? '-';
+      tanggal = loan != null ? _fmtDate(loan['borrow_date']?.toString()) : '-';
+      final condition = row['condition']?.toString() ?? '-';
+      switch (condition.toLowerCase()) {
+        case 'dipinjam':
+          statusText = 'Dipinjam';
+          statusBg = const Color(0xFF57D3C9);
+          statusFg = Colors.white;
+          break;
+        case 'rusak':
+        case 'perlu perbaikan':
+          statusText = condition;
+          statusBg = const Color(0xFFFE6F51);
+          statusFg = Colors.white;
+          break;
+        default:
+          statusText = condition;
+          statusBg = Colors.grey.shade300;
+          statusFg = Colors.black87;
+      }
     }
 
     return Container(
@@ -436,12 +493,12 @@ class _StatusBarangAdminState extends State<StatusBarangAdmin> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Nama Barang — clickable
+          // Nama Barang — clickable (hanya tab 0)
           Expanded(
             flex: 3,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () => _navigateToDetail(item),
+              onTap: itemForNav != null ? () => _navigateToDetail(itemForNav!) : null,
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
                 child: Row(
@@ -456,11 +513,11 @@ class _StatusBarangAdminState extends State<StatusBarangAdmin> {
                     const SizedBox(width: 6),
                     Flexible(
                       child: Text(name,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
-                              color: _blue,
-                              decoration: TextDecoration.underline),
+                              color: itemForNav != null ? _blue : Colors.black87,
+                              decoration: itemForNav != null ? TextDecoration.underline : null),
                           overflow: TextOverflow.ellipsis),
                     ),
                   ],
@@ -474,8 +531,15 @@ class _StatusBarangAdminState extends State<StatusBarangAdmin> {
             flex: 3,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Text('-',
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+              child: Text(
+                borrower,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: borrower == '-' ? Colors.grey.shade400 : Colors.black87,
+                  fontWeight: borrower == '-' ? FontWeight.normal : FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
 
@@ -484,8 +548,10 @@ class _StatusBarangAdminState extends State<StatusBarangAdmin> {
             flex: 3,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Text('-',
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+              child: Text(
+                tanggal,
+                style: TextStyle(fontSize: 10, color: tanggal == '-' ? Colors.grey.shade400 : Colors.black87),
+              ),
             ),
           ),
 
@@ -498,7 +564,7 @@ class _StatusBarangAdminState extends State<StatusBarangAdmin> {
                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
                 decoration: BoxDecoration(
                     color: statusBg, borderRadius: BorderRadius.circular(4)),
-                child: Text(condition,
+                child: Text(statusText,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         fontSize: 8,

@@ -72,7 +72,11 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
     return _RowStatus.tersedia;
   }
 
-  String _categoryName(dynamic catId) {
+  String _categoryName(Map<String, dynamic> item) {
+    // Prefer category_name from JOIN, fallback to client-side lookup
+    final fromJoin = item['category_name']?.toString();
+    if (fromJoin != null && fromJoin.isNotEmpty) return fromJoin;
+    final catId = item['category_id'];
     if (catId == null) return '-';
     return _categories
         .firstWhere((c) => c['id'].toString() == catId.toString(), orElse: () => {'name': '-'})['name']
@@ -228,7 +232,7 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
   }
 
   void _showItemDetail(Map<String, dynamic> item) {
-    final catName = _categoryName(item['category_id']);
+    final catName = _categoryName(item);
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
@@ -603,7 +607,7 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
   // ── DATA ROW ───────────────────────────────
   Widget _dataRow(Map<String, dynamic> item) {
     final name    = item['name']?.toString() ?? '-';
-    final catName = _categoryName(item['category_id']);
+    final catName = _categoryName(item);
     final stock   = item['stock'] as int? ?? 0;
     final status  = _itemStatus(item);
 
