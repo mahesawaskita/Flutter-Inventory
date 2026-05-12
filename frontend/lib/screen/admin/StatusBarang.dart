@@ -1,1885 +1,573 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/constants/app_assets.dart';
 import 'package:frontend/screen/admin/DetailBarang.dart';
+import 'package:frontend/service/api_service.dart';
+import 'package:frontend/service/auth_service.dart';
 
-class StatusBarangAdmin extends StatelessWidget {
+class StatusBarangAdmin extends StatefulWidget {
   const StatusBarangAdmin({super.key});
 
   @override
+  State<StatusBarangAdmin> createState() => _StatusBarangAdminState();
+}
+
+class _StatusBarangAdminState extends State<StatusBarangAdmin> {
+  static const _blue = Color(0xFF3998FC);
+  static const _dark = Color(0xFF1A1A1A);
+
+  final _searchCtrl = TextEditingController();
+  List<Map<String, dynamic>> _allItems = [];
+  bool _isLoading = true;
+  int _activeTab = 0; // 0: Sedang Dipinjam, 1: History
+
+  // ── Computed ──────────────────────────────
+  String get _searchQ => _searchCtrl.text.trim().toLowerCase();
+
+  List<Map<String, dynamic>> get _dipinjam => _allItems
+      .where((i) => (i['condition'] ?? '').toString().toLowerCase() == 'dipinjam')
+      .toList();
+
+  List<Map<String, dynamic>> get _rusak => _allItems.where((i) {
+        final c = (i['condition'] ?? '').toString().toLowerCase();
+        return c == 'rusak' || c == 'perlu perbaikan';
+      }).toList();
+
+  List<Map<String, dynamic>> get _currentList {
+    var list = _activeTab == 0 ? _dipinjam : _allItems;
+    if (_searchQ.isNotEmpty) {
+      list = list
+          .where((i) => (i['name'] ?? '').toString().toLowerCase().contains(_searchQ))
+          .toList();
+    }
+    return list;
+  }
+
+  int get _statDipinjam => _dipinjam.length;
+  int get _statTersedia =>
+      _allItems.where((i) => (i['condition'] ?? '') == 'Tersedia').length;
+  int get _statRusak => _rusak.length;
+
+  // ── Lifecycle ─────────────────────────────
+  @override
+  void initState() {
+    super.initState();
+    _searchCtrl.addListener(() => setState(() {}));
+    _loadData();
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      final token = await AuthService.getToken();
+      if (token != null) {
+        final items = await ApiService.getItems(token);
+        if (mounted) {
+          setState(() {
+            _allItems = items.map((e) => Map<String, dynamic>.from(e)).toList();
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal memuat data: $e'), backgroundColor: Colors.red));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _navigateToDetail(Map<String, dynamic> item) {
+    Navigator.push(context,
+        MaterialPageRoute(builder: (_) => DetailBarangAdmin(item: item)));
+  }
+
+  // ── BUILD ──────────────────────────────────
+  @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          child: SizedBox(
-            width: constraints.maxWidth,
-            child: FittedBox(
-              fit: BoxFit.fitWidth,
-              alignment: Alignment.topCenter,
-              child: SizedBox(
-                width: 414,
-                height: 896,
-                child: Container(
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(color: const Color(0xFF1A1A1A)),
-                  child: Stack(
+    return Scaffold(
+      backgroundColor: _dark,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // ── Dark header ──
+            SizedBox(
+              height: 60,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () => Navigator.of(context).maybePop(),
+                    ),
+                  ),
+                  Container(
+                    width: 66, height: 66,
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: Colors.grey.shade400),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withOpacity(0.15),
+                            blurRadius: 6, offset: const Offset(0, 2))
+                      ],
+                    ),
+                    child: Image.asset(AppAssets.stJudul, fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) =>
+                            const Icon(Icons.assessment_outlined, color: Colors.blue)),
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: Material(
+                        color: Colors.grey.shade700,
+                        shape: const CircleBorder(),
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          onTap: () {},
+                          child: const Padding(padding: EdgeInsets.all(9),
+                              child: Icon(Icons.settings_outlined, size: 20, color: Colors.white)),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // ── White panel ──
+            Expanded(
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFFFBFB),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: RefreshIndicator(
+                  onRefresh: _loadData,
+                  color: _blue,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-              Positioned(
-                left: 54.80,
-                top: 77.75,
-                child: Container(
-                  transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(3.11),
-                  width: 32.77,
-                  height: 32.77,
-                  child: Stack(),
-                ),
-              ),
-              Positioned(
-                left: 160,
-                top: 774,
-                child: Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.splash),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 5,
-                top: 116,
-                child: Container(
-                  width: 402,
-                  height: 652,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFFFFBFB),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 6,
-                        color: const Color(0xFFB0A0A0),
+                      // Title
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(16, 14, 16, 0),
+                        child: Text('Status Barang',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.black87)),
                       ),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 120,
-                top: 704,
-                child: Container(
-                  width: 175,
-                  height: 48,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFF0E62BC),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 120,
-                top: 704,
-                child: Container(
-                  width: 175,
-                  height: 40,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFF3998FC),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 22,
-                top: 352,
-                child: Container(
-                  width: 111,
-                  height: 36,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFF9A9A9A),
-                      ),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 22,
-                top: 395,
-                child: Container(
-                  width: 300,
-                  height: 27,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFA7A7A7),
-                      ),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 325,
-                top: 395,
-                child: Container(
-                  width: 67,
-                  height: 27,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFE7E7E9),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFB9B9B9),
-                      ),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 149,
-                top: 352,
-                child: Container(
-                  width: 163,
-                  height: 36,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFD5D2DD),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFB5B5B5),
-                      ),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 299,
-                top: 352,
-                child: Container(
-                  width: 92,
-                  height: 36,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFD5D2DD),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFB5B5B5),
-                      ),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 150,
-                top: 70,
-                child: Container(
-                  width: 108,
-                  height: 78,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFFFFBFB),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 3,
-                        color: const Color(0xFFB0A0A0),
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 22,
-                top: 198,
-                child: Container(
-                  width: 181,
-                  height: 75,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFFBE5B3),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 2,
-                        color: const Color(0xFFB0A0A0),
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 22,
-                top: 285,
-                child: Container(
-                  width: 181,
-                  height: 57,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFDCEBF9),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 2,
-                        color: const Color(0xFFB0A0A0),
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 211,
-                top: 285,
-                child: Container(
-                  width: 181,
-                  height: 57,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFF1ECF0),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 2,
-                        color: const Color(0xFFB0A0A0),
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 211,
-                top: 198,
-                child: Container(
-                  width: 180,
-                  height: 75,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFE1EEF9),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 2,
-                        color: const Color(0xFFB0A0A0),
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 185,
-                top: 51,
-                child: Container(
-                  width: 73,
-                  height: 66,
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(),
-                ),
-              ),
-              Positioned(
-                left: 348,
-                top: 135,
-                child: Container(
-                  width: 44,
-                  height: 40,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFD9D9D9),
-                    shape: OvalBorder(),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 356,
-                top: 140,
-                child: const SizedBox(
-                  width: 29,
-                  height: 31,
-                  child: Icon(
-                    Icons.settings,
-                    size: 26,
-                    color: Color(0xFF8D8D8D),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 134,
-                top: 159,
-                child: SizedBox(
-                  width: 146,
-                  height: 29,
-                  child: Text(
-                    'Status Barang',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 20,
-                      fontFamily: 'Paytone One',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 28,
-                top: 400,
-                child: Container(
-                  width: 18,
-                  height: 17,
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(),
-                  child: Stack(),
-                ),
-              ),
-              Positioned(
-                left: 67,
-                top: 208,
-                child: SizedBox(
-                  width: 131,
-                  height: 23,
-                  child: Text(
-                    'Total Barang Disewakan',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 10,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 32,
-                top: 225,
-                child: SizedBox(
-                  width: 131,
-                  height: 23,
-                  child: Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: '6 ',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 10,
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        TextSpan(
-                          text: 'Dipinjam',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 10,
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ],
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 40,
-                top: 245,
-                child: SizedBox(
-                  width: 131,
-                  height: 23,
-                  child: Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: '^',
-                          style: TextStyle(
-                            color: const Color(0xFFDFCC00),
-                            fontSize: 10,
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        TextSpan(
-                          text: ' +5',
-                          style: TextStyle(
-                            color: const Color(0xFF00E338),
-                            fontSize: 10,
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        TextSpan(
-                          text: ' ',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 10,
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        TextSpan(
-                          text: 'Barang baru',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 10,
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ],
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 231,
-                top: 323,
-                child: SizedBox(
-                  width: 131,
-                  height: 23,
-                  child: Text(
-                    'Perlu Perbaikan',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 10,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 212,
-                top: 245,
-                child: SizedBox(
-                  width: 131,
-                  height: 23,
-                  child: Text(
-                    'Hari ini 7',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: const Color(0xFF00FAFF),
-                      fontSize: 10,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 108,
-                top: 323,
-                child: SizedBox(
-                  width: 131,
-                  height: 23,
-                  child: Text(
-                    '2 telat',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: const Color(0xFFFF0000),
-                      fontSize: 10,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 72,
-                top: 295,
-                child: SizedBox(
-                  width: 108,
-                  height: 32,
-                  child: Text(
-                    'Terlambat\nDikembalikan',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 10,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 255,
-                top: 208,
-                child: SizedBox(
-                  width: 108,
-                  height: 32,
-                  child: Text(
-                    'Total Barang\nDikembalikan',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 10,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 258,
-                top: 295,
-                child: SizedBox(
-                  width: 108,
-                  height: 32,
-                  child: Text(
-                    'Total Barang\nRusak',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 10,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 167,
-                top: 74,
-                child: Container(
-                  width: 74,
-                  height: 69,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.stJudul),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 22,
-                top: 197,
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.stBarangPinjam),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 211,
-                top: 191,
-                child: Container(
-                  width: 44,
-                  height: 66,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.stTotalKembali),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 21,
-                top: 284,
-                child: Container(
-                  width: 54,
-                  height: 54,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.stTelat),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 214,
-                top: 290,
-                child: Container(
-                  width: 41,
-                  height: 41,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.stTotalRusak),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 508.80,
-                top: 54.75,
-                child: Container(
-                  transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(3.11),
-                  width: 32.77,
-                  height: 32.77,
-                  child: Stack(),
-                ),
-              ),
-              Positioned(
-                left: 26,
-                top: 459,
-                child: Container(
-                  width: 360,
-                  height: 188,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFE3E0E0),
-                      ),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 26,
-                top: 470,
-                child: Container(
-                  width: 112,
-                  height: 55,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFA7A7A7),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 26,
-                top: 431,
-                child: Container(
-                  width: 112,
-                  height: 40,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFE3E0E0),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFA7A7A7),
-                      ),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 312,
-                top: 431,
-                child: Container(
-                  width: 74,
-                  height: 40,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFE3E0E0),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFA7A7A7),
-                      ),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 26,
-                top: 523,
-                child: Container(
-                  width: 112,
-                  height: 57,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFA7A7A7),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 26,
-                top: 576,
-                child: Container(
-                  width: 112,
-                  height: 58,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFA7A7A7),
-                      ),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 26,
-                top: 633,
-                child: Container(
-                  width: 112,
-                  height: 57,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFA7A7A7),
-                      ),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 312,
-                top: 632,
-                child: Container(
-                  width: 74,
-                  height: 58,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFA7A7A7),
-                      ),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 25,
-                top: 481,
-                child: Container(
-                  width: 52,
-                  height: 35,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.stLaptop),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 26,
-                top: 530,
-                child: Container(
-                  width: 48,
-                  height: 41,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.stMonitor),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 30,
-                top: 583,
-                child: Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.stPrinter),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 31,
-                top: 641,
-                child: Container(
-                  width: 41,
-                  height: 41,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.stMouse),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 137,
-                top: 431,
-                child: Container(
-                  width: 91,
-                  height: 40,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFD9D9D9),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFF9C9C9C),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 137,
-                top: 470,
-                child: Container(
-                  width: 91,
-                  height: 54,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFF9C9C9C),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 226,
-                top: 470,
-                child: Container(
-                  width: 91,
-                  height: 54,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFF9C9C9C),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 313,
-                top: 470,
-                child: Container(
-                  width: 73,
-                  height: 54,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFF9C9C9C),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 137,
-                top: 523,
-                child: Container(
-                  width: 91,
-                  height: 54,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFF9C9C9C),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 226,
-                top: 523,
-                child: Container(
-                  width: 91,
-                  height: 54,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFF9C9C9C),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 313,
-                top: 523,
-                child: Container(
-                  width: 73,
-                  height: 54,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFF9C9C9C),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 137,
-                top: 576,
-                child: Container(
-                  width: 91,
-                  height: 58,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFF9C9C9C),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 226,
-                top: 576,
-                child: Container(
-                  width: 91,
-                  height: 58,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFF9C9C9C),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 313,
-                top: 576,
-                child: Container(
-                  width: 73,
-                  height: 58,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFF9C9C9C),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 137,
-                top: 633,
-                child: Container(
-                  width: 91,
-                  height: 57,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFF9C9C9C),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 226,
-                top: 633,
-                child: Container(
-                  width: 88,
-                  height: 57,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFF9C9C9C),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 26,
-                top: 442,
-                child: SizedBox(
-                  width: 111,
-                  height: 29,
-                  child: Text(
-                    'Nama Barang',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 12,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 127,
-                top: 442,
-                child: SizedBox(
-                  width: 111,
-                  height: 29,
-                  child: Text(
-                    'Peminjam',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 12,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 226,
-                top: 431,
-                child: Container(
-                  width: 88,
-                  height: 40,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFD9D9D9),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFF9C9C9C),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 216,
-                top: 434,
-                child: SizedBox(
-                  width: 111,
-                  height: 29,
-                  child: Text(
-                    'Tanggal \nDipinjam',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 12,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 295,
-                top: 442,
-                child: SizedBox(
-                  width: 111,
-                  height: 29,
-                  child: Text(
-                    'Status',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 12,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 67,
-                top: 483,
-                child: SizedBox(
-                  width: 63,
-                  height: 28,
-                  child: Text(
-                    'Laptop',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 179,
-                top: 483,
-                child: SizedBox(
-                  width: 60,
-                  height: 28,
-                  child: Text(
-                    'Budi Agung',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 320,
-                top: 481,
-                child: Container(
-                  width: 58,
-                  height: 35,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFFEE4A7),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 232,
-                top: 483,
-                child: SizedBox(
-                  width: 81,
-                  height: 28,
-                  child: Text(
-                    '24 Mar 2024',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 320,
-                top: 533,
-                child: Container(
-                  width: 58,
-                  height: 35,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFF57D3C9),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 320,
-                top: 585,
-                child: Container(
-                  width: 58,
-                  height: 42,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFFE6F51),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 320,
-                top: 641,
-                child: Container(
-                  width: 58,
-                  height: 42,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFF57D3C9),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 309,
-                top: 484,
-                child: SizedBox(
-                  width: 81,
-                  height: 28,
-                  child: Text(
-                    'Terlambat\n2 Hari',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 10,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 309,
-                top: 542,
-                child: SizedBox(
-                  width: 81,
-                  height: 28,
-                  child: Text(
-                    'Dipinjam',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 309,
-                top: 594,
-                child: SizedBox(
-                  width: 81,
-                  height: 28,
-                  child: Text(
-                    'Telat',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 309,
-                top: 654,
-                child: SizedBox(
-                  width: 81,
-                  height: 28,
-                  child: Text(
-                    'Dipinjam',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 232,
-                top: 502,
-                child: SizedBox(
-                  width: 81,
-                  height: 28,
-                  child: Text(
-                    '26 Mar 2024',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 232,
-                top: 535,
-                child: SizedBox(
-                  width: 81,
-                  height: 28,
-                  child: Text(
-                    '25 Mar 2024',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 232,
-                top: 554,
-                child: SizedBox(
-                  width: 81,
-                  height: 28,
-                  child: Text(
-                    '27 Mar 2024',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 232,
-                top: 590,
-                child: SizedBox(
-                  width: 81,
-                  height: 28,
-                  child: Text(
-                    '23 Mar 2024',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 232,
-                top: 609,
-                child: SizedBox(
-                  width: 81,
-                  height: 28,
-                  child: Text(
-                    '25 Mar 2024',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 232,
-                top: 647,
-                child: SizedBox(
-                  width: 81,
-                  height: 28,
-                  child: Text(
-                    '26 Mar 2024',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 232,
-                top: 666,
-                child: SizedBox(
-                  width: 81,
-                  height: 28,
-                  child: Text(
-                    '28 Mar 2024',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 176,
-                top: 535,
-                child: SizedBox(
-                  width: 63,
-                  height: 28,
-                  child: Text(
-                    'Melissa Putri',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 173,
-                top: 590,
-                child: SizedBox(
-                  width: 63,
-                  height: 28,
-                  child: Text(
-                    'Bintang Audi',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 179,
-                top: 647,
-                child: SizedBox(
-                  width: 51,
-                  height: 28,
-                  child: Text(
-                    'Putri Ayu',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 74,
-                top: 535,
-                child: SizedBox(
-                  width: 57,
-                  height: 29,
-                  child: Text(
-                    'Monitor',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 71,
-                top: 590,
-                child: SizedBox(
-                  width: 58,
-                  height: 28,
-                  child: Text(
-                    'Printer',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 77,
-                top: 647,
-                child: SizedBox(
-                  width: 45,
-                  height: 28,
-                  child: Text(
-                    'Mouse',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 38,
-                top: 402,
-                child: SizedBox(
-                  width: 152,
-                  height: 23,
-                  child: Text(
-                    'Cari barang, peminjam... ',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: const Color(0xFF7F7F7F),
-                      fontSize: 11,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 332,
-                top: 399,
-                child: SizedBox(
-                  width: 55,
-                  height: 23,
-                  child: Text(
-                    'Detail',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 13,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 160,
-                top: 219,
-                child: SizedBox(
-                  width: 38,
-                  height: 23,
-                  child: Text(
-                    '14',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 32,
-                      fontFamily: 'Outfit',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 337,
-                top: 202,
-                child: SizedBox(
-                  width: 51,
-                  height: 23,
-                  child: Text(
-                    '20',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 32,
-                      fontFamily: 'Outfit',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 150,
-                top: 290,
-                child: SizedBox(
-                  width: 61,
-                  height: 23,
-                  child: Text(
-                    '3',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 30,
-                      fontFamily: 'Outfit',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 339,
-                top: 291,
-                child: SizedBox(
-                  width: 61,
-                  height: 23,
-                  child: Text(
-                    '2',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 30,
-                      fontFamily: 'Outfit',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 133,
-                top: 371,
-                child: Container(
-                  width: 16,
-                  height: 17,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFD9D9D9),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1,
-                        color: const Color(0xFFA1A1A1),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 148,
-                top: 709,
-                child: SizedBox(
-                  width: 119,
-                  height: 23,
-                  child: Text(
-                    'Lanjut',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 22,
-                top: 359,
-                child: SizedBox(
-                  width: 111,
-                  height: 23,
-                  child: Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: 'Sedang',
-                          style: TextStyle(
-                            color: const Color(0xFF3998FC),
-                            fontSize: 12,
-                            fontFamily: 'Phetsarath',
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        TextSpan(
-                          text: ' Dipinjam',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 12,
-                            fontFamily: 'Phetsarath',
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 163,
-                top: 359,
-                child: SizedBox(
-                  width: 125,
-                  height: 23,
-                  child: Text(
-                    'History Penggunaan',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 12,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 305,
-                top: 359,
-                child: SizedBox(
-                  width: 111,
-                  height: 23,
-                  child: Text(
-                    'Filter',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 14,
-                      fontFamily: 'Phetsarath',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 310,
-                top: 358,
-                child: const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: Icon(
-                    Icons.filter_list,
-                    size: 20,
-                    color: Color(0xFF3998FC),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 27,
-                top: 386,
-                child: Container(
-                  width: 102,
-                  height: 3,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFF3998FC),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 145,
-                top: 325,
-                child: Container(
-                  width: 11,
-                  height: 11,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF3998FC),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 142,
-                top: 478,
-                child: Container(
-                  width: 31,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.stLaptop),
-                      fit: BoxFit.fill,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 142,
-                top: 532,
-                child: Container(
-                  width: 31,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.stMonitor),
-                      fit: BoxFit.fill,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 142,
-                top: 584,
-                child: Container(
-                  width: 31,
-                  height: 31,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.stPrinter),
-                      fit: BoxFit.fill,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 142,
-                top: 643,
-                child: Container(
-                  width: 31,
-                  height: 29,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AppAssets.stMouse),
-                      fit: BoxFit.fill,
-                    ),
-                  ),
-                ),
-              ),
+                      const SizedBox(height: 12),
 
-              // Baris Laptop — tap → detail barang
-              Positioned(
-                left: 26,
-                top: 470,
-                child: GestureDetector(
-                  onTap: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const DetailBarangAdmin())),
-                  child: Container(width: 360, height: 54, color: Colors.transparent),
-                ),
-              ),
+                      // ── Stats 2×2 ──
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Row(
+                          children: [
+                            Expanded(child: _statCard(
+                              bg: const Color(0xFFFBE5B3),
+                              iconPath: AppAssets.stBarangPinjam,
+                              label: 'Total Barang\nDisewakan',
+                              value: '$_statDipinjam Dipinjam',
+                              sub: '+5 Barang baru',
+                              subColor: Colors.green.shade700,
+                            )),
+                            const SizedBox(width: 8),
+                            Expanded(child: _statCard(
+                              bg: const Color(0xFFE1EEF9),
+                              iconPath: AppAssets.stTotalKembali,
+                              label: 'Total Barang\nDikembalikan',
+                              value: '$_statTersedia',
+                              sub: 'Hari ini $_statTersedia',
+                              subColor: Colors.blue.shade700,
+                            )),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Row(
+                          children: [
+                            Expanded(child: _statCard(
+                              bg: const Color(0xFFDCEBF9),
+                              iconPath: AppAssets.stTelat,
+                              label: 'Terlambat\nDikembalikan',
+                              value: '0',
+                              sub: '0 telat',
+                              subColor: Colors.red,
+                            )),
+                            const SizedBox(width: 8),
+                            Expanded(child: _statCard(
+                              bg: const Color(0xFFF1ECF0),
+                              iconPath: AppAssets.stTotalRusak,
+                              label: 'Total Barang\nRusak',
+                              value: '$_statRusak',
+                              sub: 'Perlu Perbaikan',
+                              subColor: Colors.orange.shade700,
+                            )),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
 
-              // Baris Monitor — tap → detail barang
-              Positioned(
-                left: 26,
-                top: 523,
-                child: GestureDetector(
-                  onTap: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const DetailBarangAdmin())),
-                  child: Container(width: 360, height: 57, color: Colors.transparent),
-                ),
-              ),
+                      // ── Tab bar ──
+                      _buildTabs(),
+                      const SizedBox(height: 8),
 
-              // Baris Printer — tap → detail barang
-              Positioned(
-                left: 26,
-                top: 576,
-                child: GestureDetector(
-                  onTap: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const DetailBarangAdmin())),
-                  child: Container(width: 360, height: 58, color: Colors.transparent),
-                ),
-              ),
+                      // ── Search + Detail button ──
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: SizedBox(
+                                height: 36,
+                                child: TextField(
+                                  controller: _searchCtrl,
+                                  style: const TextStyle(fontSize: 13),
+                                  decoration: InputDecoration(
+                                    hintText: 'Cari barang, peminjam...',
+                                    hintStyle: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                                    prefixIcon: Icon(Icons.search, size: 18, color: Colors.grey.shade500),
+                                    suffixIcon: _searchQ.isNotEmpty
+                                        ? IconButton(
+                                            icon: const Icon(Icons.clear, size: 16),
+                                            onPressed: () => _searchCtrl.clear())
+                                        : null,
+                                    isDense: true,
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(18),
+                                      borderSide: BorderSide(color: Colors.grey.shade400),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(18),
+                                      borderSide: BorderSide(color: Colors.grey.shade400),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(18),
+                                      borderSide: const BorderSide(color: _blue, width: 1.5),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            OutlinedButton(
+                              onPressed: _currentList.isNotEmpty
+                                  ? () => _navigateToDetail(_currentList.first)
+                                  : null,
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                side: BorderSide(color: Colors.grey.shade400),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(18)),
+                              ),
+                              child: const Text('Detail',
+                                  style: TextStyle(fontSize: 13, color: Colors.black87,
+                                      fontWeight: FontWeight.w700)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
 
-              // Baris Mouse — tap → detail barang
-              Positioned(
-                left: 26,
-                top: 633,
-                child: GestureDetector(
-                  onTap: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const DetailBarangAdmin())),
-                  child: Container(width: 360, height: 57, color: Colors.transparent),
-                ),
-              ),
+                      // ── Table header ──
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(flex: 3, child: _thCell('Nama Barang')),
+                            Expanded(flex: 3, child: _thCell('Peminjam')),
+                            Expanded(flex: 3, child: _thCell('Tgl Dipinjam')),
+                            Expanded(flex: 2, child: _thCell('Status')),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 2),
 
-              // Tombol "Lanjut" — tap → detail barang
-              Positioned(
-                left: 120,
-                top: 704,
-                child: GestureDetector(
-                  onTap: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const DetailBarangAdmin())),
-                  child: Container(width: 175, height: 40, color: Colors.transparent),
-                ),
-              ),
-            ],
+                      // ── Items list ──
+                      Expanded(
+                        child: _isLoading
+                            ? const Center(child: CircularProgressIndicator(color: _blue))
+                            : _currentList.isEmpty
+                                ? Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(24),
+                                      child: Text(
+                                        _activeTab == 0
+                                            ? 'Tidak ada barang yang sedang dipinjam'
+                                            : 'Belum ada data',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    padding: EdgeInsets.zero,
+                                    itemCount: _currentList.length,
+                                    itemBuilder: (_, i) => _dataRow(_currentList[i]),
+                                  ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
-          ),
-        );
-      },
+
+            // ── Logo footer ──
+            Container(
+              color: _dark,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Center(
+                child: SizedBox(
+                  height: 44, width: 44,
+                  child: Image.asset(AppAssets.splash, fit: BoxFit.contain),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
+
+  // ── TABS ──────────────────────────────────
+  Widget _buildTabs() {
+    final tabs = ['Sedang Dipinjam', 'History Penggunaan'];
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Row(
+        children: [
+          ...List.generate(tabs.length, (i) {
+            final active = i == _activeTab;
+            return GestureDetector(
+              onTap: () => setState(() => _activeTab = i),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 16, bottom: 6),
+                    child: Text(tabs[i],
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: active ? FontWeight.w700 : FontWeight.w400,
+                            color: active ? _blue : Colors.black54)),
+                  ),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    height: 3,
+                    width: active ? 90 : 0,
+                    decoration: BoxDecoration(
+                        color: _blue, borderRadius: BorderRadius.circular(15)),
+                  ),
+                ],
+              ),
+            );
+          }),
+          const Spacer(),
+          GestureDetector(
+            onTap: () {},
+            child: Row(
+              children: [
+                const Icon(Icons.filter_list, color: _blue, size: 18),
+                const SizedBox(width: 3),
+                const Text('Filter',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.black87)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── DATA ROW ──────────────────────────────
+  Widget _dataRow(Map<String, dynamic> item) {
+    final name = item['name']?.toString() ?? '-';
+    final condition = item['condition']?.toString() ?? '-';
+
+    Color statusBg;
+    Color statusFg;
+    switch (condition.toLowerCase()) {
+      case 'dipinjam':
+        statusBg = const Color(0xFF57D3C9);
+        statusFg = Colors.white;
+        break;
+      case 'rusak':
+      case 'perlu perbaikan':
+        statusBg = const Color(0xFFFE6F51);
+        statusFg = Colors.white;
+        break;
+      case 'tersedia':
+        statusBg = const Color(0xFF4CAF50);
+        statusFg = Colors.white;
+        break;
+      default:
+        statusBg = Colors.grey.shade300;
+        statusFg = Colors.black87;
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Nama Barang — clickable
+          Expanded(
+            flex: 3,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => _navigateToDetail(item),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 34, height: 34,
+                      decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(6)),
+                      child: const Icon(Icons.inventory_2_outlined, size: 18, color: Colors.grey),
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(name,
+                          style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: _blue,
+                              decoration: TextDecoration.underline),
+                          overflow: TextOverflow.ellipsis),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Peminjam
+          Expanded(
+            flex: 3,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text('-',
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+            ),
+          ),
+
+          // Tanggal Dipinjam
+          Expanded(
+            flex: 3,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text('-',
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+            ),
+          ),
+
+          // Status
+          Expanded(
+            flex: 2,
+            child: Center(
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+                decoration: BoxDecoration(
+                    color: statusBg, borderRadius: BorderRadius.circular(4)),
+                child: Text(condition,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 8,
+                        fontWeight: FontWeight.w700,
+                        color: statusFg)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── HELPERS ───────────────────────────────
+  Widget _statCard({
+    required Color bg,
+    required String iconPath,
+    required String label,
+    required String value,
+    required String sub,
+    required Color subColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFB0A0A0), width: 1.5),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 3)],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              SizedBox(
+                width: 34, height: 34,
+                child: Image.asset(iconPath, fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) =>
+                        const Icon(Icons.assessment_outlined, color: Colors.blue, size: 24)),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(label,
+                    style: const TextStyle(
+                        fontSize: 9, fontWeight: FontWeight.w600, height: 1.3)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(value,
+              style: const TextStyle(
+                  fontSize: 16, fontWeight: FontWeight.w800, color: Colors.black87)),
+          const SizedBox(height: 2),
+          Text(sub,
+              style: TextStyle(
+                  fontSize: 9, color: subColor, fontWeight: FontWeight.w500)),
+        ],
+      ),
+    );
+  }
+
+  Widget _thCell(String text) => Center(
+        child: Text(text,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade800)),
+      );
 }
