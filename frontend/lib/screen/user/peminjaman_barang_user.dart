@@ -1,22 +1,177 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/service/api_service.dart';
+import 'package:frontend/service/auth_service.dart';
 
 import 'user_ui.dart';
 
 class PeminjamanBarangUserScreen extends StatefulWidget {
-  const PeminjamanBarangUserScreen({super.key});
+  final Map<String, dynamic>? selectedItem;
+
+  const PeminjamanBarangUserScreen({super.key, this.selectedItem});
 
   @override
   State<PeminjamanBarangUserScreen> createState() => _PeminjamanBarangUserScreenState();
 }
 
 class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen> {
+  // Form state
+  List<Map<String, dynamic>> _availableItems = [];
+  Map<String, dynamic>? _selectedItem;
+  final _purposeCtrl = TextEditingController();
+  DateTime? _borrowDate;
+  DateTime? _dueDate;
+
+  // History
+  List<Map<String, dynamic>> _myLoans = [];
+  int _historyTab = 2; // 0=pending, 1=active, 2=history
+
+  bool _isLoadingItems = true;
+  bool _isSubmitting = false;
+  bool _isLoadingHistory = true;
+  String _username = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+    if (widget.selectedItem != null) {
+      _selectedItem = widget.selectedItem;
+    }
+  }
+
+  @override
+  void dispose() {
+    _purposeCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadData() async {
+    final token = await AuthService.getToken();
+    final username = await AuthService.getUsername();
+    if (!mounted) return;
+    setState(() => _username = username ?? '');
+
+    if (token == null) return;
+
+    final items = await ApiService.getItems(token);
+    if (mounted) {
+      setState(() {
+        _availableItems = items
+            .map((e) => Map<String, dynamic>.from(e))
+            .where((i) => i['condition']?.toString() == 'Tersedia' && (i['stock'] as int? ?? 0) > 0)
+            .toList();
+        _isLoadingItems = false;
+
+        // Keep pre-selected item if still available
+        if (_selectedItem != null) {
+          final match = _availableItems.firstWhere(
+            (i) => i['id']?.toString() == _selectedItem!['id']?.toString(),
+            orElse: () => <String, dynamic>{},
+          );
+          _selectedItem = match.isNotEmpty ? match : null;
+        }
+      });
+    }
+
+    final loans = await ApiService.getMyLoans(token);
+    if (mounted) {
+      setState(() {
+        _myLoans = loans.map((e) => Map<String, dynamic>.from(e)).toList();
+        _isLoadingHistory = false;
+      });
+    }
+  }
+
+  Future<void> _pickDate(bool isBorrow) async {
+    final initial = isBorrow ? (_borrowDate ?? DateTime.now()) : (_dueDate ?? (_borrowDate ?? DateTime.now()).add(const Duration(days: 1)));
+    final first = isBorrow ? DateTime.now() : (_borrowDate ?? DateTime.now()).add(const Duration(days: 1));
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: first,
+      lastDate: DateTime.now().add(const Duration(days: 90)),
+    );
+    if (picked != null && mounted) {
+      setState(() {
+        if (isBorrow) {
+          _borrowDate = picked;
+          if (_dueDate != null && _dueDate!.isBefore(picked)) _dueDate = null;
+        } else {
+          _dueDate = picked;
+        }
+      });
+    }
+  }
+
+  Future<void> _submit() async {
+    if (_selectedItem == null) { _showMsg('Pilih barang yang ingin dipinjam', isError: true); return; }
+    if (_borrowDate == null) { _showMsg('Pilih tanggal peminjaman', isError: true); return; }
+    if (_dueDate == null) { _showMsg('Pilih tanggal pengembalian', isError: true); return; }
+
+    setState(() => _isSubmitting = true);
+    final token = await AuthService.getToken();
+    if (token == null) { if (mounted) setState(() => _isSubmitting = false); return; }
+
+    final result = await ApiService.createLoan(token, {
+      'item_id': _selectedItem!['id'],
+      'purpose': _purposeCtrl.text.trim(),
+      'borrow_date': _fmtApi(_borrowDate!),
+      'due_date': _fmtApi(_dueDate!),
+    });
+
+    if (!mounted) return;
+    setState(() => _isSubmitting = false);
+
+    if (result['success'] == true) {
+      _showMsg('Peminjaman berhasil diajukan!');
+      setState(() {
+        _selectedItem = null;
+        _purposeCtrl.clear();
+        _borrowDate = null;
+        _dueDate = null;
+      });
+      _loadData();
+    } else {
+      _showMsg(result['message']?.toString() ?? 'Gagal', isError: true);
+    }
+  }
+
+  void _showMsg(String msg, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg),
+      backgroundColor: isError ? Colors.red : Colors.green,
+    ));
+  }
+
+  String _fmtApi(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  String _fmtDisplay(String? s) {
+    if (s == null) return '-';
+    try {
+      final d = DateTime.parse(s);
+      const m = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+      return '${d.day} ${m[d.month - 1]} ${d.year}';
+    } catch (_) { return s; }
+  }
+
+  bool _isLate(Map<String, dynamic> loan) {
+    if (loan['status'] != 'active') return false;
+    try {
+      return DateTime.parse(loan['due_date'].toString()).isBefore(DateTime.now());
+    } catch (_) { return false; }
+  }
+
+  List<Map<String, dynamic>> get _historyFiltered {
+    switch (_historyTab) {
+      case 0: return _myLoans.where((l) => l['status'] == 'active' && !_isLate(l)).toList();
+      case 1: return _myLoans.where((l) => l['status'] == 'active').toList();
+      default: return _myLoans.where((l) => l['status'] == 'returned').toList();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final history = <({IconData icon, String name, String date})>[
-      (icon: Icons.mouse_rounded, name: 'Mouse', date: '17 - 19 Apr 2024'),
-      (icon: Icons.videocam_rounded, name: 'Projector', date: '05 - 08 Apr 2024'),
-    ];
-
     return UserPageScaffold(
       child: UserFramedPage(
         title: 'Peminjaman Barang',
@@ -24,35 +179,98 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const UserMockSearch(hint: 'Cari barang yang ingin dipinjam...'),
-            const SizedBox(height: 10),
-            const _ArrowRow(icon: Icons.person_pin_circle_rounded, title: 'Nama Peminjam'),
-            const SizedBox(height: 6),
-            const _ArrowRow(icon: Icons.laptop_mac_rounded, title: 'Barang yang Dipinjam', subtitle: 'Laptop'),
-            const SizedBox(height: 6),
+            // ── Form Card ──
             UserSectionCard(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-              child: Row(
-                children: const [
-                  Icon(Icons.calendar_month_rounded, color: Color(0xFF748BCB)),
-                  SizedBox(width: 8),
-                  Text('Waktu Peminjaman', style: TextStyle(fontWeight: FontWeight.w700)),
-                  Spacer(),
-                  Text('26 Maret 2024', style: TextStyle(fontSize: 13)),
-                  SizedBox(width: 4),
-                  Icon(Icons.arrow_forward_ios_rounded, size: 14),
-                  SizedBox(width: 4),
-                  Text('28 Maret 2024', style: TextStyle(fontSize: 13)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Nama peminjam
+                  _fieldRow(
+                    icon: Icons.person_pin_circle_rounded,
+                    title: 'Nama Peminjam',
+                    value: _username.isEmpty ? '...' : _username,
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Pilih barang
+                  _isLoadingItems
+                      ? const Center(child: Padding(
+                          padding: EdgeInsets.all(8),
+                          child: CircularProgressIndicator(color: UserUi.blue, strokeWidth: 2),
+                        ))
+                      : GestureDetector(
+                          onTap: _showItemPicker,
+                          child: _fieldRow(
+                            icon: Icons.inventory_2_rounded,
+                            title: 'Barang yang Dipinjam',
+                            value: _selectedItem != null
+                                ? _selectedItem!['name'].toString()
+                                : 'Pilih barang...',
+                            muted: _selectedItem == null,
+                            trailing: const Icon(Icons.chevron_right_rounded, size: 18),
+                          ),
+                        ),
+                  const SizedBox(height: 8),
+
+                  // Waktu peminjaman
+                  GestureDetector(
+                    onTap: () => _pickDate(true),
+                    child: UserSectionCard(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.calendar_month_rounded, color: Color(0xFF748BCB), size: 20),
+                          const SizedBox(width: 8),
+                          const Text('Mulai', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                          const Spacer(),
+                          Text(
+                            _borrowDate != null ? _fmtDisplay(_fmtApi(_borrowDate!)) : 'Pilih tanggal',
+                            style: TextStyle(fontSize: 13, color: _borrowDate != null ? Colors.black87 : UserUi.textMuted),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: UserUi.textMuted),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () => _pickDate(false),
+                            child: Text(
+                              _dueDate != null ? _fmtDisplay(_fmtApi(_dueDate!)) : 'Pilih kembali',
+                              style: TextStyle(fontSize: 13, color: _dueDate != null ? Colors.black87 : UserUi.textMuted),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Keperluan
+                  UserSectionCard(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.edit_note_rounded, color: Color(0xFF7A9AD8), size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextField(
+                            controller: _purposeCtrl,
+                            style: const TextStyle(fontSize: 13),
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              isDense: true,
+                              hintText: 'Keperluan peminjaman...',
+                              hintStyle: TextStyle(fontSize: 13, color: UserUi.textMuted),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 6),
-            const _ArrowRow(
-              icon: Icons.edit_note_rounded,
-              title: 'Keperluan',
-              subtitle: 'Mengerjakan tugas kantor',
-            ),
             const SizedBox(height: 10),
+
+            // ── Peraturan ──
             UserSectionCard(
               color: const Color(0xFFF7F0F6),
               child: Row(
@@ -67,7 +285,9 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
                         Text('Peraturan Peminjaman', style: TextStyle(fontWeight: FontWeight.w800)),
                         SizedBox(height: 6),
                         Text(
-                          '1. Barang hanya boleh dipinjam untuk keperluan kantor.\n2. Batas waktu peminjaman maksimal 3 hari.\n3. Keterlambatan pengembalian akan dikenakan sanksi.',
+                          '1. Barang hanya boleh dipinjam untuk keperluan resmi.\n'
+                          '2. Batas waktu peminjaman maksimal 7 hari.\n'
+                          '3. Keterlambatan pengembalian akan dikenakan sanksi.',
                           style: TextStyle(fontSize: 12, height: 1.45),
                         ),
                       ],
@@ -77,73 +297,85 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
               ),
             ),
             const SizedBox(height: 14),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 62),
-              child: UserPrimaryButton(text: 'Ajukan Peminjaman', icon: Icons.send_rounded),
+
+            // ── Submit ──
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 62),
+              child: UserPrimaryButton(
+                text: _isSubmitting ? 'Mengajukan...' : 'Ajukan Peminjaman',
+                icon: _isSubmitting ? null : Icons.send_rounded,
+                onTap: _isSubmitting ? null : _submit,
+              ),
             ),
             const SizedBox(height: 16),
+
+            // ── History ──
             UserSectionCard(
               color: Colors.white,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text('Riwayat Peminjaman Saya', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+                  const Text('Riwayat Peminjaman Saya',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
                   const SizedBox(height: 10),
-                  const Row(
+                  Row(
                     children: [
-                      Expanded(child: _HistoryTab(text: 'Menunggu Persetujuan')),
-                      SizedBox(width: 8),
-                      Expanded(child: _HistoryTab(text: 'Sedang Dipinjam')),
-                      SizedBox(width: 8),
-                      Expanded(child: _HistoryTab(text: 'Riwayat', active: true)),
+                      Expanded(child: _HistoryTab(text: 'Menunggu', active: _historyTab == 0, onTap: () => setState(() => _historyTab = 0))),
+                      const SizedBox(width: 6),
+                      Expanded(child: _HistoryTab(text: 'Dipinjam', active: _historyTab == 1, onTap: () => setState(() => _historyTab = 1))),
+                      const SizedBox(width: 6),
+                      Expanded(child: _HistoryTab(text: 'Riwayat', active: _historyTab == 2, onTap: () => setState(() => _historyTab = 2))),
                     ],
                   ),
                   const SizedBox(height: 10),
-                  ...history.map(
-                    (item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: Row(
-                        children: [
-                          UserProductThumb(icon: item.icon, background: const Color(0xFFE5E5EA)),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(item.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
-                                Text(item.date, style: const TextStyle(fontSize: 12)),
-                              ],
+                  if (_isLoadingHistory)
+                    const Center(child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: CircularProgressIndicator(color: UserUi.blue, strokeWidth: 2),
+                    ))
+                  else if (_historyFiltered.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.all(12),
+                      child: Text('Tidak ada data', style: TextStyle(color: UserUi.textMuted, fontSize: 13)),
+                    )
+                  else
+                    ..._historyFiltered.map((loan) {
+                      final itemName = loan['item_name']?.toString() ?? '-';
+                      final borrowDate = _fmtDisplay(loan['borrow_date']?.toString());
+                      final dueDate = _fmtDisplay(loan['due_date']?.toString());
+                      final status = loan['status']?.toString() ?? '-';
+                      final late = _isLate(loan);
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Row(
+                          children: [
+                            const UserProductThumb(
+                              icon: Icons.inventory_2_rounded,
+                              background: Color(0xFFE5E5EA),
                             ),
-                          ),
-                          const UserPill(
-                            text: 'Sudah Dikembalikan',
-                            background: Color(0xFFD8DEFF),
-                            foreground: Color(0xFF4D7BEE),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Center(
-                    child: Container(
-                      width: 160,
-                      height: 30,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE6E1EF),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      alignment: Alignment.center,
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text('Lihat Selengkapnya', style: TextStyle(color: UserUi.blue)),
-                          SizedBox(width: 4),
-                          Icon(Icons.chevron_right_rounded, size: 18, color: UserUi.blue),
-                        ],
-                      ),
-                    ),
-                  ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(itemName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+                                  Text('$borrowDate → $dueDate', style: const TextStyle(fontSize: 11, color: UserUi.textMuted)),
+                                ],
+                              ),
+                            ),
+                            UserPill(
+                              text: status == 'returned' ? 'Dikembalikan' : (late ? 'Terlambat' : 'Aktif'),
+                              background: status == 'returned'
+                                  ? const Color(0xFFD8DEFF)
+                                  : (late ? const Color(0xFFFFE0D7) : const Color(0xFFDCF5E3)),
+                              foreground: status == 'returned'
+                                  ? const Color(0xFF4D7BEE)
+                                  : (late ? Colors.red : Colors.green),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
                 ],
               ),
             ),
@@ -152,63 +384,101 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
       ),
     );
   }
-}
 
-class _ArrowRow extends StatelessWidget {
-  const _ArrowRow({
-    required this.icon,
-    required this.title,
-    this.subtitle,
-  });
-
-  final IconData icon;
-  final String title;
-  final String? subtitle;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _fieldRow({
+    required IconData icon,
+    required String title,
+    required String value,
+    bool muted = false,
+    Widget? trailing,
+  }) {
     return UserSectionCard(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       child: Row(
         children: [
-          Icon(icon, color: const Color(0xFF7A9AD8)),
+          Icon(icon, color: const Color(0xFF7A9AD8), size: 20),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-                if (subtitle != null) Text(subtitle!, style: const TextStyle(fontSize: 12)),
+                Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                Text(value, style: TextStyle(fontSize: 12, color: muted ? UserUi.textMuted : Colors.black87)),
               ],
             ),
           ),
-          const Icon(Icons.chevron_right_rounded),
+          if (trailing != null) trailing,
         ],
       ),
+    );
+  }
+
+  void _showItemPicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (_) {
+        if (_availableItems.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(24),
+            child: Text('Tidak ada barang yang tersedia', style: TextStyle(color: UserUi.textMuted)),
+          );
+        }
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Text('Pilih Barang', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+              ),
+              ..._availableItems.map((item) => ListTile(
+                    leading: const Icon(Icons.inventory_2_rounded, color: UserUi.blue),
+                    title: Text(item['name']?.toString() ?? '-'),
+                    subtitle: Text('Stok: ${item['stock']} · ${item['category_name'] ?? '-'}',
+                        style: const TextStyle(fontSize: 12)),
+                    trailing: _selectedItem != null && _selectedItem!['id']?.toString() == item['id']?.toString()
+                        ? const Icon(Icons.check_circle, color: UserUi.blue)
+                        : null,
+                    onTap: () {
+                      setState(() => _selectedItem = item);
+                      Navigator.pop(context);
+                    },
+                  )),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
     );
   }
 }
 
 class _HistoryTab extends StatelessWidget {
-  const _HistoryTab({required this.text, this.active = false});
-
+  const _HistoryTab({required this.text, required this.active, required this.onTap});
   final String text;
   final bool active;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 30,
-      decoration: BoxDecoration(
-        color: active ? UserUi.blue : const Color(0xFFECE5EC),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 11,
-          color: active ? Colors.white : Colors.black87,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 30,
+        decoration: BoxDecoration(
+          color: active ? UserUi.blue : const Color(0xFFECE5EC),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: 11,
+            color: active ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
     );

@@ -3,13 +3,37 @@ import 'package:frontend/constants/app_assets.dart';
 import 'package:frontend/service/auth_service.dart';
 import 'package:frontend/sistem_login/login_page.dart';
 
-class ProfilPage extends StatelessWidget {
+class ProfilPage extends StatefulWidget {
   const ProfilPage({super.key});
 
+  @override
+  State<ProfilPage> createState() => _ProfilPageState();
+}
+
+class _ProfilPageState extends State<ProfilPage> {
   static const _cardRadius = 14.0;
   static const _bg = Color(0xFF1A1A1A);
-  /// Kartu "Menu Profil": off-white / lavender sangat pucat
   static const _menuInfoCardBg = Color(0xFFF0EDF5);
+
+  String _username = '';
+  String _role = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final username = await AuthService.getUsername();
+    final role = await AuthService.getRole();
+    if (mounted) {
+      setState(() {
+        _username = username ?? '-';
+        _role = role ?? 'admin';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,9 +90,9 @@ class ProfilPage extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Muhammad Riza',
-                              style: TextStyle(
+                            Text(
+                              _username.isEmpty ? '...' : _username,
+                              style: const TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
                                 color: Colors.black,
@@ -87,22 +111,13 @@ class ProfilPage extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  'Admin',
+                                  _role.isEmpty ? 'Admin' : _role[0].toUpperCase() + _role.substring(1),
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey[800],
                                   ),
                                 ),
                               ],
-                            ),
-                            const SizedBox(height: 4),
-                            const Text(
-                              'No. 2390343091',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontStyle: FontStyle.italic,
-                                color: Colors.black87,
-                              ),
                             ),
                           ],
                         ),
@@ -155,10 +170,8 @@ class ProfilPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      _itemProfil('Email', 'production@gmail.com'),
-                      _itemProfil('No. Telepon', '+62 858 2563'),
-                      _itemProfil('Jabatan', 'Staff Gudang'),
-                      _itemProfil('Bergabung Sejak', '2024'),
+                      _itemProfil('Username', _username.isEmpty ? '-' : _username),
+                      _itemProfil('Role', _role.isEmpty ? '-' : _role[0].toUpperCase() + _role.substring(1)),
                     ],
                   ),
                 ),

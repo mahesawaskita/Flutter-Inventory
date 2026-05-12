@@ -20,9 +20,16 @@ exports.upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
 }).single('image');
 
-// 🔹 GET ALL ITEMS
+// 🔹 GET ALL ITEMS (with category_name via JOIN)
 exports.getItems = (req, res) => {
-  db.query('SELECT * FROM items WHERE (status IS NULL OR status != "inactive")', (err, result) => {
+  const sql = `
+    SELECT items.*, categories.name AS category_name
+    FROM items
+    LEFT JOIN categories ON items.category_id = categories.id
+    WHERE (items.status IS NULL OR items.status != 'inactive')
+    ORDER BY items.id DESC
+  `;
+  db.query(sql, (err, result) => {
     if (err) return res.status(500).json(err);
     res.json(result);
   });

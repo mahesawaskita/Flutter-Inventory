@@ -72,7 +72,11 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
     return _RowStatus.tersedia;
   }
 
-  String _categoryName(dynamic catId) {
+  String _categoryName(Map<String, dynamic> item) {
+    // Prefer category_name from JOIN, fallback to client-side lookup
+    final fromJoin = item['category_name']?.toString();
+    if (fromJoin != null && fromJoin.isNotEmpty) return fromJoin;
+    final catId = item['category_id'];
     if (catId == null) return '-';
     return _categories
         .firstWhere((c) => c['id'].toString() == catId.toString(), orElse: () => {'name': '-'})['name']
@@ -230,7 +234,7 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
   }
 
   void _showItemDetail(Map<String, dynamic> item) {
-    final catName = _categoryName(item['category_id']);
+    final catName = _categoryName(item);
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
@@ -332,38 +336,36 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
                       // ── Stats cards ──
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: IntrinsicHeight(
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Expanded(child: _statCard(
-                                accentColor: _blue,
-                                subtitleColor: const Color(0xFF42A5F5),
-                                title: 'Total Barang',
-                                value: '$_statTotal',
-                                subtitle: '+55 sejak\nminggu lalu',
-                                asset: AppAssets.dfTotal,
-                              )),
-                              const SizedBox(width: 8),
-                              Expanded(child: _statCard(
-                                accentColor: _amberDark,
-                                subtitleColor: _amberDark,
-                                title: 'Barang Hampir Habis',
-                                value: '$_statHampirHabis',
-                                subtitle: '3 minggu lalu',
-                                asset: AppAssets.dfHampirHabis,
-                              )),
-                              const SizedBox(width: 8),
-                              Expanded(child: _statCard(
-                                accentColor: _red,
-                                subtitleColor: _red,
-                                title: 'Barang\nHabis',
-                                value: '$_statHabis',
-                                subtitle: '2 minggu lalu',
-                                asset: AppAssets.dfBarangHabis,
-                              )),
-                            ],
-                          ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: _statCard(
+                              accentColor: _blue,
+                              subtitleColor: const Color(0xFF42A5F5),
+                              title: 'Total Barang',
+                              value: '$_statTotal',
+                              subtitle: '+55 sejak minggu lalu',
+                              asset: AppAssets.dfTotal,
+                            )),
+                            const SizedBox(width: 8),
+                            Expanded(child: _statCard(
+                              accentColor: _amberDark,
+                              subtitleColor: _amberDark,
+                              title: 'Barang Hampir Habis',
+                              value: '$_statHampirHabis',
+                              subtitle: '3 minggu lalu',
+                              asset: AppAssets.dfHampirHabis,
+                            )),
+                            const SizedBox(width: 8),
+                            Expanded(child: _statCard(
+                              accentColor: _red,
+                              subtitleColor: _red,
+                              title: 'Barang Habis',
+                              value: '$_statHabis',
+                              subtitle: '2 minggu lalu',
+                              asset: AppAssets.dfBarangHabis,
+                            )),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -607,7 +609,7 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
   // ── DATA ROW ───────────────────────────────
   Widget _dataRow(Map<String, dynamic> item) {
     final name    = item['name']?.toString() ?? '-';
-    final catName = _categoryName(item['category_id']);
+    final catName = _categoryName(item);
     final stock   = item['stock'] as int? ?? 0;
     final status  = _itemStatus(item);
 
@@ -774,6 +776,7 @@ class _DaftarBarangPageState extends State<DaftarBarangPage> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           SizedBox(height: 26, child: _asset(asset, w: 26, h: 26)),
           const SizedBox(height: 5),
