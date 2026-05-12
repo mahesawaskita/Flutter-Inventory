@@ -45,13 +45,13 @@ exports.createItem = (req, res) => {
   }
 
   const sql = `
-    INSERT INTO items (category_id, name, description, stock, \`condition\`, price, image)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO items (category_id, name, description, stock, \`condition\`, status, price, image)
+    VALUES (?, ?, ?, ?, ?, 'available', ?, ?)
   `;
 
   db.query(
     sql,
-    [category_id || null, name.trim(), description || '', stock || 0, condition || 'Tersedia', price || 0, image],
+    [category_id || null, name.trim(), description || '', stock || 0, condition || 'good', price || 0, image],
     (err, result) => {
       if (err) {
         console.log('[CREATE ITEM] ERROR:', err.message);

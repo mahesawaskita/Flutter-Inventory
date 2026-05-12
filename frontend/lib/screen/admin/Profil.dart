@@ -313,14 +313,14 @@ Widget _menuItem(
 }) {
   return Material(
     color: Colors.transparent,
-    borderRadius: BorderRadius.circular(ProfilPage._cardRadius),
+    borderRadius: BorderRadius.circular(14),
     child: InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(ProfilPage._cardRadius),
+      borderRadius: BorderRadius.circular(14),
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(ProfilPage._cardRadius),
+          borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.28),

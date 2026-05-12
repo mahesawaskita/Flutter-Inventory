@@ -24,38 +24,44 @@ class _StatusBarangAdminState extends State<StatusBarangAdmin> {
   // ── Computed ──────────────────────────────
   String get _searchQ => _searchCtrl.text.trim().toLowerCase();
 
-  List<Map<String, dynamic>> get _dipinjam => _allItems
-      .where((i) => (i['condition'] ?? '').toString().toLowerCase() == 'dipinjam')
-      .toList();
-
-  List<Map<String, dynamic>> get _rusak => _allItems.where((i) {
-        final c = (i['condition'] ?? '').toString().toLowerCase();
-        return c == 'rusak' || c == 'perlu perbaikan';
-      }).toList();
+  List<Map<String, dynamic>> get _borrowedLoans =>
+      _allLoans.where((l) => l['status'] == 'borrowed').toList();
 
   List<Map<String, dynamic>> get _currentList {
     if (_activeTab == 0) {
-      // Tampilkan item yang kondisinya Dipinjam
-      var list = _dipinjam;
+      var list = _borrowedLoans;
       if (_searchQ.isNotEmpty) {
-        list = list.where((i) => (i['name'] ?? '').toString().toLowerCase().contains(_searchQ)).toList();
+        list = list.where((l) =>
+            (l['item_name'] ?? '').toString().toLowerCase().contains(_searchQ) ||
+            (l['username'] ?? '').toString().toLowerCase().contains(_searchQ)).toList();
       }
       return list;
     } else {
-      // History: tampilkan loan yang sudah dikembalikan
       var list = _allLoans.where((l) => l['status'] == 'returned').toList();
       if (_searchQ.isNotEmpty) {
-        list = list.where((l) => (l['item_name'] ?? '').toString().toLowerCase().contains(_searchQ)).toList();
+        list = list.where((l) =>
+            (l['item_name'] ?? '').toString().toLowerCase().contains(_searchQ)).toList();
       }
       return list;
     }
   }
 
-  int get _statDipinjam => _allLoans.where((l) => l['status'] == 'active').length;
+  int get _statDipinjam => _borrowedLoans.length;
   int get _statTersedia =>
-      _allItems.where((i) => (i['condition'] ?? '') == 'Tersedia').length;
-  int get _statRusak => _rusak.length;
+      _allItems.where((i) => (i['status'] ?? '') == 'available').length;
+  int get _statRusak =>
+      _allItems.where((i) => (i['condition'] ?? '') == 'damaged').length;
   int get _statDikembalikan => _allLoans.where((l) => l['status'] == 'returned').length;
+  int get _statTerlambat {
+    final now = DateTime.now();
+    return _borrowedLoans.where((l) {
+      try {
+        return DateTime.parse(l['due_date'].toString()).isBefore(now);
+      } catch (_) {
+        return false;
+      }
+    }).length;
+  }
 
   // ── Lifecycle ─────────────────────────────
   @override
@@ -92,17 +98,6 @@ class _StatusBarangAdminState extends State<StatusBarangAdmin> {
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  // Cari loan aktif untuk item tertentu
-  Map<String, dynamic>? _activeLoanForItem(dynamic itemId) {
-    try {
-      return _allLoans.firstWhere(
-        (l) => l['item_id']?.toString() == itemId?.toString() && l['status'] == 'active',
-      );
-    } catch (_) {
-      return null;
     }
   }
 
@@ -240,8 +235,8 @@ class _StatusBarangAdminState extends State<StatusBarangAdmin> {
                               bg: const Color(0xFFDCEBF9),
                               iconPath: AppAssets.stTelat,
                               label: 'Terlambat\nDikembalikan',
-                              value: '0',
-                              sub: '0 telat',
+                              value: '$_statTerlambat',
+                              sub: '$_statTerlambat telat',
                               subColor: Colors.red,
                             )),
                             const SizedBox(width: 8),
@@ -305,7 +300,18 @@ class _StatusBarangAdminState extends State<StatusBarangAdmin> {
                             const SizedBox(width: 8),
                             OutlinedButton(
                               onPressed: (_activeTab == 0 && _currentList.isNotEmpty)
-                                  ? () => _navigateToDetail(_currentList.first)
+                                  ? () {
+                                      final loan = _currentList.first;
+                                      final itemId = loan['item_id']?.toString();
+                                      Map<String, dynamic>? item;
+                                      if (itemId != null) {
+                                        try {
+                                          item = _allItems.firstWhere(
+                                              (i) => i['id']?.toString() == itemId);
+                                        } catch (_) {}
+                                      }
+                                      if (item != null) _navigateToDetail(item);
+                                    }
                                   : null,
                               style: OutlinedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -438,50 +444,47 @@ class _StatusBarangAdminState extends State<StatusBarangAdmin> {
 
   // ── DATA ROW ──────────────────────────────
   Widget _dataRow(Map<String, dynamic> row) {
-    // row bisa berupa item (tab 0) atau loan (tab 1)
+    // Both tabs use borrowing records
     final isHistoryTab = _activeTab == 1;
 
-    String name;
-    String borrower;
-    String tanggal;
+    final name = row['item_name']?.toString() ?? '-';
+    final borrower = row['username']?.toString() ?? '-';
+    final tanggal = _fmtDate(row['borrow_date']?.toString());
+
     String statusText;
     Color statusBg;
     Color statusFg;
-    Map<String, dynamic>? itemForNav;
 
     if (isHistoryTab) {
-      // row adalah loan record
-      name = row['item_name']?.toString() ?? '-';
-      borrower = row['username']?.toString() ?? '-';
-      tanggal = _fmtDate(row['borrow_date']?.toString());
       statusText = 'Kembali';
       statusBg = const Color(0xFF57D3C9);
       statusFg = Colors.white;
-      itemForNav = null;
     } else {
-      // row adalah item record
-      itemForNav = row;
-      name = row['name']?.toString() ?? '-';
-      final loan = _activeLoanForItem(row['id']);
-      borrower = loan?['username']?.toString() ?? '-';
-      tanggal = loan != null ? _fmtDate(loan['borrow_date']?.toString()) : '-';
-      final condition = row['condition']?.toString() ?? '-';
-      switch (condition.toLowerCase()) {
-        case 'dipinjam':
-          statusText = 'Dipinjam';
-          statusBg = const Color(0xFF57D3C9);
-          statusFg = Colors.white;
-          break;
-        case 'rusak':
-        case 'perlu perbaikan':
-          statusText = condition;
-          statusBg = const Color(0xFFFE6F51);
-          statusFg = Colors.white;
-          break;
-        default:
-          statusText = condition;
-          statusBg = Colors.grey.shade300;
-          statusFg = Colors.black87;
+      bool late = false;
+      try {
+        final due = row['due_date']?.toString();
+        if (due != null) late = DateTime.parse(due).isBefore(DateTime.now());
+      } catch (_) {}
+      if (late) {
+        statusText = 'Terlambat';
+        statusBg = const Color(0xFFFE6F51);
+        statusFg = Colors.white;
+      } else {
+        statusText = 'Dipinjam';
+        statusBg = const Color(0xFF57D3C9);
+        statusFg = Colors.white;
+      }
+    }
+
+    // Find item for detail navigation
+    Map<String, dynamic>? itemForNav;
+    if (_activeTab == 0) {
+      final itemId = row['item_id']?.toString();
+      if (itemId != null) {
+        try {
+          itemForNav = _allItems.firstWhere(
+              (i) => i['id']?.toString() == itemId);
+        } catch (_) {}
       }
     }
 

@@ -64,17 +64,23 @@ class _DaftarBarangUserScreenState extends State<DaftarBarangUserScreen> {
     }
   }
 
-  Color _conditionColor(String condition) {
-    switch (condition.toLowerCase()) {
-      case 'tersedia':
-        return const Color(0xFF74D294);
-      case 'dipinjam':
-        return const Color(0xFFF0D48A);
-      case 'rusak':
-      case 'perlu perbaikan':
-        return const Color(0xFFFA7B6F);
-      default:
-        return Colors.grey;
+  String _statusLabel(Map<String, dynamic> item) {
+    switch (item['status']?.toString() ?? 'available') {
+      case 'available': return 'Tersedia';
+      case 'borrowed': return 'Dipinjam';
+      case 'reserved': return 'Direservasi';
+      case 'inactive': return 'Tidak Aktif';
+      default: return item['status']?.toString() ?? '-';
+    }
+  }
+
+  Color _statusColor(Map<String, dynamic> item) {
+    switch (item['status']?.toString() ?? 'available') {
+      case 'available': return const Color(0xFF74D294);
+      case 'borrowed': return const Color(0xFFF0D48A);
+      case 'reserved': return const Color(0xFF90CAF9);
+      case 'inactive': return Colors.grey;
+      default: return Colors.grey;
     }
   }
 
@@ -203,9 +209,9 @@ class _DaftarBarangUserScreenState extends State<DaftarBarangUserScreen> {
                 final name = item['name']?.toString() ?? '-';
                 final cat = item['category_name']?.toString() ?? '-';
                 final stock = item['stock'] as int? ?? 0;
-                final condition = item['condition']?.toString() ?? 'Tersedia';
-                final condColor = _conditionColor(condition);
-                final canBorrow = condition == 'Tersedia' && stock > 0;
+                final statusLabel = _statusLabel(item);
+                final condColor = _statusColor(item);
+                final canBorrow = (item['status']?.toString() ?? '') == 'available' && stock > 0;
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 10),
@@ -231,7 +237,7 @@ class _DaftarBarangUserScreenState extends State<DaftarBarangUserScreen> {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             UserPill(
-                              text: condition,
+                              text: statusLabel,
                               background: condColor.withOpacity(0.2),
                               foreground: condColor,
                             ),

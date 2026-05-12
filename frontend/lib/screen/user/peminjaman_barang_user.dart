@@ -58,7 +58,7 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
       setState(() {
         _availableItems = items
             .map((e) => Map<String, dynamic>.from(e))
-            .where((i) => i['condition']?.toString() == 'Tersedia' && (i['stock'] as int? ?? 0) > 0)
+            .where((i) => i['status']?.toString() == 'available' && (i['stock'] as int? ?? 0) > 0)
             .toList();
         _isLoadingItems = false;
 
@@ -156,7 +156,7 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
   }
 
   bool _isLate(Map<String, dynamic> loan) {
-    if (loan['status'] != 'active') return false;
+    if (loan['status'] != 'borrowed') return false;
     try {
       return DateTime.parse(loan['due_date'].toString()).isBefore(DateTime.now());
     } catch (_) { return false; }
@@ -164,8 +164,8 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
 
   List<Map<String, dynamic>> get _historyFiltered {
     switch (_historyTab) {
-      case 0: return _myLoans.where((l) => l['status'] == 'active' && !_isLate(l)).toList();
-      case 1: return _myLoans.where((l) => l['status'] == 'active').toList();
+      case 0: return _myLoans.where((l) => l['status'] == 'pending').toList();
+      case 1: return _myLoans.where((l) => l['status'] == 'borrowed').toList();
       default: return _myLoans.where((l) => l['status'] == 'returned').toList();
     }
   }
@@ -364,13 +364,21 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
                               ),
                             ),
                             UserPill(
-                              text: status == 'returned' ? 'Dikembalikan' : (late ? 'Terlambat' : 'Aktif'),
+                              text: status == 'returned'
+                                  ? 'Dikembalikan'
+                                  : status == 'borrowed'
+                                      ? (late ? 'Terlambat' : 'Dipinjam')
+                                      : 'Menunggu',
                               background: status == 'returned'
                                   ? const Color(0xFFD8DEFF)
-                                  : (late ? const Color(0xFFFFE0D7) : const Color(0xFFDCF5E3)),
+                                  : status == 'borrowed'
+                                      ? (late ? const Color(0xFFFFE0D7) : const Color(0xFFDCF5E3))
+                                      : const Color(0xFFFFF3CD),
                               foreground: status == 'returned'
                                   ? const Color(0xFF4D7BEE)
-                                  : (late ? Colors.red : Colors.green),
+                                  : status == 'borrowed'
+                                      ? (late ? Colors.red : Colors.green)
+                                      : Colors.orange,
                             ),
                           ],
                         ),

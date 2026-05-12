@@ -39,7 +39,7 @@ class _StatusBarangUserScreenState extends State<StatusBarangUserScreen> {
   }
 
   bool _isLate(Map<String, dynamic> loan) {
-    if (loan['status'] != 'active') return false;
+    if (loan['status'] != 'borrowed') return false;
     try {
       return DateTime.parse(loan['due_date'].toString()).isBefore(DateTime.now());
     } catch (_) {
@@ -47,13 +47,13 @@ class _StatusBarangUserScreenState extends State<StatusBarangUserScreen> {
     }
   }
 
-  int get _statActive => _myLoans.where((l) => l['status'] == 'active' && !_isLate(l)).length;
+  int get _statActive => _myLoans.where((l) => l['status'] == 'borrowed' && !_isLate(l)).length;
   int get _statReturned => _myLoans.where((l) => l['status'] == 'returned').length;
   int get _statLate => _myLoans.where((l) => _isLate(l)).length;
 
   List<Map<String, dynamic>> get _filtered {
     var list = _activeTab == 1
-        ? _myLoans.where((l) => l['status'] == 'active').toList()
+        ? _myLoans.where((l) => l['status'] == 'borrowed').toList()
         : _myLoans;
     if (_search.isNotEmpty) {
       list = list.where((l) =>
