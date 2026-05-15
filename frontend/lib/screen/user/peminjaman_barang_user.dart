@@ -468,40 +468,18 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
-      builder: (_) {
-        if (_availableItems.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.all(24),
-            child: Text('Tidak ada barang yang tersedia', style: TextStyle(color: UserUi.textMuted)),
-          );
-        }
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Padding(
-                padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: Text('Pilih Barang', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-              ),
-              ..._availableItems.map((item) => ListTile(
-                    leading: const Icon(Icons.inventory_2_rounded, color: UserUi.blue),
-                    title: Text(item['name']?.toString() ?? '-'),
-                    subtitle: Text('Stok: ${item['stock']} · ${item['category_name'] ?? '-'}',
-                        style: const TextStyle(fontSize: 12)),
-                    trailing: _selectedItem != null && _selectedItem!['id']?.toString() == item['id']?.toString()
-                        ? const Icon(Icons.check_circle, color: UserUi.blue)
-                        : null,
-                    onTap: () {
-                      setState(() => _selectedItem = item);
-                      Navigator.pop(context);
-                    },
-                  )),
-              const SizedBox(height: 8),
-            ],
-          ),
-        );
-      },
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _ItemPickerSheet(
+        items: _availableItems,
+        selectedItem: _selectedItem,
+        onSelected: (item) {
+          setState(() => _selectedItem = item);
+          Navigator.pop(context);
+        },
+      ),
     );
   }
 }
@@ -529,6 +507,254 @@ class _HistoryTab extends StatelessWidget {
             fontSize: 11,
             color: active ? Colors.white : Colors.black87,
             fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Item Picker Bottom Sheet ──────────────────────────────────────────────────
+
+class _ItemPickerSheet extends StatefulWidget {
+  const _ItemPickerSheet({
+    required this.items,
+    required this.onSelected,
+    this.selectedItem,
+  });
+
+  final List<Map<String, dynamic>> items;
+  final Map<String, dynamic>? selectedItem;
+  final ValueChanged<Map<String, dynamic>> onSelected;
+
+  @override
+  State<_ItemPickerSheet> createState() => _ItemPickerSheetState();
+}
+
+class _ItemPickerSheetState extends State<_ItemPickerSheet> {
+  final _searchCtrl = TextEditingController();
+  String _query = '';
+  String? _activeCategory; // null = semua
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  List<String> get _categories {
+    final cats = widget.items
+        .map((i) => i['category_name']?.toString() ?? '')
+        .where((c) => c.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+    return cats;
+  }
+
+  List<Map<String, dynamic>> get _filtered {
+    return widget.items.where((item) {
+      final name = item['name']?.toString().toLowerCase() ?? '';
+      final cat = item['category_name']?.toString() ?? '';
+      final matchSearch = _query.isEmpty || name.contains(_query.toLowerCase());
+      final matchCat = _activeCategory == null || cat == _activeCategory;
+      return matchSearch && matchCat;
+    }).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filtered = _filtered;
+    final categories = _categories;
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.6,
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
+      expand: false,
+      builder: (_, scrollController) => Column(
+        children: [
+          // ── Drag handle ──
+          Container(
+            margin: const EdgeInsets.only(top: 10, bottom: 6),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: const Color(0xFFCCCCCC),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+
+          // ── Header ──
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 4, 16, 10),
+            child: Text(
+              'Pilih Barang',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+            ),
+          ),
+
+          // ── Search ──
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: TextField(
+              controller: _searchCtrl,
+              onChanged: (v) => setState(() => _query = v),
+              style: const TextStyle(fontSize: 13),
+              decoration: InputDecoration(
+                hintText: 'Cari nama barang...',
+                hintStyle:
+                    const TextStyle(fontSize: 13, color: UserUi.textMuted),
+                prefixIcon: const Icon(Icons.search_rounded,
+                    size: 20, color: UserUi.textMuted),
+                suffixIcon: _query.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.close_rounded,
+                            size: 18, color: UserUi.textMuted),
+                        onPressed: () {
+                          _searchCtrl.clear();
+                          setState(() => _query = '');
+                        },
+                      )
+                    : null,
+                filled: true,
+                fillColor: const Color(0xFFF5F0F6),
+                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // ── Category chips ──
+          if (categories.isNotEmpty)
+            SizedBox(
+              height: 34,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  _CategoryChip(
+                    label: 'Semua',
+                    active: _activeCategory == null,
+                    onTap: () => setState(() => _activeCategory = null),
+                  ),
+                  ...categories.map((cat) => _CategoryChip(
+                        label: cat,
+                        active: _activeCategory == cat,
+                        onTap: () => setState(() => _activeCategory = cat),
+                      )),
+                ],
+              ),
+            ),
+          const SizedBox(height: 8),
+
+          // ── Divider ──
+          const Divider(height: 1, color: UserUi.softBorder),
+
+          // ── Item list ──
+          Expanded(
+            child: filtered.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.search_off_rounded,
+                            size: 40, color: Colors.grey[300]),
+                        const SizedBox(height: 8),
+                        Text(
+                          _query.isEmpty
+                              ? 'Tidak ada barang tersedia'
+                              : 'Barang "$_query" tidak ditemukan',
+                          style: const TextStyle(
+                              color: UserUi.textMuted, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.separated(
+                    controller: scrollController,
+                    itemCount: filtered.length,
+                    separatorBuilder: (_, __) =>
+                        const Divider(height: 1, indent: 56, color: UserUi.softBorder),
+                    itemBuilder: (_, i) {
+                      final item = filtered[i];
+                      final isSelected = widget.selectedItem != null &&
+                          widget.selectedItem!['id']?.toString() ==
+                              item['id']?.toString();
+                      return ListTile(
+                        leading: Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: UserUi.productThumbBackground,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.inventory_2_rounded,
+                              size: 20, color: UserUi.productThumbIconColor),
+                        ),
+                        title: Text(
+                          item['name']?.toString() ?? '-',
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w700),
+                        ),
+                        subtitle: Text(
+                          '${item['category_name'] ?? '-'} · Stok: ${item['stock']}',
+                          style: const TextStyle(
+                              fontSize: 11, color: UserUi.textMuted),
+                        ),
+                        trailing: isSelected
+                            ? const Icon(Icons.check_circle_rounded,
+                                color: UserUi.blue)
+                            : const Icon(Icons.chevron_right_rounded,
+                                color: UserUi.textMuted),
+                        onTap: () => widget.onSelected(item),
+                      );
+                    },
+                  ),
+          ),
+
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+}
+
+class _CategoryChip extends StatelessWidget {
+  const _CategoryChip({
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: active ? UserUi.blue : const Color(0xFFF0EAF2),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: active ? UserUi.blue : UserUi.softBorder,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: active ? Colors.white : Colors.black87,
           ),
         ),
       ),
