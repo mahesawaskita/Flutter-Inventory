@@ -26,6 +26,7 @@ class _DetailPeminjamanBarangUserScreenState
   bool _isSubmitting = false;
   String _username = '';
   File? _photoFile;
+  int _quantity = 1;
 
   @override
   void initState() {
@@ -42,6 +43,46 @@ class _DetailPeminjamanBarangUserScreenState
   Future<void> _loadUsername() async {
     final name = await AuthService.getUsername();
     if (mounted) setState(() => _username = name ?? '');
+  }
+
+  Future<void> _confirmLoan() async {
+    final loan = widget.loan;
+    if (loan == null) return;
+
+    setState(() => _isSubmitting = true);
+    final token = await AuthService.getToken();
+    if (token == null) {
+      if (mounted) setState(() => _isSubmitting = false);
+      return;
+    }
+
+    final result = await ApiService.createLoan(token, {
+      'item_id': loan['item_id'],
+      'purpose': _notesCtrl.text.trim(),
+      'borrow_date': loan['borrow_date'],
+      'due_date': loan['due_date'],
+      'quantity': _quantity,
+    });
+
+    if (!mounted) return;
+    setState(() => _isSubmitting = false);
+
+    if (result['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Peminjaman berhasil dikonfirmasi!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.pop(context, true);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message']?.toString() ?? 'Gagal'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Future<void> _takePhoto() async {
@@ -136,6 +177,7 @@ class _DetailPeminjamanBarangUserScreenState
     final status = loan?['status']?.toString() ?? 'borrowed';
     final isBorrowed = status == 'borrowed';
     final isReturned = status == 'returned';
+    final maxStock = int.tryParse(loan?['stock']?.toString() ?? '99') ?? 99;
 
     return UserPageScaffold(
       child: UserFramedPage(
@@ -154,58 +196,110 @@ class _DetailPeminjamanBarangUserScreenState
             UserSectionCard(
               color: Colors.white,
               padding: const EdgeInsets.all(10),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const UserProductThumb(icon: Icons.laptop_mac_rounded),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          itemName,
-                          style: const TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w800),
-                        ),
-                        Text(
-                          _username.isEmpty ? '-' : _username,
-                          style: const TextStyle(
-                              fontSize: 12, color: UserUi.textMuted),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
+                  Row(
+                    children: [
+                      const UserProductThumb(icon: Icons.laptop_mac_rounded),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(Icons.calendar_today_rounded,
-                                size: 13, color: UserUi.blue),
-                            const SizedBox(width: 4),
                             Text(
-                              borrowDate,
+                              itemName,
                               style: const TextStyle(
-                                  fontSize: 12, color: UserUi.blue),
+                                  fontSize: 14, fontWeight: FontWeight.w800),
+                            ),
+                            Text(
+                              _username.isEmpty ? '-' : _username,
+                              style: const TextStyle(
+                                  fontSize: 12, color: UserUi.textMuted),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                const Icon(Icons.calendar_today_rounded,
+                                    size: 13, color: UserUi.blue),
+                                const SizedBox(width: 4),
+                                Text(
+                                  borrowDate,
+                                  style: const TextStyle(
+                                      fontSize: 12, color: UserUi.blue),
+                                ),
+                              ],
                             ),
                           ],
                         ),
+                      ),
+                      if (loan != null)
+                        UserPill(
+                          text: isReturned
+                              ? 'Dikembalikan'
+                              : isBorrowed
+                                  ? 'Dipinjam'
+                                  : 'Menunggu',
+                          background: isReturned
+                              ? const Color(0xFFD8DEFF)
+                              : isBorrowed
+                                  ? const Color(0xFFDCF5E3)
+                                  : const Color(0xFFFFF3CD),
+                          foreground: isReturned
+                              ? const Color(0xFF4D7BEE)
+                              : isBorrowed
+                                  ? Colors.green
+                                  : Colors.orange,
+                        ),
+                    ],
+                  ),
+
+                  // ── Jumlah dipinjam (hanya mode peminjaman) ──
+                  if (!isReturnMode) ...[
+                    const SizedBox(height: 10),
+                    const Divider(height: 1, color: UserUi.softBorder),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        const Icon(Icons.layers_rounded,
+                            size: 16, color: UserUi.textMuted),
+                        const SizedBox(width: 6),
+                        const Text('Jumlah Dipinjam',
+                            style: TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.w700)),
+                        const Spacer(),
+                        _QtyButton(
+                          icon: Icons.remove_rounded,
+                          enabled: _quantity > 1,
+                          onTap: () => setState(() => _quantity--),
+                        ),
+                        Padding(
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 14),
+                          child: Text(
+                            '$_quantity',
+                            style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                        _QtyButton(
+                          icon: Icons.add_rounded,
+                          enabled: _quantity < maxStock,
+                          onTap: () => setState(() => _quantity++),
+                        ),
                       ],
                     ),
-                  ),
-                  if (loan != null)
-                    UserPill(
-                      text: isReturned
-                          ? 'Dikembalikan'
-                          : isBorrowed
-                              ? 'Dipinjam'
-                              : 'Menunggu',
-                      background: isReturned
-                          ? const Color(0xFFD8DEFF)
-                          : isBorrowed
-                              ? const Color(0xFFDCF5E3)
-                              : const Color(0xFFFFF3CD),
-                      foreground: isReturned
-                          ? const Color(0xFF4D7BEE)
-                          : isBorrowed
-                              ? Colors.green
-                              : Colors.orange,
+                    const SizedBox(height: 2),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        'Stok tersedia: $maxStock',
+                        style: const TextStyle(
+                            fontSize: 11, color: UserUi.textMuted),
+                      ),
                     ),
+                  ],
                 ],
               ),
             ),
@@ -261,7 +355,7 @@ class _DetailPeminjamanBarangUserScreenState
               color: const Color(0xFFF7F1F6),
               child: Center(
                 child: GestureDetector(
-                  onTap: isReturnMode ? _takePhoto : null,
+                  onTap: _takePhoto,
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [
@@ -282,8 +376,7 @@ class _DetailPeminjamanBarangUserScreenState
                                 color: UserUi.productThumbIconColor,
                               ),
                       ),
-                      if (isReturnMode)
-                        Positioned(
+                      Positioned(
                           bottom: -6,
                           right: -6,
                           child: Container(
@@ -347,14 +440,46 @@ class _DetailPeminjamanBarangUserScreenState
                       onTap: (isBorrowed && !_isSubmitting) ? _confirmReturn : null,
                     )
                   : UserPrimaryButton(
-                      text: 'Kembali ke Peminjaman',
-                      icon: Icons.arrow_back_rounded,
-                      onTap: () => Navigator.pop(context),
+                      text: _isSubmitting
+                          ? 'Memproses...'
+                          : 'Konfirmasi Peminjaman',
+                      icon: _isSubmitting
+                          ? null
+                          : Icons.check_circle_outline_rounded,
+                      onTap: _isSubmitting ? null : _confirmLoan,
                     ),
             ),
             const SizedBox(height: 8),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _QtyButton extends StatelessWidget {
+  const _QtyButton({
+    required this.icon,
+    required this.enabled,
+    required this.onTap,
+  });
+  final IconData icon;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: enabled ? onTap : null,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          color: enabled ? UserUi.blue : const Color(0xFFE0E0E0),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, size: 18, color: Colors.white),
       ),
     );
   }

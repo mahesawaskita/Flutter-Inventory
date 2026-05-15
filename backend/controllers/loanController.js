@@ -55,7 +55,8 @@ exports.getMyLoans = (req, res) => {
 // POST /api/loans — buat peminjaman baru
 exports.createLoan = (req, res) => {
   const userId = req.user.id;
-  const { item_id, borrow_date, due_date } = req.body;
+  const { item_id, borrow_date, due_date, quantity = 1 } = req.body;
+  const qty = parseInt(quantity, 10) || 1;
 
   if (!item_id || !borrow_date || !due_date) {
     return res.status(400).json({ message: 'item_id, borrow_date, dan due_date wajib diisi' });
@@ -74,17 +75,20 @@ exports.createLoan = (req, res) => {
       if (item.stock <= 0 || item.status === 'borrowed') {
         return res.status(400).json({ message: 'Stok barang habis, tidak tersedia untuk dipinjam' });
       }
+      if (item.stock < qty) {
+        return res.status(400).json({ message: `Stok tidak cukup. Tersedia: ${item.stock}` });
+      }
 
-      // Simpan peminjaman dengan snapshot nama & foto barang
+      // Simpan peminjaman dengan snapshot nama, foto, dan jumlah
       const sql = `
-        INSERT INTO borrowings (user_id, item_id, nama_barang, foto_barang, borrow_date, return_date, status)
-        VALUES (?, ?, ?, ?, ?, ?, 'borrowed')
+        INSERT INTO borrowings (user_id, item_id, nama_barang, foto_barang, quantity, borrow_date, return_date, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'borrowed')
       `;
-      db.query(sql, [userId, item_id, item.name, item.image, borrow_date, due_date], (err2, result) => {
+      db.query(sql, [userId, item_id, item.name, item.image, qty, borrow_date, due_date], (err2, result) => {
         if (err2) return res.status(500).json({ message: 'Gagal membuat peminjaman', error: err2.message });
 
-        // Kurangi stok; jika habis ubah status jadi 'borrowed'
-        const newStock = item.stock - 1;
+        // Kurangi stok sesuai jumlah; jika habis ubah status jadi 'borrowed'
+        const newStock = item.stock - qty;
         const newStatus = newStock <= 0 ? 'borrowed' : 'available';
         db.query(
           "UPDATE items SET stock = ?, `status` = ? WHERE id = ?",
@@ -94,7 +98,7 @@ exports.createLoan = (req, res) => {
           }
         );
 
-        console.log(`[LOAN] User ${userId} meminjam "${item.name}" (item_id:${item_id}), stok: ${item.stock} → ${newStock}, borrowing id: ${result.insertId}`);
+        console.log(`[LOAN] User ${userId} meminjam ${qty}x "${item.name}" (item_id:${item_id}), stok: ${item.stock} → ${newStock}, borrowing id: ${result.insertId}`);
         res.json({ message: 'Peminjaman berhasil dibuat', id: result.insertId });
       });
     }

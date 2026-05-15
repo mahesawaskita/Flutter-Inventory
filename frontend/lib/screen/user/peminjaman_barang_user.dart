@@ -27,7 +27,6 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
   int _historyTab = 2; // 0=pending, 1=active, 2=history
 
   bool _isLoadingItems = true;
-  bool _isSubmitting = false;
   bool _isLoadingHistory = true;
   String _username = '';
 
@@ -109,11 +108,29 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
   }
 
   Future<void> _submitAndNavigate() async {
-    if (_selectedItem != null && _borrowDate != null && _dueDate != null) {
-      await _submit();
-    } else {
-      _goToDetail(null, isReturnMode: false);
+    if (_selectedItem == null) {
+      _showMsg('Pilih barang yang ingin dipinjam', isError: true);
+      return;
     }
+    if (_borrowDate == null) {
+      _showMsg('Pilih tanggal peminjaman', isError: true);
+      return;
+    }
+    if (_dueDate == null) {
+      _showMsg('Pilih tanggal pengembalian', isError: true);
+      return;
+    }
+
+    // Navigate ke detail dulu — konfirmasi & API call dilakukan di sana
+    _goToDetail({
+      'item_id': _selectedItem!['id'],
+      'item_name': _selectedItem!['name'],
+      'category_name': _selectedItem!['category_name'] ?? '-',
+      'borrow_date': _fmtApi(_borrowDate!),
+      'due_date': _fmtApi(_dueDate!),
+      'stock': _selectedItem!['stock'],
+      'purpose': _purposeCtrl.text.trim(),
+    }, isReturnMode: false);
   }
 
   void _goToDetail(Map<String, dynamic>? loan, {bool isReturnMode = false}) {
@@ -127,53 +144,16 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
         ),
       ),
     ).then((refreshed) {
-      if (refreshed == true) _loadData();
+      if (refreshed == true) {
+        setState(() {
+          _selectedItem = null;
+          _purposeCtrl.clear();
+          _borrowDate = null;
+          _dueDate = null;
+        });
+        _loadData();
+      }
     });
-  }
-
-  Future<void> _submit() async {
-    setState(() => _isSubmitting = true);
-    final token = await AuthService.getToken();
-    if (token == null) {
-      if (mounted) setState(() => _isSubmitting = false);
-      return;
-    }
-
-    final selectedItem = _selectedItem!;
-    final borrowDate = _fmtApi(_borrowDate!);
-    final dueDate = _fmtApi(_dueDate!);
-
-    final result = await ApiService.createLoan(token, {
-      'item_id': selectedItem['id'],
-      'purpose': _purposeCtrl.text.trim(),
-      'borrow_date': borrowDate,
-      'due_date': dueDate,
-    });
-
-    if (!mounted) return;
-    setState(() => _isSubmitting = false);
-
-    if (result['success'] == true) {
-      _showMsg('Peminjaman berhasil diajukan!');
-      setState(() {
-        _selectedItem = null;
-        _purposeCtrl.clear();
-        _borrowDate = null;
-        _dueDate = null;
-      });
-      _loadData();
-      _goToDetail({
-        'id': result['id'],
-        'item_name': selectedItem['name'],
-        'category_name': selectedItem['category_name'] ?? '-',
-        'borrow_date': borrowDate,
-        'due_date': dueDate,
-        'status': 'borrowed',
-      }, isReturnMode: false);
-    } else {
-      _showMsg(result['message']?.toString() ?? 'Gagal', isError: true);
-      _goToDetail(null, isReturnMode: false);
-    }
   }
 
   void _showMsg(String msg, {bool isError = false}) {
@@ -342,9 +322,9 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 62),
               child: UserPrimaryButton(
-                text: _isSubmitting ? 'Mengajukan...' : 'Ajukan Peminjaman',
-                icon: _isSubmitting ? null : Icons.send_rounded,
-                onTap: _isSubmitting ? null : _submitAndNavigate,
+                text: 'Ajukan Peminjaman',
+                icon: Icons.send_rounded,
+                onTap: _submitAndNavigate,
               ),
             ),
             const SizedBox(height: 16),
