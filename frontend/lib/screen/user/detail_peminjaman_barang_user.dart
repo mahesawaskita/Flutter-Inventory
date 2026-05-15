@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:frontend/service/api_service.dart';
 import 'package:frontend/service/auth_service.dart';
+import 'package:image_picker/image_picker.dart';
 import 'user_ui.dart';
 
 class DetailPeminjamanBarangUserScreen extends StatefulWidget {
@@ -18,6 +20,7 @@ class _DetailPeminjamanBarangUserScreenState
   final _notesCtrl = TextEditingController();
   bool _isSubmitting = false;
   String _username = '';
+  File? _photoFile;
 
   @override
   void initState() {
@@ -34,6 +37,25 @@ class _DetailPeminjamanBarangUserScreenState
   Future<void> _loadUsername() async {
     final name = await AuthService.getUsername();
     if (mounted) setState(() => _username = name ?? '');
+  }
+
+  Future<void> _takePhoto() async {
+    try {
+      final picked = await ImagePicker().pickImage(
+        source: ImageSource.camera,
+        imageQuality: 80,
+        maxWidth: 1080,
+      );
+      if (picked != null && mounted) {
+        setState(() => _photoFile = File(picked.path));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Kamera tidak tersedia: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   Future<void> _confirmReturn() async {
@@ -232,43 +254,50 @@ class _DetailPeminjamanBarangUserScreenState
             UserSectionCard(
               color: const Color(0xFFF7F1F6),
               child: Center(
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      width: 144,
-                      height: 96,
-                      decoration: BoxDecoration(
-                        color: UserUi.productThumbBackground,
-                        borderRadius: BorderRadius.circular(12),
-                        border:
-                            Border.all(color: UserUi.frameBorder.withValues(alpha: .7)),
-                      ),
-                      child: const Icon(
-                        Icons.laptop_mac_rounded,
-                        size: 52,
-                        color: UserUi.productThumbIconColor,
-                      ),
-                    ),
-                    Positioned(
-                      bottom: -6,
-                      right: -6,
-                      child: Container(
-                        width: 28,
-                        height: 28,
+                child: GestureDetector(
+                  onTap: _takePhoto,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        width: 144,
+                        height: 96,
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: UserUi.softBorder),
+                          color: UserUi.productThumbBackground,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: UserUi.frameBorder.withValues(alpha: .7)),
                         ),
-                        child: const Icon(
-                          Icons.camera_alt_rounded,
-                          size: 14,
-                          color: Colors.red,
+                        clipBehavior: Clip.hardEdge,
+                        child: _photoFile != null
+                            ? Image.file(_photoFile!, fit: BoxFit.cover)
+                            : const Icon(
+                                Icons.laptop_mac_rounded,
+                                size: 52,
+                                color: UserUi.productThumbIconColor,
+                              ),
+                      ),
+                      Positioned(
+                        bottom: -6,
+                        right: -6,
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: _photoFile != null ? Colors.green : Colors.white,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: UserUi.softBorder),
+                          ),
+                          child: Icon(
+                            _photoFile != null
+                                ? Icons.check_rounded
+                                : Icons.camera_alt_rounded,
+                            size: 14,
+                            color: _photoFile != null ? Colors.white : Colors.red,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
