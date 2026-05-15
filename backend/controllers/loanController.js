@@ -8,8 +8,9 @@ exports.getAllLoans = (req, res) => {
       b.borrow_date,
       b.return_date  AS due_date,
       b.actual_return AS return_date,
+      COALESCE(b.nama_barang, i.name) AS item_name,
+      COALESCE(b.foto_barang, i.image) AS item_image,
       u.username,
-      i.name AS item_name,
       i.condition AS item_condition,
       i.status AS item_status,
       c.name AS category_name
@@ -34,7 +35,8 @@ exports.getMyLoans = (req, res) => {
       b.borrow_date,
       b.return_date  AS due_date,
       b.actual_return AS return_date,
-      i.name AS item_name,
+      COALESCE(b.nama_barang, i.name) AS item_name,
+      COALESCE(b.foto_barang, i.image) AS item_image,
       i.condition AS item_condition,
       i.status AS item_status,
       c.name AS category_name
@@ -59,25 +61,40 @@ exports.createLoan = (req, res) => {
     return res.status(400).json({ message: 'item_id, borrow_date, dan due_date wajib diisi' });
   }
 
+  // Ambil detail item: nama, foto, stok, status
   db.query(
-    "SELECT id, `status` FROM items WHERE id = ? AND status != 'inactive'",
+    "SELECT id, name, image, stock, `status` FROM items WHERE id = ? AND status != 'inactive'",
     [item_id],
     (err, items) => {
       if (err) return res.status(500).json({ message: 'Server error' });
       if (items.length === 0) return res.status(404).json({ message: 'Barang tidak ditemukan' });
-      if (items[0].status !== 'available') {
-        return res.status(400).json({ message: 'Barang tidak tersedia untuk dipinjam' });
+
+      const item = items[0];
+
+      if (item.stock <= 0 || item.status === 'borrowed') {
+        return res.status(400).json({ message: 'Stok barang habis, tidak tersedia untuk dipinjam' });
       }
 
+      // Simpan peminjaman dengan snapshot nama & foto barang
       const sql = `
-        INSERT INTO borrowings (user_id, item_id, borrow_date, return_date, status)
-        VALUES (?, ?, ?, ?, 'borrowed')
+        INSERT INTO borrowings (user_id, item_id, nama_barang, foto_barang, borrow_date, return_date, status)
+        VALUES (?, ?, ?, ?, ?, ?, 'borrowed')
       `;
-      db.query(sql, [userId, item_id, borrow_date, due_date], (err2, result) => {
+      db.query(sql, [userId, item_id, item.name, item.image, borrow_date, due_date], (err2, result) => {
         if (err2) return res.status(500).json({ message: 'Gagal membuat peminjaman', error: err2.message });
 
-        db.query("UPDATE items SET `status` = 'borrowed' WHERE id = ?", [item_id]);
-        console.log(`[LOAN] User ${userId} meminjam item ${item_id}, borrowing id: ${result.insertId}`);
+        // Kurangi stok; jika habis ubah status jadi 'borrowed'
+        const newStock = item.stock - 1;
+        const newStatus = newStock <= 0 ? 'borrowed' : 'available';
+        db.query(
+          "UPDATE items SET stock = ?, `status` = ? WHERE id = ?",
+          [newStock, newStatus, item_id],
+          (err3) => {
+            if (err3) console.error('[LOAN] Gagal update stok:', err3.message);
+          }
+        );
+
+        console.log(`[LOAN] User ${userId} meminjam "${item.name}" (item_id:${item_id}), stok: ${item.stock} → ${newStock}, borrowing id: ${result.insertId}`);
         res.json({ message: 'Peminjaman berhasil dibuat', id: result.insertId });
       });
     }
@@ -109,8 +126,17 @@ exports.returnLoan = (req, res) => {
       [id],
       (err2) => {
         if (err2) return res.status(500).json({ message: 'Gagal memperbarui peminjaman' });
-        db.query("UPDATE items SET `status` = 'available' WHERE id = ?", [loan.item_id]);
-        console.log(`[LOAN] Item ${loan.item_id} dikembalikan, borrowing id: ${id}`);
+
+        // Tambah stok kembali + set status available
+        db.query(
+          "UPDATE items SET stock = stock + 1, `status` = 'available' WHERE id = ?",
+          [loan.item_id],
+          (err3) => {
+            if (err3) console.error('[RETURN] Gagal update stok:', err3.message);
+          }
+        );
+
+        console.log(`[RETURN] Item ${loan.item_id} dikembalikan, borrowing id: ${id}`);
         res.json({ message: 'Barang berhasil dikembalikan' });
       }
     );
