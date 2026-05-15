@@ -13,11 +13,11 @@ const storage = multer.diskStorage({
 exports.uploadLoanPhoto = multer({
   storage,
   fileFilter: (req, file, cb) => {
-    const ok = /jpeg|jpg|png|gif|webp/.test(path.extname(file.originalname).toLowerCase()) &&
-               /image\//.test(file.mimetype);
-    cb(ok ? null : new Error('Hanya file gambar yang diperbolehkan'), ok);
+    const extOk = /\.(jpeg|jpg|png|gif|webp)$/i.test(file.originalname);
+    const mimeOk = file.mimetype.startsWith('image/') || file.mimetype === 'application/octet-stream';
+    cb(null, extOk || mimeOk); // terima jika salah satu lolos
   },
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 10 * 1024 * 1024 },
 }).single('foto_barang');
 
 // GET /api/loans — semua peminjaman (admin)
