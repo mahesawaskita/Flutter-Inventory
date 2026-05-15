@@ -130,7 +130,6 @@ class _DetailPeminjamanBarangUserScreenState
     final loan = widget.loan;
     final isReturnMode = widget.isReturnMode;
     final itemName = loan?['item_name']?.toString() ?? 'Barang';
-    final categoryName = loan?['category_name']?.toString() ?? '-';
     final borrowDate = _fmtDisplay(loan?['borrow_date']?.toString());
     final dueDate = _fmtDisplay(loan?['due_date']?.toString());
     final returnDate = _fmtDisplay(loan?['return_date']?.toString());
