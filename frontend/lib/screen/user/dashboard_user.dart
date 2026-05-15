@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/screen/user/daftar_barang_user.dart';
 import 'package:frontend/screen/user/peminjaman_barang_user.dart';
 import 'package:frontend/screen/user/pengembalian_barang_user.dart';
+import 'package:frontend/screen/user/profile_user.dart';
 import 'package:frontend/screen/user/qr_scanner_user.dart';
 import 'package:frontend/screen/user/status_barang_user.dart';
 import 'package:frontend/service/auth_service.dart';
@@ -47,7 +48,12 @@ class _DashboardUserScreenState extends State<DashboardUserScreen> {
           child: Column(
             children: [
               // ===== HEADER =====
-              Container(
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProfileUserScreen()),
+                ),
+                child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
                 decoration: BoxDecoration(
                   color: UserUi.card,
@@ -93,6 +99,7 @@ class _DashboardUserScreenState extends State<DashboardUserScreen> {
                     ),
                   ],
                 ),
+              ),
               ),
 
               const SizedBox(height: 120),
@@ -166,27 +173,28 @@ class _DashboardUserScreenState extends State<DashboardUserScreen> {
   }
 
   void _handleMenuTap(String menuTitle) {
+    Widget? destination;
     switch (menuTitle) {
       case 'Kembalian\nBarang':
-        Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const PengembalianBarangUserScreen()));
+        destination = const PengembalianBarangUserScreen();
         break;
       case 'Daftar\nBarang':
-        Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const DaftarBarangUserScreen()));
+        destination = const DaftarBarangUserScreen();
         break;
       case 'Status Barang':
-        Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const StatusBarangUserScreen()));
+        destination = const StatusBarangUserScreen();
         break;
       case 'Barcode\nScanner':
-        Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const QRScannerUserScreen()));
+        destination = const QRScannerUserScreen();
         break;
       case 'Peminjaman\nBarang':
-        Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const PeminjamanBarangUserScreen()));
+        destination = const PeminjamanBarangUserScreen();
         break;
     }
+    if (destination == null) return;
+    Navigator.push(context, MaterialPageRoute(builder: (_) => destination!))
+        .then((_) {
+      if (mounted) setState(() => _selectedMenuIndex = null);
+    });
   }
 }

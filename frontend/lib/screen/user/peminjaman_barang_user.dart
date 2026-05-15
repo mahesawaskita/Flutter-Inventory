@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/service/api_service.dart';
 import 'package:frontend/service/auth_service.dart';
 
+import 'detail_peminjaman_barang_user.dart';
 import 'user_ui.dart';
 
 class PeminjamanBarangUserScreen extends StatefulWidget {
@@ -131,6 +132,14 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
         _dueDate = null;
       });
       _loadData();
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const DetailPeminjamanBarangUserScreen(),
+          ),
+        );
+      }
     } else {
       _showMsg(result['message']?.toString() ?? 'Gagal', isError: true);
     }
