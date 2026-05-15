@@ -59,7 +59,11 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
       setState(() {
         _availableItems = items
             .map((e) => Map<String, dynamic>.from(e))
-            .where((i) => i['status']?.toString() == 'available' && (i['stock'] as int? ?? 0) > 0)
+            .where((i) {
+              final s = i['status']?.toString();
+              final stock = int.tryParse(i['stock']?.toString() ?? '0') ?? 0;
+              return s != 'inactive' && s != 'borrowed' && stock > 0;
+            })
             .toList();
         _isLoadingItems = false;
 
@@ -104,14 +108,26 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
     }
   }
 
-  Future<void> _submit() async {
-    if (_selectedItem == null) { _showMsg('Pilih barang yang ingin dipinjam', isError: true); return; }
-    if (_borrowDate == null) { _showMsg('Pilih tanggal peminjaman', isError: true); return; }
-    if (_dueDate == null) { _showMsg('Pilih tanggal pengembalian', isError: true); return; }
+  Future<void> _submitAndNavigate() async {
+    if (_selectedItem != null && _borrowDate != null && _dueDate != null) {
+      await _submit();
+    } else {
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const DetailPeminjamanBarangUserScreen()),
+        );
+      }
+    }
+  }
 
+  Future<void> _submit() async {
     setState(() => _isSubmitting = true);
     final token = await AuthService.getToken();
-    if (token == null) { if (mounted) setState(() => _isSubmitting = false); return; }
+    if (token == null) {
+      if (mounted) setState(() => _isSubmitting = false);
+      return;
+    }
 
     final result = await ApiService.createLoan(token, {
       'item_id': _selectedItem!['id'],
@@ -132,16 +148,15 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
         _dueDate = null;
       });
       _loadData();
-      if (mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => const DetailPeminjamanBarangUserScreen(),
-          ),
-        );
-      }
     } else {
       _showMsg(result['message']?.toString() ?? 'Gagal', isError: true);
+    }
+
+    if (mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const DetailPeminjamanBarangUserScreen()),
+      );
     }
   }
 
@@ -307,13 +322,13 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
             ),
             const SizedBox(height: 14),
 
-            // ── Submit ──
+                    // ── Submit ──
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 62),
               child: UserPrimaryButton(
                 text: _isSubmitting ? 'Mengajukan...' : 'Ajukan Peminjaman',
                 icon: _isSubmitting ? null : Icons.send_rounded,
-                onTap: _isSubmitting ? null : _submit,
+                onTap: _isSubmitting ? null : _submitAndNavigate,
               ),
             ),
             const SizedBox(height: 16),
