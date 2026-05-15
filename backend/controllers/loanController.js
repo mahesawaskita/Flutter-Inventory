@@ -154,16 +154,17 @@ exports.returnLoan = (req, res) => {
       (err2) => {
         if (err2) return res.status(500).json({ message: 'Gagal memperbarui peminjaman' });
 
-        // Tambah stok kembali + set status available
+        // Tambah stok kembali sesuai quantity yang dipinjam
+        const returnQty = loan.quantity || 1;
         db.query(
-          "UPDATE items SET stock = stock + 1, `status` = 'available' WHERE id = ?",
-          [loan.item_id],
+          "UPDATE items SET stock = stock + ?, `status` = 'available' WHERE id = ?",
+          [returnQty, loan.item_id],
           (err3) => {
             if (err3) console.error('[RETURN] Gagal update stok:', err3.message);
           }
         );
 
-        console.log(`[RETURN] Item ${loan.item_id} dikembalikan, borrowing id: ${id}`);
+        console.log(`[RETURN] Item ${loan.item_id} dikembalikan ${returnQty}x, borrowing id: ${id}`);
         res.json({ message: 'Barang berhasil dikembalikan' });
       }
     );
