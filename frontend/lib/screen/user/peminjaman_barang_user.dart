@@ -112,13 +112,18 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
     if (_selectedItem != null && _borrowDate != null && _dueDate != null) {
       await _submit();
     } else {
-      if (mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const DetailPeminjamanBarangUserScreen()),
-        );
-      }
+      _goToDetail(null);
     }
+  }
+
+  void _goToDetail(Map<String, dynamic>? loan) {
+    if (!mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => DetailPeminjamanBarangUserScreen(loan: loan)),
+    ).then((refreshed) {
+      if (refreshed == true) _loadData();
+    });
   }
 
   Future<void> _submit() async {
@@ -129,11 +134,15 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
       return;
     }
 
+    final selectedItem = _selectedItem!;
+    final borrowDate = _fmtApi(_borrowDate!);
+    final dueDate = _fmtApi(_dueDate!);
+
     final result = await ApiService.createLoan(token, {
-      'item_id': _selectedItem!['id'],
+      'item_id': selectedItem['id'],
       'purpose': _purposeCtrl.text.trim(),
-      'borrow_date': _fmtApi(_borrowDate!),
-      'due_date': _fmtApi(_dueDate!),
+      'borrow_date': borrowDate,
+      'due_date': dueDate,
     });
 
     if (!mounted) return;
@@ -148,15 +157,17 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
         _dueDate = null;
       });
       _loadData();
+      _goToDetail({
+        'id': result['id'],
+        'item_name': selectedItem['name'],
+        'category_name': selectedItem['category_name'] ?? '-',
+        'borrow_date': borrowDate,
+        'due_date': dueDate,
+        'status': 'borrowed',
+      });
     } else {
       _showMsg(result['message']?.toString() ?? 'Gagal', isError: true);
-    }
-
-    if (mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const DetailPeminjamanBarangUserScreen()),
-      );
+      _goToDetail(null);
     }
   }
 
@@ -371,7 +382,9 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
                       final late = _isLate(loan);
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 10),
-                        child: Row(
+                        child: GestureDetector(
+                          onTap: () => _goToDetail(loan),
+                          child: Row(
                           children: [
                             const UserProductThumb(
                               icon: Icons.inventory_2_rounded,
@@ -405,6 +418,7 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
                                       : Colors.orange,
                             ),
                           ],
+                        ),
                         ),
                       );
                     }),

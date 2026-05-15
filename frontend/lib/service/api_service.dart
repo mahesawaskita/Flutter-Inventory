@@ -138,6 +138,7 @@ class ApiService {
       return {
         'success': response.statusCode == 200,
         'message': body['message'] ?? 'Error',
+        'id': body['id'],
       };
     } catch (e) {
       return {'success': false, 'message': 'Tidak dapat terhubung ke server'};
