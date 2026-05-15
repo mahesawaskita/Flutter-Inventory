@@ -125,15 +125,26 @@ class ApiService {
     }
   }
 
-  /// Buat peminjaman baru
+  /// Buat peminjaman baru (multipart agar bisa kirim foto)
   static Future<Map<String, dynamic>> createLoan(
-      String token, Map<String, dynamic> data) async {
+      String token, Map<String, dynamic> data, {String? imagePath}) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/loans'),
-        headers: {'Content-Type': 'application/json', 'Authorization': token},
-        body: jsonEncode(data),
-      );
+      final uri = Uri.parse('$baseUrl/api/loans');
+      final request = http.MultipartRequest('POST', uri);
+      request.headers['Authorization'] = token;
+
+      data.forEach((key, value) {
+        if (value != null) request.fields[key] = value.toString();
+      });
+
+      if (imagePath != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('foto_barang', imagePath),
+        );
+      }
+
+      final streamed = await request.send();
+      final response = await http.Response.fromStream(streamed);
       final body = jsonDecode(response.body);
       return {
         'success': response.statusCode == 200,

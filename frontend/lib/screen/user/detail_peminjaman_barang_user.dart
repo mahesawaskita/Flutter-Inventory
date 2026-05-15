@@ -56,13 +56,17 @@ class _DetailPeminjamanBarangUserScreenState
       return;
     }
 
-    final result = await ApiService.createLoan(token, {
-      'item_id': loan['item_id'],
-      'purpose': _notesCtrl.text.trim(),
-      'borrow_date': loan['borrow_date'],
-      'due_date': loan['due_date'],
-      'quantity': _quantity,
-    });
+    final result = await ApiService.createLoan(
+      token,
+      {
+        'item_id': loan['item_id'],
+        'purpose': _notesCtrl.text.trim(),
+        'borrow_date': loan['borrow_date'],
+        'due_date': loan['due_date'],
+        'quantity': _quantity,
+      },
+      imagePath: _photoFile?.path,
+    );
 
     if (!mounted) return;
     setState(() => _isSubmitting = false);

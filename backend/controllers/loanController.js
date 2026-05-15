@@ -1,4 +1,24 @@
 const db = require('../config/db');
+const multer = require('multer');
+const path = require('path');
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'uploads/'),
+  filename: (req, file, cb) => {
+    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, unique + path.extname(file.originalname));
+  },
+});
+
+exports.uploadLoanPhoto = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    const ok = /jpeg|jpg|png|gif|webp/.test(path.extname(file.originalname).toLowerCase()) &&
+               /image\//.test(file.mimetype);
+    cb(ok ? null : new Error('Hanya file gambar yang diperbolehkan'), ok);
+  },
+  limits: { fileSize: 5 * 1024 * 1024 },
+}).single('foto_barang');
 
 // GET /api/loans — semua peminjaman (admin)
 exports.getAllLoans = (req, res) => {
@@ -79,12 +99,15 @@ exports.createLoan = (req, res) => {
         return res.status(400).json({ message: `Stok tidak cukup. Tersedia: ${item.stock}` });
       }
 
+      // Foto yang diupload user saat peminjaman (opsional)
+      const fotoBarang = req.file ? req.file.filename : item.image;
+
       // Simpan peminjaman dengan snapshot nama, foto, dan jumlah
       const sql = `
         INSERT INTO borrowings (user_id, item_id, nama_barang, foto_barang, quantity, borrow_date, return_date, status)
         VALUES (?, ?, ?, ?, ?, ?, ?, 'borrowed')
       `;
-      db.query(sql, [userId, item_id, item.name, item.image, qty, borrow_date, due_date], (err2, result) => {
+      db.query(sql, [userId, item_id, item.name, fotoBarang, qty, borrow_date, due_date], (err2, result) => {
         if (err2) return res.status(500).json({ message: 'Gagal membuat peminjaman', error: err2.message });
 
         // Kurangi stok sesuai jumlah; jika habis ubah status jadi 'borrowed'
