@@ -112,15 +112,20 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
     if (_selectedItem != null && _borrowDate != null && _dueDate != null) {
       await _submit();
     } else {
-      _goToDetail(null);
+      _goToDetail(null, isReturnMode: false);
     }
   }
 
-  void _goToDetail(Map<String, dynamic>? loan) {
+  void _goToDetail(Map<String, dynamic>? loan, {bool isReturnMode = false}) {
     if (!mounted) return;
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => DetailPeminjamanBarangUserScreen(loan: loan)),
+      MaterialPageRoute(
+        builder: (_) => DetailPeminjamanBarangUserScreen(
+          loan: loan,
+          isReturnMode: isReturnMode,
+        ),
+      ),
     ).then((refreshed) {
       if (refreshed == true) _loadData();
     });
@@ -164,10 +169,10 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
         'borrow_date': borrowDate,
         'due_date': dueDate,
         'status': 'borrowed',
-      });
+      }, isReturnMode: false);
     } else {
       _showMsg(result['message']?.toString() ?? 'Gagal', isError: true);
-      _goToDetail(null);
+      _goToDetail(null, isReturnMode: false);
     }
   }
 
@@ -383,7 +388,7 @@ class _PeminjamanBarangUserScreenState extends State<PeminjamanBarangUserScreen>
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 10),
                         child: GestureDetector(
-                          onTap: () => _goToDetail(loan),
+                          onTap: () => _goToDetail(loan, isReturnMode: true),
                           child: Row(
                           children: [
                             const UserProductThumb(
