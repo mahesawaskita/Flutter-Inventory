@@ -33,6 +33,15 @@ app.get('/', (req, res) => {
   res.send('Backend jalan 🚀');
 });
 
+// Pastikan kolom quantity ada di tabel borrowings
+db.query(`ALTER TABLE borrowings ADD COLUMN IF NOT EXISTS quantity INT NOT NULL DEFAULT 1`, (err) => {
+  if (err && !err.message.includes('Duplicate column')) {
+    console.log('[DB] quantity column check:', err.message);
+  } else {
+    console.log('[DB] Kolom quantity di borrowings siap');
+  }
+});
+
 app.listen(3000, () => {
   console.log('Server jalan di http://localhost:3000');
 });

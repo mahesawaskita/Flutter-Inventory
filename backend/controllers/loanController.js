@@ -144,8 +144,15 @@ exports.returnLoan = (req, res) => {
     if (result.length === 0) return res.status(404).json({ message: 'Peminjaman tidak ditemukan' });
 
     const loan = result[0];
+    console.log('[RETURN] Data loan:', JSON.stringify(loan));
+
     if (loan.status === 'returned') {
       return res.status(400).json({ message: 'Barang sudah dikembalikan' });
+    }
+
+    const returnQty = parseInt(loan.quantity, 10);
+    if (!returnQty || returnQty <= 0) {
+      return res.status(400).json({ message: `Data quantity tidak valid: ${loan.quantity}` });
     }
 
     db.query(
@@ -154,8 +161,6 @@ exports.returnLoan = (req, res) => {
       (err2) => {
         if (err2) return res.status(500).json({ message: 'Gagal memperbarui peminjaman' });
 
-        // Tambah stok kembali sesuai quantity yang dipinjam
-        const returnQty = loan.quantity || 1;
         db.query(
           "UPDATE items SET stock = stock + ?, `status` = 'available' WHERE id = ?",
           [returnQty, loan.item_id],
