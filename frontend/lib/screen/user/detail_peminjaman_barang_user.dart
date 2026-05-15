@@ -1,118 +1,318 @@
 import 'package:flutter/material.dart';
-
+import 'package:frontend/service/api_service.dart';
+import 'package:frontend/service/auth_service.dart';
 import 'user_ui.dart';
 
 class DetailPeminjamanBarangUserScreen extends StatefulWidget {
-  const DetailPeminjamanBarangUserScreen({super.key});
+  final Map<String, dynamic>? loan;
+
+  const DetailPeminjamanBarangUserScreen({super.key, this.loan});
 
   @override
-  State<DetailPeminjamanBarangUserScreen> createState() => _DetailPeminjamanBarangUserScreenState();
+  State<DetailPeminjamanBarangUserScreen> createState() =>
+      _DetailPeminjamanBarangUserScreenState();
 }
 
-class _DetailPeminjamanBarangUserScreenState extends State<DetailPeminjamanBarangUserScreen> {
+class _DetailPeminjamanBarangUserScreenState
+    extends State<DetailPeminjamanBarangUserScreen> {
+  final _notesCtrl = TextEditingController();
+  bool _isSubmitting = false;
+  String _username = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUsername();
+  }
+
+  @override
+  void dispose() {
+    _notesCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadUsername() async {
+    final name = await AuthService.getUsername();
+    if (mounted) setState(() => _username = name ?? '');
+  }
+
+  Future<void> _confirmReturn() async {
+    final loan = widget.loan;
+    if (loan == null) return;
+
+    setState(() => _isSubmitting = true);
+    final token = await AuthService.getToken();
+    if (token == null) {
+      if (mounted) setState(() => _isSubmitting = false);
+      return;
+    }
+
+    final id = int.tryParse(loan['id']?.toString() ?? '');
+    if (id == null) {
+      if (mounted) setState(() => _isSubmitting = false);
+      return;
+    }
+
+    final result = await ApiService.returnLoan(token, id);
+    if (!mounted) return;
+    setState(() => _isSubmitting = false);
+
+    if (result['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Barang berhasil dikembalikan!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.pop(context, true);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message']?.toString() ?? 'Gagal'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  String _fmtDisplay(String? s) {
+    if (s == null || s.isEmpty) return '-';
+    try {
+      final d = DateTime.parse(s);
+      const m = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+        'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+      ];
+      return '${d.day} ${m[d.month - 1]} ${d.year}';
+    } catch (_) {
+      return s;
+    }
+  }
+
+  String get _todayFmt {
+    final d = DateTime.now();
+    const m = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+    ];
+    return '${d.day} ${m[d.month - 1]} ${d.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final loan = widget.loan;
+    final itemName = loan?['item_name']?.toString() ?? 'Barang';
+    final categoryName = loan?['category_name']?.toString() ?? '-';
+    final borrowDate = _fmtDisplay(loan?['borrow_date']?.toString());
+    final dueDate = _fmtDisplay(loan?['due_date']?.toString());
+    final returnDate = _fmtDisplay(loan?['return_date']?.toString());
+    final status = loan?['status']?.toString() ?? 'borrowed';
+    final isBorrowed = status == 'borrowed';
+    final isReturned = status == 'returned';
+
     return UserPageScaffold(
       child: UserFramedPage(
-        title: 'Detail Peminjaman Barang',
-        topIcon: const Icon(Icons.local_shipping_rounded, size: 48, color: Color(0xFFEA6482)),
+        title: 'Detail Pengembalian Barang',
+        topIcon: const Icon(
+          Icons.assignment_return_rounded,
+          size: 46,
+          color: Color(0xFFEA6482),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // ── Barang yang Dikembalikan ──
+            const _SectionLabel('Barang yang Dikembalikan'),
+            const SizedBox(height: 6),
             UserSectionCard(
-              padding: EdgeInsets.zero,
-              child: Column(
+              color: Colors.white,
+              padding: const EdgeInsets.all(10),
+              child: Row(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Row(
-                      children: const [
-                        UserProductThumb(icon: Icons.laptop_mac_rounded),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Laptop', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
-                              Text('Elektronik', style: TextStyle(fontSize: 12)),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    height: 1,
-                    color: UserUi.softBorder,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                    child: Row(
-                      children: const [
-                        Icon(Icons.list_alt_rounded, color: Color(0xFF51B1F1)),
-                        SizedBox(width: 8),
-                        Text('Stok ', style: TextStyle(fontSize: 13)),
-                        Text('10 Tersedia', style: TextStyle(fontSize: 13, color: Color(0xFF00C853))),
-                        Spacer(),
-                        Icon(Icons.chevron_right_rounded),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Text('Informasi Peminjaman', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
-            const SizedBox(height: 8),
-            UserSectionCard(
-              child: Column(
-                children: [
-                  UserInfoTile(
-                    leading: const CircleAvatar(
-                      radius: 22,
-                      backgroundColor: Color(0xFFD9EEF7),
-                      child: Icon(Icons.person, color: Color(0xFF5C6D91)),
-                    ),
-                    title: 'Bintang Audi',
-                    subtitle: '+ Tambah Nama',
-                  ),
-                  const SizedBox(height: 8),
-                  const _LabeledDate(title: 'Tanggal Peminjaman', start: '24 April 2024', end: '1 Mei 2024'),
-                  const SizedBox(height: 8),
-                  const _FieldBlock(label: 'Catatan (Opsional)', icon: Icons.edit_note_rounded, hint: 'Masukkan catatan peminjaman barang...'),
-                  const SizedBox(height: 8),
-                  UserSectionCard(
-                    padding: const EdgeInsets.all(10),
-                    color: const Color(0xFFF7F1F6),
+                  const UserProductThumb(icon: Icons.laptop_mac_rounded),
+                  const SizedBox(width: 10),
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: const [
-                            Icon(Icons.photo_camera_rounded, size: 18),
-                            SizedBox(width: 8),
-                            Text('Foto Barang', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
-                          ],
+                        Text(
+                          itemName,
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w800),
                         ),
-                        const SizedBox(height: 12),
-                        Center(
-                          child: Container(
-                            width: 144,
-                            height: 76,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFD7D7D7),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: UserUi.frameBorder.withOpacity(.7)),
+                        Text(
+                          _username.isEmpty ? '-' : _username,
+                          style: const TextStyle(
+                              fontSize: 12, color: UserUi.textMuted),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(Icons.calendar_today_rounded,
+                                size: 13, color: UserUi.blue),
+                            const SizedBox(width: 4),
+                            Text(
+                              borrowDate,
+                              style: const TextStyle(
+                                  fontSize: 12, color: UserUi.blue),
                             ),
-                            child: const Icon(Icons.laptop_mac_rounded, size: 46, color: Color(0xFF4460C8)),
-                          ),
+                          ],
                         ),
                       ],
                     ),
                   ),
+                  if (loan != null)
+                    UserPill(
+                      text: isReturned
+                          ? 'Dikembalikan'
+                          : isBorrowed
+                              ? 'Dipinjam'
+                              : 'Menunggu',
+                      background: isReturned
+                          ? const Color(0xFFD8DEFF)
+                          : isBorrowed
+                              ? const Color(0xFFDCF5E3)
+                              : const Color(0xFFFFF3CD),
+                      foreground: isReturned
+                          ? const Color(0xFF4D7BEE)
+                          : isBorrowed
+                              ? Colors.green
+                              : Colors.orange,
+                    ),
                 ],
               ),
             ),
+            const SizedBox(height: 12),
+
+            // ── Tanggal Peminjaman ──
+            const _SectionLabel('Tanggal Peminjaman'),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Expanded(
+                  child: _DateChip(
+                    icon: Icons.calendar_month_rounded,
+                    text: borrowDate,
+                    iconColor: const Color(0xFF748BCB),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _DateChip(
+                    icon: Icons.bolt_rounded,
+                    text: dueDate,
+                    iconColor: const Color(0xFFB07D00),
+                    background: const Color(0xFFFBE3AF),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // ── Tanggal Pengembalian ──
+            Row(
+              children: const [
+                Icon(Icons.check_circle_rounded,
+                    size: 16, color: Colors.green),
+                SizedBox(width: 6),
+                _SectionLabel('Tanggal Pengembalian'),
+              ],
+            ),
+            const SizedBox(height: 6),
+            _DateChip(
+              icon: Icons.calendar_today_rounded,
+              text: isReturned ? returnDate : _todayFmt,
+              iconColor: const Color(0xFF748BCB),
+            ),
+            const SizedBox(height: 12),
+
+            // ── Foto Barang ──
+            const _SectionLabel('Foto Barang'),
+            const SizedBox(height: 6),
+            UserSectionCard(
+              color: const Color(0xFFF7F1F6),
+              child: Center(
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 144,
+                      height: 96,
+                      decoration: BoxDecoration(
+                        color: UserUi.productThumbBackground,
+                        borderRadius: BorderRadius.circular(12),
+                        border:
+                            Border.all(color: UserUi.frameBorder.withValues(alpha: .7)),
+                      ),
+                      child: const Icon(
+                        Icons.laptop_mac_rounded,
+                        size: 52,
+                        color: UserUi.productThumbIconColor,
+                      ),
+                    ),
+                    Positioned(
+                      bottom: -6,
+                      right: -6,
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: UserUi.softBorder),
+                        ),
+                        child: const Icon(
+                          Icons.camera_alt_rounded,
+                          size: 14,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // ── Catatan ──
+            const _SectionLabel('Catatan (Opsional)'),
+            const SizedBox(height: 6),
+            UserSectionCard(
+              color: Colors.white,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              child: TextField(
+                controller: _notesCtrl,
+                style: const TextStyle(fontSize: 13),
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  isDense: true,
+                  hintText: 'Masukkan catatan pengembalian barang...',
+                  hintStyle:
+                      TextStyle(fontSize: 13, color: UserUi.textMuted),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // ── Konfirmasi button ──
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: UserPrimaryButton(
+                text: _isSubmitting
+                    ? 'Memproses...'
+                    : isReturned
+                        ? 'Sudah Dikembalikan'
+                        : 'Konfirmasi',
+                icon: isReturned
+                    ? Icons.check_rounded
+                    : Icons.check_circle_outline_rounded,
+                background: isReturned ? Colors.grey : UserUi.blue,
+                onTap: (isBorrowed && !_isSubmitting) ? _confirmReturn : null,
+              ),
+            ),
+            const SizedBox(height: 8),
           ],
         ),
       ),
@@ -120,84 +320,52 @@ class _DetailPeminjamanBarangUserScreenState extends State<DetailPeminjamanBaran
   }
 }
 
-class _LabeledDate extends StatelessWidget {
-  const _LabeledDate({
-    required this.title,
-    required this.start,
-    required this.end,
-  });
-
-  final String title;
-  final String start;
-  final String end;
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.label);
+  final String label;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Icon(Icons.calendar_month_rounded, size: 18, color: Color(0xFF748BCB)),
-            const SizedBox(width: 8),
-            Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Row(
-          children: [
-            Expanded(child: UserTextInputMock(text: start, icon: const Icon(Icons.calendar_today_rounded, size: 14))),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Container(
-                height: 34,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFBE3AF),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Row(
-                  children: [
-                    const Icon(Icons.bolt_rounded, size: 15, color: Color(0xFFB07D00)),
-                    const SizedBox(width: 6),
-                    Text(end, style: const TextStyle(fontSize: 12)),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
+    return Text(
+      label,
+      style: const TextStyle(
+          fontSize: 13, fontWeight: FontWeight.w800, color: Colors.black87),
     );
   }
 }
 
-class _FieldBlock extends StatelessWidget {
-  const _FieldBlock({
-    required this.label,
+class _DateChip extends StatelessWidget {
+  const _DateChip({
     required this.icon,
-    required this.hint,
+    required this.text,
+    required this.iconColor,
+    this.background = const Color(0xFFF6F3F8),
   });
 
-  final String label;
   final IconData icon;
-  final String hint;
+  final String text;
+  final Color iconColor;
+  final Color background;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(icon, size: 18, color: const Color(0xFF748BCB)),
-            const SizedBox(width: 8),
-            Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-          ],
-        ),
-        const SizedBox(height: 6),
-        UserTextInputMock(text: hint, muted: true),
-      ],
+    return Container(
+      height: 34,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: UserUi.softBorder),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 14, color: iconColor),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(text, style: const TextStyle(fontSize: 12)),
+          ),
+        ],
+      ),
     );
   }
 }
