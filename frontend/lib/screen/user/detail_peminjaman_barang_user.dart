@@ -7,8 +7,13 @@ import 'user_ui.dart';
 
 class DetailPeminjamanBarangUserScreen extends StatefulWidget {
   final Map<String, dynamic>? loan;
+  final bool isReturnMode;
 
-  const DetailPeminjamanBarangUserScreen({super.key, this.loan});
+  const DetailPeminjamanBarangUserScreen({
+    super.key,
+    this.loan,
+    this.isReturnMode = false,
+  });
 
   @override
   State<DetailPeminjamanBarangUserScreen> createState() =>
@@ -123,6 +128,7 @@ class _DetailPeminjamanBarangUserScreenState
   @override
   Widget build(BuildContext context) {
     final loan = widget.loan;
+    final isReturnMode = widget.isReturnMode;
     final itemName = loan?['item_name']?.toString() ?? 'Barang';
     final categoryName = loan?['category_name']?.toString() ?? '-';
     final borrowDate = _fmtDisplay(loan?['borrow_date']?.toString());
@@ -134,17 +140,17 @@ class _DetailPeminjamanBarangUserScreenState
 
     return UserPageScaffold(
       child: UserFramedPage(
-        title: 'Detail Pengembalian Barang',
-        topIcon: const Icon(
-          Icons.assignment_return_rounded,
+        title: isReturnMode ? 'Detail Pengembalian Barang' : 'Detail Peminjaman Barang',
+        topIcon: Icon(
+          isReturnMode ? Icons.assignment_return_rounded : Icons.local_shipping_rounded,
           size: 46,
-          color: Color(0xFFEA6482),
+          color: const Color(0xFFEA6482),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ── Barang yang Dikembalikan ──
-            const _SectionLabel('Barang yang Dikembalikan'),
+            // ── Barang ──
+            _SectionLabel(isReturnMode ? 'Barang yang Dikembalikan' : 'Barang yang Dipinjam'),
             const SizedBox(height: 6),
             UserSectionCard(
               color: Colors.white,
@@ -231,22 +237,23 @@ class _DetailPeminjamanBarangUserScreenState
             ),
             const SizedBox(height: 12),
 
-            // ── Tanggal Pengembalian ──
-            Row(
-              children: const [
-                Icon(Icons.check_circle_rounded,
-                    size: 16, color: Colors.green),
-                SizedBox(width: 6),
-                _SectionLabel('Tanggal Pengembalian'),
-              ],
-            ),
-            const SizedBox(height: 6),
-            _DateChip(
-              icon: Icons.calendar_today_rounded,
-              text: isReturned ? returnDate : _todayFmt,
-              iconColor: const Color(0xFF748BCB),
-            ),
-            const SizedBox(height: 12),
+            // ── Tanggal Pengembalian (hanya mode pengembalian) ──
+            if (isReturnMode) ...[
+              Row(
+                children: const [
+                  Icon(Icons.check_circle_rounded, size: 16, color: Colors.green),
+                  SizedBox(width: 6),
+                  _SectionLabel('Tanggal Pengembalian'),
+                ],
+              ),
+              const SizedBox(height: 6),
+              _DateChip(
+                icon: Icons.calendar_today_rounded,
+                text: isReturned ? returnDate : _todayFmt,
+                iconColor: const Color(0xFF748BCB),
+              ),
+              const SizedBox(height: 12),
+            ],
 
             // ── Foto Barang ──
             const _SectionLabel('Foto Barang'),
@@ -255,7 +262,7 @@ class _DetailPeminjamanBarangUserScreenState
               color: const Color(0xFFF7F1F6),
               child: Center(
                 child: GestureDetector(
-                  onTap: _takePhoto,
+                  onTap: isReturnMode ? _takePhoto : null,
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [
@@ -276,26 +283,25 @@ class _DetailPeminjamanBarangUserScreenState
                                 color: UserUi.productThumbIconColor,
                               ),
                       ),
-                      Positioned(
-                        bottom: -6,
-                        right: -6,
-                        child: Container(
-                          width: 28,
-                          height: 28,
-                          decoration: BoxDecoration(
-                            color: _photoFile != null ? Colors.green : Colors.white,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: UserUi.softBorder),
-                          ),
-                          child: Icon(
-                            _photoFile != null
-                                ? Icons.check_rounded
-                                : Icons.camera_alt_rounded,
-                            size: 14,
-                            color: _photoFile != null ? Colors.white : Colors.red,
+                      if (isReturnMode)
+                        Positioned(
+                          bottom: -6,
+                          right: -6,
+                          child: Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: _photoFile != null ? Colors.green : Colors.white,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: UserUi.softBorder),
+                            ),
+                            child: Icon(
+                              _photoFile != null ? Icons.check_rounded : Icons.camera_alt_rounded,
+                              size: 14,
+                              color: _photoFile != null ? Colors.white : Colors.red,
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -308,38 +314,44 @@ class _DetailPeminjamanBarangUserScreenState
             const SizedBox(height: 6),
             UserSectionCard(
               color: Colors.white,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               child: TextField(
                 controller: _notesCtrl,
                 style: const TextStyle(fontSize: 13),
                 maxLines: 3,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   border: InputBorder.none,
                   isDense: true,
-                  hintText: 'Masukkan catatan pengembalian barang...',
-                  hintStyle:
-                      TextStyle(fontSize: 13, color: UserUi.textMuted),
+                  hintText: isReturnMode
+                      ? 'Masukkan catatan pengembalian barang...'
+                      : 'Keperluan peminjaman...',
+                  hintStyle: const TextStyle(fontSize: 13, color: UserUi.textMuted),
                 ),
               ),
             ),
             const SizedBox(height: 20),
 
-            // ── Konfirmasi button ──
+            // ── Button ──
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: UserPrimaryButton(
-                text: _isSubmitting
-                    ? 'Memproses...'
-                    : isReturned
-                        ? 'Sudah Dikembalikan'
-                        : 'Konfirmasi',
-                icon: isReturned
-                    ? Icons.check_rounded
-                    : Icons.check_circle_outline_rounded,
-                background: isReturned ? Colors.grey : UserUi.blue,
-                onTap: (isBorrowed && !_isSubmitting) ? _confirmReturn : null,
-              ),
+              child: isReturnMode
+                  ? UserPrimaryButton(
+                      text: _isSubmitting
+                          ? 'Memproses...'
+                          : isReturned
+                              ? 'Sudah Dikembalikan'
+                              : 'Konfirmasi Pengembalian',
+                      icon: isReturned
+                          ? Icons.check_rounded
+                          : Icons.check_circle_outline_rounded,
+                      background: isReturned ? Colors.grey : UserUi.blue,
+                      onTap: (isBorrowed && !_isSubmitting) ? _confirmReturn : null,
+                    )
+                  : UserPrimaryButton(
+                      text: 'Kembali ke Peminjaman',
+                      icon: Icons.arrow_back_rounded,
+                      onTap: () => Navigator.pop(context),
+                    ),
             ),
             const SizedBox(height: 8),
           ],
