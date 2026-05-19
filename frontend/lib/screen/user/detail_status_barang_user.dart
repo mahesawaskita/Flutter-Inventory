@@ -1,23 +1,137 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/service/api_service.dart';
+import 'package:frontend/service/auth_service.dart';
 
 import 'user_ui.dart';
 
 class DetailStatusBarangUserScreen extends StatefulWidget {
-  const DetailStatusBarangUserScreen({super.key});
+  final Map<String, dynamic> loan;
+
+  const DetailStatusBarangUserScreen({super.key, required this.loan});
 
   @override
-  State<DetailStatusBarangUserScreen> createState() => _DetailStatusBarangUserScreenState();
+  State<DetailStatusBarangUserScreen> createState() =>
+      _DetailStatusBarangUserScreenState();
 }
 
-class _DetailStatusBarangUserScreenState extends State<DetailStatusBarangUserScreen> {
+class _DetailStatusBarangUserScreenState
+    extends State<DetailStatusBarangUserScreen> {
+  bool _isReturning = false;
+
+  bool _isLate() {
+    if (widget.loan['status'] != 'borrowed') return false;
+    try {
+      final due = DateTime.parse(widget.loan['due_date'].toString());
+      final now = DateTime.now();
+      return DateTime(due.year, due.month, due.day)
+          .isBefore(DateTime(now.year, now.month, now.day));
+    } catch (_) {
+      return false;
+    }
+  }
+
+  int _daysLate() {
+    try {
+      final due = DateTime.parse(widget.loan['due_date'].toString());
+      final now = DateTime.now();
+      final dueDay = DateTime(due.year, due.month, due.day);
+      final today = DateTime(now.year, now.month, now.day);
+      return today.difference(dueDay).inDays;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  String _fmtDisplay(String? s) {
+    if (s == null || s.isEmpty) return '-';
+    try {
+      final d = DateTime.parse(s);
+      const m = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+        'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+      ];
+      return '${d.day} ${m[d.month - 1]} ${d.year}';
+    } catch (_) {
+      return s;
+    }
+  }
+
+  Future<void> _confirmReturn() async {
+    final id = int.tryParse(widget.loan['id']?.toString() ?? '');
+    if (id == null) return;
+
+    setState(() => _isReturning = true);
+    final token = await AuthService.getToken();
+    if (token == null) {
+      if (mounted) setState(() => _isReturning = false);
+      return;
+    }
+
+    final result = await ApiService.returnLoan(token, id);
+    if (!mounted) return;
+    setState(() => _isReturning = false);
+
+    if (result['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Barang berhasil dikembalikan!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.pop(context, true);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message']?.toString() ?? 'Gagal'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final loan = widget.loan;
+    final itemName = loan['item_name']?.toString() ?? '-';
+    final borrowerName =
+        (loan['user_name'] ?? loan['borrower_name'] ?? '-').toString();
+    final status = loan['status']?.toString() ?? 'borrowed';
+    final isReturned = status == 'returned';
+    final isBorrowed = status == 'borrowed';
+    final late = _isLate();
+    final daysLate = late ? _daysLate() : 0;
+
+    final borrowDate = _fmtDisplay(loan['borrow_date']?.toString());
+    final dueDate = _fmtDisplay(loan['due_date']?.toString());
+    final returnDate = _fmtDisplay(loan['return_date']?.toString());
+    final purpose =
+        (loan['purpose'] ?? loan['notes'] ?? '').toString().trim();
+
+    String statusLabel;
+    Color statusBg;
+    Color statusFg;
+    if (isReturned) {
+      statusLabel = 'Dikembalikan';
+      statusBg = const Color(0xFFD8DEFF);
+      statusFg = const Color(0xFF4D7BEE);
+    } else if (late) {
+      statusLabel = 'Terlambat $daysLate Hari';
+      statusBg = const Color(0xFFFFA53B);
+      statusFg = Colors.white;
+    } else {
+      statusLabel = 'Dipinjam';
+      statusBg = const Color(0xFFF3D88B);
+      statusFg = Colors.black87;
+    }
+
     return UserPageScaffold(
       child: UserFramedPage(
         title: 'Detail Status Barang',
-        topIcon: const Icon(Icons.inventory_2_rounded, size: 48, color: Color(0xFF4B4B4B)),
+        topIcon: const Icon(Icons.inventory_2_rounded,
+            size: 48, color: Color(0xFF4B4B4B)),
         child: Column(
           children: [
+            // ── Header card: item + borrower + date + status ──
             UserSectionCard(
               padding: EdgeInsets.zero,
               child: Column(
@@ -25,15 +139,28 @@ class _DetailStatusBarangUserScreenState extends State<DetailStatusBarangUserScr
                   Padding(
                     padding: const EdgeInsets.all(10),
                     child: Row(
-                      children: const [
-                        UserProductThumb(icon: Icons.laptop_mac_rounded, background: Color(0xFFF3EEF3)),
-                        SizedBox(width: 10),
+                      children: [
+                        UserProductThumb(
+                          icon: Icons.inventory_2_rounded,
+                          background: late
+                              ? const Color(0xFFFFE0D7)
+                              : const Color(0xFFF3EEF3),
+                        ),
+                        const SizedBox(width: 10),
                         Expanded(
                           child: Text.rich(
                             TextSpan(
                               children: [
-                                TextSpan(text: 'Nama Barang\n', style: TextStyle(fontWeight: FontWeight.w700)),
-                                TextSpan(text: 'Laptop', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900)),
+                                const TextSpan(
+                                  text: 'Nama Barang\n',
+                                  style: TextStyle(fontWeight: FontWeight.w700),
+                                ),
+                                TextSpan(
+                                  text: itemName,
+                                  style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w900),
+                                ),
                               ],
                             ),
                           ),
@@ -47,19 +174,28 @@ class _DetailStatusBarangUserScreenState extends State<DetailStatusBarangUserScr
                     child: Column(
                       children: [
                         Row(
-                          children: const [
-                            CircleAvatar(
+                          children: [
+                            const CircleAvatar(
                               radius: 16,
                               backgroundColor: Color(0xFFE8EEF8),
-                              child: Icon(Icons.person, size: 18, color: Color(0xFF5A6C91)),
+                              child: Icon(Icons.person,
+                                  size: 18, color: Color(0xFF5A6C91)),
                             ),
-                            SizedBox(width: 8),
+                            const SizedBox(width: 8),
                             Expanded(
                               child: Text.rich(
                                 TextSpan(
                                   children: [
-                                    TextSpan(text: 'Peminjam\n', style: TextStyle(fontSize: 12)),
-                                    TextSpan(text: 'Budi Agung', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+                                    const TextSpan(
+                                      text: 'Peminjam\n',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                    TextSpan(
+                                      text: borrowerName,
+                                      style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w800),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -68,14 +204,16 @@ class _DetailStatusBarangUserScreenState extends State<DetailStatusBarangUserScr
                         ),
                         const SizedBox(height: 8),
                         Row(
-                          children: const [
-                            Icon(Icons.calendar_month_rounded),
-                            SizedBox(width: 8),
-                            Expanded(child: Text('24 Mar 2024 - 26 Mar 2024')),
+                          children: [
+                            const Icon(Icons.calendar_month_rounded),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text('$borrowDate - $dueDate'),
+                            ),
                             UserPill(
-                              text: 'Terlambat 2 Hari',
-                              background: Color(0xFFFFA53B),
-                              foreground: Colors.white,
+                              text: statusLabel,
+                              background: statusBg,
+                              foreground: statusFg,
                             ),
                           ],
                         ),
@@ -86,6 +224,8 @@ class _DetailStatusBarangUserScreenState extends State<DetailStatusBarangUserScr
               ),
             ),
             const SizedBox(height: 8),
+
+            // ── Detail peminjaman card ──
             UserSectionCard(
               padding: EdgeInsets.zero,
               child: Column(
@@ -96,66 +236,89 @@ class _DetailStatusBarangUserScreenState extends State<DetailStatusBarangUserScr
                     color: const Color(0xFFF7F0F6),
                     child: const Row(
                       children: [
-                        Icon(Icons.fact_check_rounded, color: Color(0xFF7ABB23)),
+                        Icon(Icons.fact_check_rounded,
+                            color: Color(0xFF7ABB23)),
                         SizedBox(width: 8),
-                        Text('Detail Peminjaman', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900)),
+                        Text('Detail Peminjaman',
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w900)),
                       ],
                     ),
                   ),
-                  const _DetailRow(icon: Icons.person_outline_rounded, label: 'Nama Peminjam', value: 'Budi Agung'),
-                  const _DetailRow(icon: Icons.calendar_month_rounded, label: 'Tanggal Dipinjam', value: '24 Mar 2024'),
-                  const _DetailRow(icon: Icons.calendar_month_rounded, label: 'Tanggal Kembali', value: '26 Mar 2024'),
-                  const _DetailRow(
-                    icon: Icons.photo_camera_rounded,
+                  _DetailRow(
+                    icon: Icons.person_outline_rounded,
+                    label: 'Nama Peminjam',
+                    value: borrowerName,
+                  ),
+                  _DetailRow(
+                    icon: Icons.calendar_month_rounded,
+                    label: 'Tanggal Dipinjam',
+                    value: borrowDate,
+                  ),
+                  _DetailRow(
+                    icon: Icons.calendar_month_rounded,
+                    label: 'Tanggal Kembali',
+                    value: dueDate,
+                  ),
+                  _DetailRow(
+                    icon: Icons.info_outline_rounded,
                     label: 'Status',
-                    value: 'Terlambat 2 Hari',
+                    value: statusLabel,
                     isBadge: true,
+                    badgeText: statusLabel,
+                    badgeBackground: statusBg,
+                    badgeForeground: statusFg,
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.thumb_up_alt_rounded, color: Color(0xFFFFC400), size: 30),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF9F4F8),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: UserUi.softBorder),
+                  if (isReturned)
+                    _DetailRow(
+                      icon: Icons.assignment_return_rounded,
+                      label: 'Tanggal Dikembalikan',
+                      value: returnDate,
+                    ),
+                  if (purpose.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.notes_rounded,
+                              color: Color(0xFFFFC400), size: 30),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF9F4F8),
+                                borderRadius: BorderRadius.circular(10),
+                                border:
+                                    Border.all(color: UserUi.softBorder),
+                              ),
+                              child: Text(purpose),
                             ),
-                            child: const Text('Laptop rusak LCD retak, perlu perbaikan'),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    color: const Color(0xFFF7F0F6),
-                    child: const Row(
-                      children: [
-                        Icon(Icons.photo_camera_rounded),
-                        SizedBox(width: 8),
-                        Text('Foto Pengembalian', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900)),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Row(
-                      children: const [
-                        Expanded(child: _DamagePhoto()),
-                        SizedBox(width: 12),
-                        Expanded(child: _DamagePhoto()),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),
+
+            // ── Tombol Kembalikan (hanya jika masih dipinjam) ──
+            if (isBorrowed) ...[
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: UserPrimaryButton(
+                  text: _isReturning ? 'Memproses...' : 'Kembalikan Barang',
+                  icon:
+                      _isReturning ? null : Icons.assignment_return_rounded,
+                  onTap: _isReturning ? null : _confirmReturn,
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 8),
           ],
         ),
       ),
@@ -169,12 +332,18 @@ class _DetailRow extends StatelessWidget {
     required this.label,
     required this.value,
     this.isBadge = false,
+    this.badgeText,
+    this.badgeBackground,
+    this.badgeForeground,
   });
 
   final IconData icon;
   final String label;
   final String value;
   final bool isBadge;
+  final String? badgeText;
+  final Color? badgeBackground;
+  final Color? badgeForeground;
 
   @override
   Widget build(BuildContext context) {
@@ -187,52 +356,23 @@ class _DetailRow extends StatelessWidget {
         children: [
           Icon(icon, color: const Color(0xFF444444)),
           const SizedBox(width: 8),
-          Expanded(child: Text(label, style: const TextStyle(fontSize: 14))),
-          if (isBadge)
-            const UserPill(
-              text: 'Terlambat 2 Hari',
-              background: Color(0xFFFFA53B),
-              foreground: Colors.white,
+          Expanded(
+            child: Text(label, style: const TextStyle(fontSize: 14)),
+          ),
+          if (isBadge && badgeText != null)
+            UserPill(
+              text: badgeText!,
+              background: badgeBackground ?? UserUi.blue.withValues(alpha: 0.2),
+              foreground: badgeForeground ?? UserUi.blue,
             )
           else
-            Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+            Text(value,
+                style: const TextStyle(
+                    fontSize: 14, fontWeight: FontWeight.w800)),
           const SizedBox(width: 4),
           const Icon(Icons.chevron_right_rounded),
         ],
       ),
-    );
-  }
-}
-
-class _DamagePhoto extends StatelessWidget {
-  const _DamagePhoto();
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Container(
-          height: 92,
-          decoration: BoxDecoration(
-            color: const Color(0xFFD7D7D7),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: UserUi.frameBorder.withOpacity(.7)),
-          ),
-          child: const Center(
-            child: Icon(Icons.broken_image_rounded, size: 44, color: Color(0xFF6E6E6E)),
-          ),
-        ),
-        Positioned(
-          top: 4,
-          left: 4,
-          child: Container(
-            width: 26,
-            height: 26,
-            decoration: const BoxDecoration(color: Color(0xFFD63A30), shape: BoxShape.circle),
-            child: const Icon(Icons.delete_rounded, size: 16, color: Colors.white),
-          ),
-        ),
-      ],
     );
   }
 }
