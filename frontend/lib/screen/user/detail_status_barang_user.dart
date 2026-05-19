@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/service/api_service.dart';
 import 'package:frontend/service/auth_service.dart';
 
 import 'user_ui.dart';
@@ -16,7 +15,18 @@ class DetailStatusBarangUserScreen extends StatefulWidget {
 
 class _DetailStatusBarangUserScreenState
     extends State<DetailStatusBarangUserScreen> {
-  bool _isReturning = false;
+  String _username = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUsername();
+  }
+
+  Future<void> _loadUsername() async {
+    final name = await AuthService.getUsername();
+    if (mounted) setState(() => _username = name ?? '');
+  }
 
   bool _isLate() {
     if (widget.loan['status'] != 'borrowed') return false;
@@ -56,48 +66,14 @@ class _DetailStatusBarangUserScreenState
     }
   }
 
-  Future<void> _confirmReturn() async {
-    final id = int.tryParse(widget.loan['id']?.toString() ?? '');
-    if (id == null) return;
-
-    setState(() => _isReturning = true);
-    final token = await AuthService.getToken();
-    if (token == null) {
-      if (mounted) setState(() => _isReturning = false);
-      return;
-    }
-
-    final result = await ApiService.returnLoan(token, id);
-    if (!mounted) return;
-    setState(() => _isReturning = false);
-
-    if (result['success'] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Barang berhasil dikembalikan!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-      Navigator.pop(context, true);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result['message']?.toString() ?? 'Gagal'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final loan = widget.loan;
     final itemName = loan['item_name']?.toString() ?? '-';
-    final borrowerName =
-        (loan['user_name'] ?? loan['borrower_name'] ?? '-').toString();
+    final raw = (loan['user_name'] ?? loan['borrower_name'] ?? '').toString().trim();
+    final borrowerName = raw.isNotEmpty ? raw : (_username.isNotEmpty ? _username : '-');
     final status = loan['status']?.toString() ?? 'borrowed';
     final isReturned = status == 'returned';
-    final isBorrowed = status == 'borrowed';
     final late = _isLate();
     final daysLate = late ? _daysLate() : 0;
 
@@ -303,20 +279,6 @@ class _DetailStatusBarangUserScreenState
                 ],
               ),
             ),
-
-            // ── Tombol Kembalikan (hanya jika masih dipinjam) ──
-            if (isBorrowed) ...[
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: UserPrimaryButton(
-                  text: _isReturning ? 'Memproses...' : 'Kembalikan Barang',
-                  icon:
-                      _isReturning ? null : Icons.assignment_return_rounded,
-                  onTap: _isReturning ? null : _confirmReturn,
-                ),
-              ),
-            ],
 
             const SizedBox(height: 8),
           ],
