@@ -38,8 +38,10 @@ class _StatusBarangUserScreenState extends State<StatusBarangUserScreen> {
       if (token != null) {
         final loans = await ApiService.getMyLoans(token);
         if (mounted) {
-          setState(() => _myLoans =
-              loans.map((e) => Map<String, dynamic>.from(e)).toList());
+          setState(
+            () => _myLoans =
+                loans.map((e) => Map<String, dynamic>.from(e)).toList(),
+          );
         }
       }
     } finally {
@@ -88,7 +90,7 @@ class _StatusBarangUserScreenState extends State<StatusBarangUserScreen> {
     }
   }
 
-  // Semua yang sedang dipinjam (termasuk yang terlambat)
+  // Semua yg sedang dipinjam (termasuk terlambat)
   int get _statActive =>
       _myLoans.where((l) => l['status'] == 'borrowed').length;
   int get _statReturned =>
@@ -103,7 +105,9 @@ class _StatusBarangUserScreenState extends State<StatusBarangUserScreen> {
     }
 
     if (_filterStatus == 'active') {
-      list = list.where((l) => l['status'] == 'borrowed' && !_isLate(l)).toList();
+      list = list
+          .where((l) => l['status'] == 'borrowed' && !_isLate(l))
+          .toList();
     } else if (_filterStatus == 'late') {
       list = list.where((l) => _isLate(l)).toList();
     } else if (_filterStatus == 'returned') {
@@ -113,9 +117,10 @@ class _StatusBarangUserScreenState extends State<StatusBarangUserScreen> {
     if (_search.isNotEmpty) {
       list = list.where((l) {
         final name = (l['item_name'] ?? '').toString().toLowerCase();
-        final user = (l['user_name'] ?? l['borrower_name'] ?? _username)
-            .toString()
-            .toLowerCase();
+        final user =
+            (l['user_name'] ?? l['borrower_name'] ?? _username)
+                .toString()
+                .toLowerCase();
         return name.contains(_search) || user.contains(_search);
       }).toList();
     }
@@ -132,25 +137,28 @@ class _StatusBarangUserScreenState extends State<StatusBarangUserScreen> {
   }
 
   int get _totalPages =>
-      _filtered.isEmpty ? 1 : ((_filtered.length + _perPage - 1) / _perPage).ceil();
+      _filtered.isEmpty
+          ? 1
+          : ((_filtered.length + _perPage - 1) / _perPage).ceil();
 
   String _fmtDisplay(String? s) {
     if (s == null) return '-';
     try {
       final d = DateTime.parse(s);
-      const m = [
+      const months = [
         'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
         'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
       ];
-      return '${d.day} ${m[d.month - 1]} ${d.year}';
+      return '${d.day} ${months[d.month - 1]} ${d.year}';
     } catch (_) {
       return s;
     }
   }
 
   String _borrowerName(Map<String, dynamic> loan) {
-    final v = (loan['user_name'] ?? loan['borrower_name'] ?? '').toString().trim();
-    return v.isNotEmpty ? v : _username.isNotEmpty ? _username : '-';
+    final v =
+        (loan['user_name'] ?? loan['borrower_name'] ?? '').toString().trim();
+    return v.isNotEmpty ? v : (_username.isNotEmpty ? _username : '-');
   }
 
   void _showFilterSheet() {
@@ -181,47 +189,48 @@ class _StatusBarangUserScreenState extends State<StatusBarangUserScreen> {
     return UserPageScaffold(
       child: UserFramedPage(
         title: 'Status Barang',
-        topIcon: const Icon(Icons.receipt_long_rounded,
-            size: 46, color: Color(0xFF90B7E1)),
+        topIcon: const Icon(
+          Icons.receipt_long_rounded,
+          size: 46,
+          color: Color(0xFF90B7E1),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ── Stats ─────────────────────────────────────────
-            IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: _SummaryCard(
-                      title: 'Sedang\nDipinjam',
-                      value: '$_statActive',
-                      subtitle: 'Barang',
-                      color: const Color(0xFFDCE5FA),
-                      icon: Icons.content_paste_rounded,
-                    ),
+            // ── Stats ──────────────────────────────────────────
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: _SummaryCard(
+                    title: 'Sedang\nDipinjam',
+                    value: '$_statActive',
+                    subtitle: 'Barang',
+                    color: const Color(0xFFDCE5FA),
+                    icon: Icons.content_paste_rounded,
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _SummaryCard(
-                      title: 'Telah\nDikembalikan',
-                      value: '$_statReturned',
-                      subtitle: 'Barang',
-                      color: const Color(0xFFE0F5E3),
-                      icon: Icons.inventory_2_rounded,
-                    ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _SummaryCard(
+                    title: 'Telah\nDikembalikan',
+                    value: '$_statReturned',
+                    subtitle: 'Barang',
+                    color: const Color(0xFFE0F5E3),
+                    icon: Icons.inventory_2_rounded,
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _SummaryCard(
-                      title: 'Terlambat\nDikembalikan',
-                      value: '$_statLate',
-                      subtitle: 'Barang',
-                      color: const Color(0xFFFFE4D9),
-                      icon: Icons.warning_amber_rounded,
-                    ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _SummaryCard(
+                    title: 'Terlambat\nDikembalikan',
+                    value: '$_statLate',
+                    subtitle: 'Barang',
+                    color: const Color(0xFFFFE4D9),
+                    icon: Icons.warning_amber_rounded,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
 
@@ -239,10 +248,10 @@ class _StatusBarangUserScreenState extends State<StatusBarangUserScreen> {
                     }),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Expanded(
                   child: _SmallTab(
-                    text: 'Sedang Dipinjam',
+                    text: 'Dipinjam',
                     active: _activeTab == 1,
                     onTap: () => setState(() {
                       _activeTab = 1;
@@ -250,23 +259,22 @@ class _StatusBarangUserScreenState extends State<StatusBarangUserScreen> {
                     }),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 _FilterButton(
                   hasFilter: _filterStatus != null,
                   onTap: _showFilterSheet,
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
 
-            // ── Search ────────────────────────────────────────
+            // ── Search ─────────────────────────────────────────
             Container(
               height: 34,
               padding: const EdgeInsets.symmetric(horizontal: 10),
               decoration: BoxDecoration(
                 color: const Color(0xFFF6ECF7),
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: UserUi.softBorder),
               ),
               child: Row(
                 children: [
@@ -277,7 +285,11 @@ class _StatusBarangUserScreenState extends State<StatusBarangUserScreen> {
                       color: Color(0xFF9DE8F2),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.search, size: 13, color: Colors.black54),
+                    child: const Icon(
+                      Icons.search,
+                      size: 13,
+                      color: Colors.black54,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -287,7 +299,10 @@ class _StatusBarangUserScreenState extends State<StatusBarangUserScreen> {
                         border: InputBorder.none,
                         isDense: true,
                         hintText: 'Cari barang atau peminjam...',
-                        hintStyle: TextStyle(fontSize: 12, color: UserUi.textLight),
+                        hintStyle: TextStyle(
+                          fontSize: 12,
+                          color: UserUi.textLight,
+                        ),
                       ),
                       onChanged: (v) => setState(() {
                         _search = v.trim().toLowerCase();
@@ -298,9 +313,9 @@ class _StatusBarangUserScreenState extends State<StatusBarangUserScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
 
-            // ── Loan list ─────────────────────────────────────
+            // ── Loan list ──────────────────────────────────────
             if (_isLoading)
               const Center(
                 child: Padding(
@@ -312,19 +327,22 @@ class _StatusBarangUserScreenState extends State<StatusBarangUserScreen> {
               const Padding(
                 padding: EdgeInsets.all(24),
                 child: Center(
-                  child: Text('Tidak ada data',
-                      style: TextStyle(color: UserUi.textMuted)),
+                  child: Text(
+                    'Tidak ada data',
+                    style: TextStyle(color: UserUi.textMuted),
+                  ),
                 ),
               )
             else
               ...paged.map((loan) {
                 final late = _isLate(loan);
-                final dueToday = _isDueToday(loan);
                 return _LoanCard(
-                  loan: loan,
+                  key: ValueKey(loan['id']),
+                  itemName: loan['item_name']?.toString() ?? '-',
                   borrowerName: _borrowerName(loan),
                   isLate: late,
-                  isDueToday: dueToday,
+                  isDueToday: _isDueToday(loan),
+                  isReturned: loan['status'] == 'returned',
                   timeIndicator: _timeIndicator(loan),
                   dueDate: _fmtDisplay(loan['due_date']?.toString()),
                   returnDate: _fmtDisplay(loan['return_date']?.toString()),
@@ -340,13 +358,16 @@ class _StatusBarangUserScreenState extends State<StatusBarangUserScreen> {
                 );
               }),
 
-            // ── Info & Pagination ──────────────────────────────
+            // ── Info + Pagination ──────────────────────────────
             if (!_isLoading && total > 0) ...[
               Padding(
-                padding: const EdgeInsets.only(top: 4, bottom: 6),
+                padding: const EdgeInsets.only(top: 2, bottom: 6),
                 child: Text(
                   'Menampilkan ${paged.length} dari $total peminjaman',
-                  style: const TextStyle(fontSize: 12, color: UserUi.textMuted),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: UserUi.textMuted,
+                  ),
                 ),
               ),
               if (_totalPages > 1)
@@ -355,7 +376,7 @@ class _StatusBarangUserScreenState extends State<StatusBarangUserScreen> {
                   totalPages: _totalPages,
                   onPage: (p) => setState(() => _page = p),
                 ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
             ],
 
             // ── Pinjam Barang ──────────────────────────────────
@@ -382,20 +403,23 @@ class _StatusBarangUserScreenState extends State<StatusBarangUserScreen> {
 
 class _LoanCard extends StatelessWidget {
   const _LoanCard({
-    required this.loan,
+    super.key,
+    required this.itemName,
     required this.borrowerName,
     required this.isLate,
     required this.isDueToday,
+    required this.isReturned,
     required this.timeIndicator,
     required this.dueDate,
     required this.returnDate,
     required this.onDetail,
   });
 
-  final Map<String, dynamic> loan;
+  final String itemName;
   final String borrowerName;
   final bool isLate;
   final bool isDueToday;
+  final bool isReturned;
   final String timeIndicator;
   final String dueDate;
   final String returnDate;
@@ -403,18 +427,16 @@ class _LoanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = loan['item_name']?.toString() ?? '-';
-    final isReturned = loan['status'] == 'returned';
-
     String statusText;
     Color statusBg;
     Color statusFg;
+
     if (isReturned) {
       statusText = 'Dikembalikan';
       statusBg = const Color(0xFFD8DEFF);
       statusFg = const Color(0xFF4D7BEE);
     } else if (isLate) {
-      statusText = 'Telat\nDikembalikan';
+      statusText = 'Telat Dikembalikan';
       statusBg = const Color(0xFFFFC2C0);
       statusFg = const Color(0xFFE05656);
     } else {
@@ -428,9 +450,9 @@ class _LoanCard extends StatelessWidget {
         : isDueToday
             ? const Color(0xFFFFA53B)
             : UserUi.textMuted;
-    final IconData timeIcon = (isLate || isDueToday)
-        ? Icons.warning_amber_rounded
-        : Icons.access_time_rounded;
+
+    final IconData timeIcon =
+        (isLate || isDueToday) ? Icons.warning_amber_rounded : Icons.access_time_rounded;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -438,8 +460,9 @@ class _LoanCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ── Row 1: thumb + name/borrower + pill/detail ──
             Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 UserProductThumb(
                   icon: Icons.inventory_2_rounded,
@@ -452,46 +475,42 @@ class _LoanCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Row 1: nama barang + status pill
+                      // item name + status pill
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
                             child: Text(
-                              name,
+                              itemName,
                               style: const TextStyle(
-                                  fontSize: 14, fontWeight: FontWeight.w800),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 6),
-                          Container(
+                          UserPill(
+                            text: statusText,
+                            background: statusBg,
+                            foreground: statusFg,
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: statusBg,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              statusText,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: statusFg,
-                              ),
+                              horizontal: 7,
+                              vertical: 3,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 2),
-                      // Row 2: nama peminjam + tombol Detail
+                      const SizedBox(height: 3),
+                      // borrower name + Detail button
                       Row(
                         children: [
                           Expanded(
                             child: Text(
                               borrowerName,
                               style: const TextStyle(
-                                  fontSize: 12, color: UserUi.textMuted),
+                                fontSize: 11,
+                                color: UserUi.textMuted,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 6),
@@ -499,7 +518,9 @@ class _LoanCard extends StatelessWidget {
                             onTap: onDetail,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: UserUi.blue,
                                 borderRadius: BorderRadius.circular(8),
@@ -510,13 +531,17 @@ class _LoanCard extends StatelessWidget {
                                   Text(
                                     'Detail',
                                     style: TextStyle(
-                                        fontSize: 11,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w700),
+                                      fontSize: 11,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
                                   SizedBox(width: 2),
-                                  Icon(Icons.chevron_right_rounded,
-                                      size: 14, color: Colors.white),
+                                  Icon(
+                                    Icons.chevron_right_rounded,
+                                    size: 13,
+                                    color: Colors.white,
+                                  ),
                                 ],
                               ),
                             ),
@@ -529,14 +554,15 @@ class _LoanCard extends StatelessWidget {
               ],
             ),
 
-            // Garis merah putus-putus untuk item terlambat
+            // ── Dashed line for late items ──
             if (isLate) ...[
               const SizedBox(height: 6),
-              _RedDashedLine(),
+              _DashedRedLine(),
             ],
+
             const SizedBox(height: 6),
 
-            // Batas pengembalian / tanggal dikembalikan
+            // ── Date row ──
             Row(
               children: [
                 Icon(
@@ -553,13 +579,15 @@ class _LoanCard extends StatelessWidget {
                         ? 'Dikembalikan: $returnDate'
                         : 'Batas Pengembalian $dueDate',
                     style: const TextStyle(
-                        fontSize: 11, color: UserUi.textMuted),
+                      fontSize: 11,
+                      color: UserUi.textMuted,
+                    ),
                   ),
                 ),
               ],
             ),
 
-            // Indikator waktu (hari lagi / terlambat)
+            // ── Time indicator ──
             if (!isReturned && timeIndicator.isNotEmpty) ...[
               const SizedBox(height: 2),
               Row(
@@ -569,9 +597,10 @@ class _LoanCard extends StatelessWidget {
                   Text(
                     timeIndicator,
                     style: TextStyle(
-                        fontSize: 11,
-                        color: timeColor,
-                        fontWeight: FontWeight.w700),
+                      fontSize: 11,
+                      color: timeColor,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ],
               ),
@@ -585,30 +614,30 @@ class _LoanCard extends StatelessWidget {
 
 // ─── Red Dashed Line ──────────────────────────────────────────────────────────
 
-class _RedDashedLine extends StatelessWidget {
+class _DashedRedLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
-      builder: (_, c) => CustomPaint(
-        size: Size(c.maxWidth, 2),
-        painter: _RedDashPainter(),
+      builder: (_, constraints) => CustomPaint(
+        size: Size(constraints.maxWidth, 1.5),
+        painter: _DashPainter(),
       ),
     );
   }
 }
 
-class _RedDashPainter extends CustomPainter {
+class _DashPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = const Color(0xFFE05656)
       ..strokeWidth = 1.5;
-    const dash = 5.0;
-    const gap = 4.0;
+    const dashWidth = 5.0;
+    const gapWidth = 4.0;
     double x = 0;
     while (x < size.width) {
-      canvas.drawLine(Offset(x, 0), Offset(x + dash, 0), paint);
-      x += dash + gap;
+      canvas.drawLine(Offset(x, 0), Offset((x + dashWidth).clamp(0, size.width), 0), paint);
+      x += dashWidth + gapWidth;
     }
   }
 
@@ -627,7 +656,9 @@ class _SummaryCard extends StatelessWidget {
     required this.icon,
   });
 
-  final String title, value, subtitle;
+  final String title;
+  final String value;
+  final String subtitle;
   final Color color;
   final IconData icon;
 
@@ -641,11 +672,9 @@ class _SummaryCard extends StatelessWidget {
       ),
       padding: const EdgeInsets.all(8),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(icon, size: 18, color: UserUi.textMuted),
               const SizedBox(width: 4),
@@ -653,16 +682,22 @@ class _SummaryCard extends StatelessWidget {
                 child: Text(
                   title,
                   style: const TextStyle(
-                      fontSize: 10, fontWeight: FontWeight.w700),
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    height: 1.3,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
             value,
             style: const TextStyle(
-                fontSize: 26, fontWeight: FontWeight.w900),
+              fontSize: 26,
+              fontWeight: FontWeight.w900,
+              height: 1.1,
+            ),
           ),
           Text(subtitle, style: const TextStyle(fontSize: 11)),
         ],
@@ -702,8 +737,11 @@ class _SmallTab extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (showArrow && active) ...[
-              Icon(Icons.expand_more_rounded,
-                  size: 15, color: active ? Colors.white : Colors.black87),
+              const Icon(
+                Icons.expand_more_rounded,
+                size: 15,
+                color: Colors.white,
+              ),
               const SizedBox(width: 2),
             ],
             Flexible(
@@ -734,32 +772,36 @@ class _FilterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = hasFilter ? Colors.white : Colors.black87;
+    final isActive = hasFilter;
+    final fg = isActive ? Colors.white : Colors.black87;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         height: 34,
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
-          color: hasFilter ? UserUi.blue : const Color(0xFFF8F0F7),
+          color: isActive ? UserUi.blue : const Color(0xFFF8F0F7),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-              color: hasFilter ? UserUi.blue : UserUi.softBorder),
+            color: isActive ? UserUi.blue : UserUi.softBorder,
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.filter_list_rounded, size: 13, color: iconColor),
+            Icon(Icons.filter_list_rounded, size: 14, color: fg),
             const SizedBox(width: 4),
             Text(
               'Filter',
               style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: iconColor),
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: fg,
+              ),
             ),
             const SizedBox(width: 2),
-            Icon(Icons.expand_more_rounded, size: 13, color: iconColor),
+            Icon(Icons.expand_more_rounded, size: 14, color: fg),
           ],
         ),
       ),
@@ -775,15 +817,15 @@ class _FilterSheet extends StatelessWidget {
   final String? current;
   final ValueChanged<String?> onSelect;
 
+  static const _options = [
+    ('', 'Semua Status', Icons.list_rounded),
+    ('active', 'Sedang Dipinjam', Icons.content_paste_rounded),
+    ('returned', 'Dikembalikan', Icons.inventory_2_rounded),
+    ('late', 'Terlambat', Icons.warning_amber_rounded),
+  ];
+
   @override
   Widget build(BuildContext context) {
-    final options = [
-      (null as String?, 'Semua Status', Icons.list_rounded),
-      ('active', 'Sedang Dipinjam', Icons.content_paste_rounded),
-      ('returned', 'Dikembalikan', Icons.inventory_2_rounded),
-      ('late', 'Terlambat', Icons.warning_amber_rounded),
-    ];
-
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
@@ -796,40 +838,50 @@ class _FilterSheet extends StatelessWidget {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 12),
-            ...options.map((opt) {
-              final sel = current == opt.$1;
+            ..._options.map((opt) {
+              // empty string means "semua" (null filter)
+              final key = opt.$1.isEmpty ? null : opt.$1;
+              final isSelected = current == key;
               return GestureDetector(
-                onTap: () => onSelect(opt.$1),
+                onTap: () => onSelect(key),
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 8),
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 10),
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
-                    color: sel
-                        ? UserUi.blue.withValues(alpha: 0.1)
+                    color: isSelected
+                        ? const Color(0xFFEEF4FF)
                         : const Color(0xFFF8F1F7),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                        color: sel ? UserUi.blue : UserUi.softBorder),
+                      color: isSelected ? UserUi.blue : UserUi.softBorder,
+                    ),
                   ),
                   child: Row(
                     children: [
-                      Icon(opt.$3,
-                          size: 18,
-                          color: sel ? UserUi.blue : UserUi.textMuted),
+                      Icon(
+                        opt.$3,
+                        size: 18,
+                        color: isSelected ? UserUi.blue : UserUi.textMuted,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           opt.$2,
                           style: TextStyle(
                             fontWeight: FontWeight.w700,
-                            color: sel ? UserUi.blue : Colors.black87,
+                            color: isSelected ? UserUi.blue : Colors.black87,
                           ),
                         ),
                       ),
-                      if (sel)
-                        const Icon(Icons.check_rounded,
-                            size: 16, color: UserUi.blue),
+                      if (isSelected)
+                        const Icon(
+                          Icons.check_rounded,
+                          size: 16,
+                          color: UserUi.blue,
+                        ),
                     ],
                   ),
                 ),
@@ -866,11 +918,11 @@ class _Pagination extends StatelessWidget {
           onTap: () => onPage(currentPage - 1),
         ),
         ...List.generate(totalPages, (i) {
-          final pg = i + 1;
+          final p = i + 1;
           return _PageBtn(
-            label: '$pg',
-            active: currentPage == pg,
-            onTap: () => onPage(pg),
+            label: '$p',
+            active: currentPage == p,
+            onTap: () => onPage(p),
           );
         }),
         _PageBtn(
@@ -905,6 +957,7 @@ class _PageBtn extends StatelessWidget {
         : enabled
             ? Colors.black87
             : UserUi.textMuted;
+
     return GestureDetector(
       onTap: enabled ? onTap : null,
       child: Container(
@@ -924,7 +977,10 @@ class _PageBtn extends StatelessWidget {
             ? Text(
                 label!,
                 style: TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.w700, color: fg),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: fg,
+                ),
               )
             : Icon(icon!, size: 16, color: fg),
       ),
