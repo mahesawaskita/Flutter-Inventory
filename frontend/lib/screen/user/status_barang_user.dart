@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/screen/user/peminjaman_barang_user.dart';
 import 'package:frontend/service/api_service.dart';
 import 'package:frontend/service/auth_service.dart';
 
@@ -379,19 +378,6 @@ class _StatusBarangUserScreenState extends State<StatusBarangUserScreen> {
               const SizedBox(height: 6),
             ],
 
-            // ── Pinjam Barang ──────────────────────────────────
-            const SizedBox(height: 4),
-            UserPrimaryButton(
-              text: 'Pinjam Barang',
-              icon: Icons.arrow_forward_rounded,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const PeminjamanBarangUserScreen(),
-                ),
-              ).then((_) => _loadLoans()),
-            ),
-            const SizedBox(height: 4),
           ],
         ),
       ),
