@@ -230,7 +230,7 @@ class _EditBarangAdminState extends State<EditBarangAdmin> {
                                   ),
                                 )
                               : DropdownButtonFormField<Map<String, dynamic>>(
-                                  initialValue: _selectedCategory,
+                                  value: _selectedCategory,
                                   decoration: _inputDeco('Pilih kategori'),
                                   items: _categories
                                       .map((cat) => DropdownMenuItem(
@@ -278,7 +278,7 @@ class _EditBarangAdminState extends State<EditBarangAdmin> {
                 const SizedBox(height: 14),
                 _fieldLabel('Status / Kondisi'),
                 DropdownButtonFormField<String>(
-                  initialValue: _selectedCondition,
+                  value: _selectedCondition,
                   decoration: _inputDeco(''),
                   items: _conditions
                       .map((c) => DropdownMenuItem(
@@ -311,7 +311,7 @@ class _EditBarangAdminState extends State<EditBarangAdmin> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF3998FC),
                     disabledBackgroundColor:
-                        const Color(0xFF3998FC).withOpacity(0.5),
+                        const Color(0xFF3998FC).withValues(alpha: 0.5),
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
@@ -350,7 +350,7 @@ class _EditBarangAdminState extends State<EditBarangAdmin> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 4,
               offset: const Offset(0, 1))
         ],
