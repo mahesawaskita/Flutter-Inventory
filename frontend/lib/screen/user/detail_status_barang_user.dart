@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/service/auth_service.dart';
 
+import 'peminjaman_barang_user.dart';
 import 'user_ui.dart';
 
 class DetailStatusBarangUserScreen extends StatefulWidget {
@@ -279,6 +280,29 @@ class _DetailStatusBarangUserScreenState
                 ],
               ),
             ),
+
+            // ── Tombol Pinjam Barang (hanya jika sudah dikembalikan) ──
+            if (isReturned) ...[
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: UserPrimaryButton(
+                  text: 'Pinjam Barang',
+                  icon: Icons.arrow_forward_rounded,
+                  onTap: () => Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PeminjamanBarangUserScreen(
+                        selectedItem: {
+                          'id': widget.loan['item_id'],
+                          'name': widget.loan['item_name'],
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
 
             const SizedBox(height: 8),
           ],
