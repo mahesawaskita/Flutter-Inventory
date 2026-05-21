@@ -172,12 +172,15 @@ class _PengembalianBarangUserScreenState extends State<PengembalianBarangUserScr
                           )
                         else
                           GestureDetector(
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => DetailPengembalianBarangUserScreen(loan: loan),
-                              ),
-                            ),
+                            onTap: () async {
+                              final returned = await Navigator.push<bool>(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => DetailPengembalianBarangUserScreen(loan: loan),
+                                ),
+                              );
+                              if (returned == true) _loadLoans();
+                            },
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                               decoration: BoxDecoration(

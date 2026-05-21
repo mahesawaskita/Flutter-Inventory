@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/service/api_service.dart';
+import 'package:frontend/service/auth_service.dart';
 
 import 'user_ui.dart';
 
@@ -12,6 +14,15 @@ class DetailPengembalianBarangUserScreen extends StatefulWidget {
 }
 
 class _DetailPengembalianBarangUserScreenState extends State<DetailPengembalianBarangUserScreen> {
+  final _noteController = TextEditingController();
+  bool _isSubmitting = false;
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
+  }
+
   String _fmtDisplay(String? s) {
     if (s == null) return '-';
     try {
@@ -23,6 +34,36 @@ class _DetailPengembalianBarangUserScreenState extends State<DetailPengembalianB
     }
   }
 
+  String get _todayFormatted {
+    final d = DateTime.now();
+    const m = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    return '${d.day} ${m[d.month - 1]} ${d.year}';
+  }
+
+  Future<void> _konfirmasi() async {
+    setState(() => _isSubmitting = true);
+    final token = await AuthService.getToken();
+    if (token == null) {
+      if (mounted) setState(() => _isSubmitting = false);
+      return;
+    }
+
+    final loanId = (widget.loan['id'] as num).toInt();
+    final result = await ApiService.returnLoan(token, loanId);
+
+    if (!mounted) return;
+    setState(() => _isSubmitting = false);
+
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(result['message']?.toString() ?? ''),
+      backgroundColor: result['success'] == true ? Colors.green : Colors.red,
+    ));
+
+    if (result['success'] == true) {
+      Navigator.pop(context, true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final loan = widget.loan;
@@ -30,7 +71,6 @@ class _DetailPengembalianBarangUserScreenState extends State<DetailPengembalianB
     final borrowerName = loan['user_name']?.toString() ?? loan['borrower_name']?.toString() ?? '-';
     final borrowDate = _fmtDisplay(loan['borrow_date']?.toString() ?? loan['created_at']?.toString());
     final dueDate = _fmtDisplay(loan['due_date']?.toString());
-    final returnDate = _fmtDisplay(loan['return_date']?.toString());
 
     return UserPageScaffold(
       child: UserFramedPage(
@@ -59,21 +99,26 @@ class _DetailPengembalianBarangUserScreenState extends State<DetailPengembalianB
               const SizedBox(height: 10),
               UserSectionCard(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _DateGroup(title: 'Tanggal Peminjaman', start: borrowDate, end: dueDate),
+                    _DateGroup(start: borrowDate, end: dueDate),
                     const SizedBox(height: 10),
-                    _SingleDateGroup(title: 'Tanggal Pengembalian', value: returnDate),
+                    _SingleDateGroup(value: _todayFormatted),
                     const SizedBox(height: 10),
                     const _PhotoArea(),
                     const SizedBox(height: 10),
-                    const _OptionalNote(),
+                    _NoteInput(controller: _noteController),
                   ],
                 ),
               ),
               const SizedBox(height: 14),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 86),
-                child: UserPrimaryButton(text: 'Konfirmasi'),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 86),
+                child: UserPrimaryButton(
+                  text: _isSubmitting ? 'Memproses...' : 'Konfirmasi',
+                  background: _isSubmitting ? Colors.grey : UserUi.blue,
+                  onTap: _isSubmitting ? null : _konfirmasi,
+                ),
               ),
             ],
           ),
@@ -84,13 +129,8 @@ class _DetailPengembalianBarangUserScreenState extends State<DetailPengembalianB
 }
 
 class _DateGroup extends StatelessWidget {
-  const _DateGroup({
-    required this.title,
-    required this.start,
-    required this.end,
-  });
+  const _DateGroup({required this.start, required this.end});
 
-  final String title;
   final String start;
   final String end;
 
@@ -109,7 +149,13 @@ class _DateGroup extends StatelessWidget {
         const SizedBox(height: 6),
         Row(
           children: [
-            Expanded(child: UserTextInputMock(text: start, icon: const Icon(Icons.calendar_today_rounded, size: 14), muted: true)),
+            Expanded(
+              child: UserTextInputMock(
+                text: start,
+                icon: const Icon(Icons.calendar_today_rounded, size: 14),
+                muted: true,
+              ),
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Container(
@@ -136,12 +182,8 @@ class _DateGroup extends StatelessWidget {
 }
 
 class _SingleDateGroup extends StatelessWidget {
-  const _SingleDateGroup({
-    required this.title,
-    required this.value,
-  });
+  const _SingleDateGroup({required this.value});
 
-  final String title;
   final String value;
 
   @override
@@ -157,7 +199,11 @@ class _SingleDateGroup extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 6),
-        UserTextInputMock(text: value, icon: const Icon(Icons.calendar_today_rounded, size: 14), muted: true),
+        UserTextInputMock(
+          text: value,
+          icon: const Icon(Icons.calendar_today_rounded, size: 14),
+          muted: true,
+        ),
       ],
     );
   }
@@ -190,7 +236,7 @@ class _PhotoArea extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: UserUi.frameBorder.withOpacity(.7)),
                 ),
-                child: const Icon(Icons.laptop_mac_rounded, size: 46, color: Color(0xFF4460C8)),
+                child: const Icon(Icons.inventory_2_rounded, size: 46, color: Color(0xFF4460C8)),
               ),
               Positioned(
                 top: 4,
@@ -210,15 +256,17 @@ class _PhotoArea extends StatelessWidget {
   }
 }
 
-class _OptionalNote extends StatelessWidget {
-  const _OptionalNote();
+class _NoteInput extends StatelessWidget {
+  const _NoteInput({required this.controller});
+
+  final TextEditingController controller;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
-        Text.rich(
+      children: [
+        const Text.rich(
           TextSpan(
             children: [
               TextSpan(text: 'Catatan ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
@@ -226,8 +274,31 @@ class _OptionalNote extends StatelessWidget {
             ],
           ),
         ),
-        SizedBox(height: 6),
-        UserTextInputMock(text: 'Masukkan catatan pengembalian barang...', muted: true),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          maxLines: 3,
+          style: const TextStyle(fontSize: 13),
+          decoration: InputDecoration(
+            hintText: 'Masukkan catatan pengembalian barang...',
+            hintStyle: const TextStyle(color: Color(0xFFAAAAAA), fontSize: 13),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: UserUi.frameBorder.withValues(alpha: .5)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: UserUi.frameBorder.withValues(alpha: .5)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: UserUi.blue),
+            ),
+          ),
+        ),
       ],
     );
   }
