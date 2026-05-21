@@ -57,11 +57,44 @@ class AuthService {
     return prefs.getString('username');
   }
 
+  static Future<String?> getEmail() async =>
+      (await SharedPreferences.getInstance()).getString('profile_email');
+
+  static Future<String?> getPhone() async =>
+      (await SharedPreferences.getInstance()).getString('profile_phone');
+
+  static Future<String?> getJabatan() async =>
+      (await SharedPreferences.getInstance()).getString('profile_jabatan');
+
+  static Future<String?> getSince() async =>
+      (await SharedPreferences.getInstance()).getString('profile_since');
+
+  static Future<void> saveProfileCache({
+    String? username,
+    String? email,
+    String? phone,
+    String? jabatan,
+    String? since,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (username != null && username.isNotEmpty) {
+      await prefs.setString('username', username);
+    }
+    if (email != null) await prefs.setString('profile_email', email);
+    if (phone != null) await prefs.setString('profile_phone', phone);
+    if (jabatan != null) await prefs.setString('profile_jabatan', jabatan);
+    if (since != null) await prefs.setString('profile_since', since);
+  }
+
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
     await prefs.remove('role');
     await prefs.remove('username');
+    await prefs.remove('profile_email');
+    await prefs.remove('profile_phone');
+    await prefs.remove('profile_jabatan');
+    await prefs.remove('profile_since');
   }
 
   static Future<Map<String, dynamic>> register(

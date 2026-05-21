@@ -18,8 +18,8 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
   Map<String, dynamic>? _item;
   List<Map<String, dynamic>> _loans = [];
   bool _isLoading = false;
-  int _activeScanTab = 0;  // 0=Peminjaman, 1=Perbaikan
-  int _activeInnerTab = 0; // 0=Peminjaman, 1=Perbaikan
+  int _activeScanTab = 0;
+  int _activeInnerTab = 0;
   bool _showAll = false;
   String? _currentUsername;
   String? _error;
@@ -30,7 +30,10 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
     if (s == null) return '-';
     try {
       final d = DateTime.parse(s);
-      const m = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+      const m = [
+        'Jan','Feb','Mar','Apr','Mei','Jun',
+        'Jul','Agu','Sep','Okt','Nov','Des'
+      ];
       return '${d.day} ${m[d.month - 1]} ${d.year}';
     } catch (_) {
       return s;
@@ -51,19 +54,23 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
 
   bool _isLate(String? s) {
     if (s == null) return false;
-    try { return DateTime.parse(s).isBefore(DateTime.now()); } catch (_) { return false; }
+    try {
+      return DateTime.parse(s).isBefore(DateTime.now());
+    } catch (_) {
+      return false;
+    }
   }
 
-  // Loan untuk user yang sedang login (boleh jadi null)
   Map<String, dynamic>? get _myActiveLoan {
     if (_currentUsername == null) return null;
     for (final l in _loans) {
-      if (l['status'] == 'borrowed' && l['username'] == _currentUsername) return l;
+      if (l['status'] == 'borrowed' && l['username'] == _currentUsername) {
+        return l;
+      }
     }
     return null;
   }
 
-  // Siapa pun yang saat ini sedang meminjam (untuk ditampilkan di kartu item)
   Map<String, dynamic>? get _currentBorrower {
     for (final l in _loans) {
       if (l['status'] == 'borrowed') return l;
@@ -71,20 +78,86 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
     return null;
   }
 
+  int get _activeLoanCount =>
+      _loans.where((l) => l['status'] == 'borrowed').length;
+
+  Color _avatarBg(String name) {
+    const colors = [
+      Color(0xFFD9EEF7),
+      Color(0xFFF7D4D8),
+      Color(0xFFE7E6F4),
+      Color(0xFFD7EDD7),
+      Color(0xFFFBE8C8),
+    ];
+    return colors[name.isEmpty ? 0 : name.codeUnitAt(0) % colors.length];
+  }
+
+  Color _avatarIcon(String name) {
+    const colors = [
+      Color(0xFF5C6D91),
+      Color(0xFF89545C),
+      Color(0xFF5C5C91),
+      Color(0xFF3A7A3A),
+      Color(0xFF8A6D30),
+    ];
+    return colors[name.isEmpty ? 0 : name.codeUnitAt(0) % colors.length];
+  }
+
   // ── Actions ───────────────────────────────────────────────────────────────
 
-  Future<void> _scan() async {
+  Future<void> _openScanner() async {
     final raw = await Navigator.push<String>(
       context,
       MaterialPageRoute(builder: (_) => const _ScannerPage()),
     );
     if (raw == null || !mounted) return;
-    final id = int.tryParse(raw.trim());
+    _processQrValue(raw.trim());
+  }
+
+  void _processQrValue(String raw) {
+    final id = int.tryParse(raw);
     if (id == null) {
       setState(() => _error = 'QR tidak valid: "$raw"');
       return;
     }
-    await _loadItem(id);
+    _loadItem(id);
+  }
+
+  /// Dialog untuk input ID manual (fallback jika kamera tidak tersedia)
+  Future<void> _openManualInput() async {
+    final controller = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Masukkan ID Barang',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          decoration: InputDecoration(
+            hintText: 'Contoh: 1, 2, 3...',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+            child: const Text('Cari'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (result != null && result.isNotEmpty && mounted) {
+      _processQrValue(result);
+    }
   }
 
   Future<void> _loadItem(int id) async {
@@ -101,7 +174,12 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
     final token = await AuthService.getToken();
     final username = await AuthService.getUsername();
     if (token == null) {
-      if (mounted) setState(() { _isLoading = false; _error = 'Silakan login ulang.'; });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _error = 'Silakan login ulang.';
+        });
+      }
       return;
     }
 
@@ -137,125 +215,150 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
     return UserPageScaffold(
       child: UserFramedPage(
         title: 'QR Scanner',
-        topIcon: const Icon(Icons.qr_code_2_rounded, size: 46, color: Color(0xFF545163)),
+        topIcon: const Icon(Icons.qr_code_2_rounded, size: 46,
+            color: Color(0xFF545163)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
 
-            // ── QR / Scanner Box ─────────────────────────────────────────
-            Container(
-              height: 184,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: UserUi.softBorder),
-                image: const DecorationImage(
-                  image: AssetImage('assets/image/user/detail QR scanner/image 20.png'),
-                  fit: BoxFit.cover,
-                  colorFilter: ColorFilter.mode(Color(0x66FFFFFF), BlendMode.lighten),
+            // ── Scanner box ───────────────────────────────────────────────
+            GestureDetector(
+              onTap: _isLoading ? null : _openScanner,
+              child: Container(
+                height: 180,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: UserUi.softBorder),
+                  image: const DecorationImage(
+                    image: AssetImage(
+                        'assets/image/user/detail QR scanner/image 20.png'),
+                    fit: BoxFit.cover,
+                    colorFilter: ColorFilter.mode(
+                        Color(0x55FFFFFF), BlendMode.lighten),
+                  ),
                 ),
-              ),
-              child: Stack(
-                children: [
-                  Center(
-                    child: Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: Colors.black, width: 7),
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(17),
-                        child: _isLoading
-                            ? const Center(child: CircularProgressIndicator(color: UserUi.blue))
-                            : item != null
-                                ? QrImageView(
-                                    data: item['id'].toString(),
-                                    version: QrVersions.auto,
-                                    size: 106,
-                                    backgroundColor: Colors.white,
-                                  )
-                                : const Center(
-                                    child: Icon(Icons.qr_code_2_rounded,
-                                        size: 90, color: Colors.black)),
+                child: Stack(
+                  children: [
+                    // QR frame corners overlay
+                    Positioned.fill(
+                      child: CustomPaint(painter: _CornerFramePainter()),
+                    ),
+                    // Center QR display
+                    Center(
+                      child: Container(
+                        width: 118,
+                        height: 118,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha:0.25),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: _isLoading
+                              ? const Center(
+                                  child: CircularProgressIndicator(
+                                      color: UserUi.blue))
+                              : item != null
+                                  ? QrImageView(
+                                      data: item['id'].toString(),
+                                      version: QrVersions.auto,
+                                      size: 118,
+                                      backgroundColor: Colors.white,
+                                    )
+                                  : const Center(
+                                      child: Icon(Icons.qr_code_2_rounded,
+                                          size: 88, color: Colors.black87)),
+                        ),
                       ),
                     ),
-                  ),
-                  // Scan / re-scan button
-                  Positioned(
-                    right: 10,
-                    bottom: 10,
-                    child: GestureDetector(
-                      onTap: _isLoading ? null : _scan,
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          Container(
-                            width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              color: item != null
-                                  ? const Color(0xFF3C4EBD)
-                                  : Colors.black54,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 3),
-                            ),
-                            child: Icon(
-                              item != null
-                                  ? Icons.qr_code_2_rounded
-                                  : Icons.document_scanner_rounded,
-                              size: 30,
-                              color: Colors.white,
-                            ),
-                          ),
-                          if (item != null)
-                            Positioned(
-                              top: -2,
-                              right: -2,
-                              child: Container(
-                                width: 18,
-                                height: 18,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF3B82F6),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(Icons.add_rounded,
-                                    size: 13, color: Colors.white),
+                    // Scan button (bottom-right)
+                    Positioned(
+                      right: 10,
+                      bottom: 10,
+                      child: GestureDetector(
+                        onTap: _isLoading ? null : _openScanner,
+                        child: Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: item != null
+                                ? const Color(0xFF3C4EBD)
+                                : const Color(0xFF444455),
+                            shape: BoxShape.circle,
+                            border:
+                                Border.all(color: Colors.white, width: 2.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha:0.3),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
                               ),
-                            ),
-                        ],
+                            ],
+                          ),
+                          child: Icon(
+                            item != null
+                                ? Icons.qr_code_scanner_rounded
+                                : Icons.document_scanner_rounded,
+                            size: 26,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
 
-            // ── Hint / Error ─────────────────────────────────────────────
+            // ── Hint / Error / Manual input ───────────────────────────────
             if (_error != null) ...[
               const SizedBox(height: 8),
               Text(_error!,
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.red, fontSize: 12)),
-            ] else if (!_isLoading && item == null) ...[
+            ],
+            if (!_isLoading && item == null) ...[
               const SizedBox(height: 8),
               const Text(
-                'Tap tombol scan untuk memindai QR barang',
+                'Tap kotak di atas untuk memindai QR barang',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 12, color: UserUi.textMuted),
               ),
+              const SizedBox(height: 6),
+              Center(
+                child: GestureDetector(
+                  onTap: _openManualInput,
+                  child: const Text(
+                    'atau masukkan ID barang manual',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: UserUi.blue,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ),
             ],
 
-            // ── Item card + history ──────────────────────────────────────
+            // ── Item info + history ───────────────────────────────────────
             if (item != null) ...[
               const SizedBox(height: 10),
 
               // Item info tile
               UserInfoTile(
-                leading: const UserProductThumb(icon: Icons.laptop_mac_rounded),
+                leading: const UserProductThumb(
+                    icon: Icons.inventory_2_rounded),
                 title: item['name']?.toString() ?? '-',
-                subtitle: borrower?['username']?.toString() ?? '-',
+                subtitle: borrower != null
+                    ? borrower['username']?.toString() ?? '-'
+                    : item['category_name']?.toString() ?? '-',
                 trailing: myLoan != null
                     ? GestureDetector(
                         onTap: () async {
@@ -263,19 +366,20 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (_) =>
-                                  DetailPengembalianBarangUserScreen(loan: myLoan),
+                                  DetailPengembalianBarangUserScreen(
+                                      loan: myLoan),
                             ),
                           );
-                          if (returned == true) {
+                          if (returned == true && mounted) {
                             await _loadItem((item['id'] as num).toInt());
                           }
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
+                              horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
                             color: UserUi.blue,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Text(
                             'Kembalikan',
@@ -289,18 +393,22 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
                     : null,
               ),
 
-              // Due date row (shown if anyone is currently borrowing)
+              // Batas pengembalian row
               if (borrower != null) ...[
                 const SizedBox(height: 4),
                 Padding(
                   padding: const EdgeInsets.only(left: 4),
                   child: Row(
                     children: [
-                      const Icon(Icons.info_outline_rounded,
-                          size: 14, color: UserUi.textMuted),
+                      Icon(
+                        Icons.schedule_rounded,
+                        size: 13,
+                        color: late ? Colors.red : UserUi.textMuted,
+                      ),
                       const SizedBox(width: 4),
                       Text(
-                        'Batas Pengembalian ${_fmt(borrower['due_date']?.toString())}  '
+                        'Batas Pengembalian '
+                        '${_fmt(borrower['due_date']?.toString())}  '
                         '${_daysLeft(borrower['due_date']?.toString())}',
                         style: TextStyle(
                           fontSize: 11,
@@ -314,14 +422,14 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
 
               const SizedBox(height: 10),
 
-              // ── Outer tabs ───────────────────────────────────────────
+              // ── Outer tabs ────────────────────────────────────────────
               Row(
                 children: [
                   Expanded(
                     child: _ScanTab(
                       text: 'Riwayat Peminjaman',
                       active: _activeScanTab == 0,
-                      count: 0,
+                      count: _activeLoanCount,
                       onTap: () => setState(() {
                         _activeScanTab = 0;
                         _activeInnerTab = 0;
@@ -345,7 +453,7 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
 
               const SizedBox(height: 8),
 
-              // ── Inner card ───────────────────────────────────────────
+              // ── Inner card ────────────────────────────────────────────
               UserSectionCard(
                 color: const Color(0xFFF8F2F7),
                 child: Column(
@@ -375,11 +483,11 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Icon(Icons.more_horiz_rounded, color: UserUi.blue),
+                        const Icon(Icons.more_horiz_rounded,
+                            color: UserUi.blue),
                       ],
                     ),
                     const SizedBox(height: 8),
-
                     if (_activeInnerTab == 0)
                       ..._buildLoanRows()
                     else
@@ -388,11 +496,28 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
                         child: Center(
                           child: Text(
                             'Belum ada riwayat perbaikan',
-                            style: TextStyle(fontSize: 12, color: UserUi.textMuted),
+                            style: TextStyle(
+                                fontSize: 12, color: UserUi.textMuted),
                           ),
                         ),
                       ),
                   ],
+                ),
+              ),
+
+              // Scan ulang button
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                onPressed: _isLoading ? null : _openScanner,
+                icon: const Icon(Icons.qr_code_scanner_rounded, size: 16),
+                label: const Text('Scan Ulang',
+                    style: TextStyle(fontSize: 12)),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: UserUi.blue,
+                  side: const BorderSide(color: UserUi.blue),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
                 ),
               ),
             ],
@@ -402,46 +527,34 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
     );
   }
 
+  // ── Loan rows ─────────────────────────────────────────────────────────────
+
   List<Widget> _buildLoanRows() {
     if (_loans.isEmpty) {
       return [
         const Padding(
           padding: EdgeInsets.symmetric(vertical: 16),
           child: Center(
-            child: Text(
-              'Belum ada riwayat peminjaman',
-              style: TextStyle(fontSize: 12, color: UserUi.textMuted),
-            ),
+            child: Text('Belum ada riwayat peminjaman',
+                style: TextStyle(fontSize: 12, color: UserUi.textMuted)),
           ),
         ),
       ];
     }
 
     const maxVisible = 3;
-    final displayed = _showAll ? _loans : _loans.take(maxVisible).toList();
+    final displayed =
+        _showAll ? _loans : _loans.take(maxVisible).toList();
 
     return [
-      for (final loan in displayed) ...[
-        UserHistoryRow(
-          avatar: const UserProductThumb(icon: Icons.laptop_mac_rounded),
-          name: loan['username']?.toString() ?? '-',
-          subtitle: loan['status'] == 'borrowed' ? 'Pinjam hingga' : 'Di pinjam selama',
-          date: loan['status'] == 'borrowed'
-              ? _fmt(loan['due_date']?.toString())
-              : _fmt(loan['borrow_date']?.toString()),
-          status: loan['status'] == 'borrowed' ? 'Sedang Dipinjam' : 'Sudah Dikembalikan',
-          statusColor: loan['status'] == 'borrowed'
-              ? const Color(0xFF68B45B)
-              : const Color(0xFF4D7BEE),
-        ),
-      ],
+      for (final loan in displayed) _loanRow(loan),
       const SizedBox(height: 8),
       if (_loans.length > maxVisible)
         GestureDetector(
           onTap: () => setState(() => _showAll = !_showAll),
           child: Center(
             child: Container(
-              width: 160,
+              width: 170,
               height: 30,
               decoration: BoxDecoration(
                 color: const Color(0xFFE6E1EF),
@@ -453,7 +566,8 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
                 children: [
                   Text(
                     _showAll ? 'Sembunyikan' : 'Lihat Selengkapnya',
-                    style: const TextStyle(color: UserUi.blue, fontSize: 12),
+                    style:
+                        const TextStyle(color: UserUi.blue, fontSize: 12),
                   ),
                   const SizedBox(width: 4),
                   Icon(
@@ -470,9 +584,122 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
         ),
     ];
   }
+
+  Widget _loanRow(Map<String, dynamic> loan) {
+    final isActive = loan['status'] == 'borrowed';
+    final name = loan['username']?.toString() ?? '-';
+    final label = isActive ? 'Pinjam hingga' : 'Di pinjam selama';
+    final date = isActive
+        ? _fmt(loan['due_date']?.toString())
+        : _fmt(loan['borrow_date']?.toString());
+    final statusText =
+        isActive ? 'Sedang Dipinjam' : 'Sudah Dikembalikan';
+    final statusColor =
+        isActive ? const Color(0xFF5DAA56) : const Color(0xFF4D7BEE);
+    final bgColor = _avatarBg(name);
+    final iconColor = _avatarIcon(name);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 8),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: UserUi.softBorder)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 22,
+            backgroundColor: bgColor,
+            child: Icon(Icons.person_rounded, color: iconColor, size: 26),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name,
+                    style: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 2),
+                RichText(
+                  text: TextSpan(
+                    style: const TextStyle(
+                        fontSize: 11, color: UserUi.textMuted),
+                    children: [
+                      TextSpan(text: '$label '),
+                      TextSpan(
+                        text: date,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 6),
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+            decoration: BoxDecoration(
+              color: statusColor.withValues(alpha:0.16),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              statusText,
+              style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: statusColor),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-// ── _ScanTab ─────────────────────────────────────────────────────────────────
+// ── Corner frame painter ──────────────────────────────────────────────────────
+
+class _CornerFramePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF3B82F6)
+      ..strokeWidth = 3
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    const len = 22.0;
+    const pad = 20.0;
+
+    // top-left
+    canvas.drawLine(Offset(pad, pad + len), Offset(pad, pad), paint);
+    canvas.drawLine(Offset(pad, pad), Offset(pad + len, pad), paint);
+    // top-right
+    canvas.drawLine(
+        Offset(size.width - pad, pad + len), Offset(size.width - pad, pad), paint);
+    canvas.drawLine(
+        Offset(size.width - pad, pad), Offset(size.width - pad - len, pad), paint);
+    // bottom-left
+    canvas.drawLine(
+        Offset(pad, size.height - pad - len), Offset(pad, size.height - pad), paint);
+    canvas.drawLine(
+        Offset(pad, size.height - pad), Offset(pad + len, size.height - pad), paint);
+    // bottom-right
+    canvas.drawLine(Offset(size.width - pad, size.height - pad - len),
+        Offset(size.width - pad, size.height - pad), paint);
+    canvas.drawLine(Offset(size.width - pad, size.height - pad),
+        Offset(size.width - pad - len, size.height - pad), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ── Outer tab ─────────────────────────────────────────────────────────────────
 
 class _ScanTab extends StatelessWidget {
   const _ScanTab({
@@ -493,6 +720,7 @@ class _ScanTab extends StatelessWidget {
       onTap: onTap,
       child: Container(
         height: 34,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
         decoration: BoxDecoration(
           color: active ? UserUi.blue : const Color(0xFFFBE1A4),
           borderRadius: BorderRadius.circular(18),
@@ -500,19 +728,26 @@ class _ScanTab extends StatelessWidget {
         alignment: Alignment.center,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              text,
-              style: TextStyle(
-                fontSize: 12,
-                color: active ? Colors.white : Colors.black87,
+            Flexible(
+              child: Text(
+                text,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: active ? Colors.white : Colors.black87,
+                ),
               ),
             ),
             if (!active) ...[
-              const SizedBox(width: 8),
-              Text('$count', style: const TextStyle(fontSize: 12)),
+              const SizedBox(width: 6),
+              Text('$count',
+                  style: const TextStyle(
+                      fontSize: 11, fontWeight: FontWeight.w800)),
               const SizedBox(width: 2),
-              const Icon(Icons.chevron_right_rounded, size: 18),
+              const Icon(Icons.chevron_right_rounded, size: 16),
             ],
           ],
         ),
@@ -521,7 +756,7 @@ class _ScanTab extends StatelessWidget {
   }
 }
 
-// ── _InnerTab ─────────────────────────────────────────────────────────────────
+// ── Inner tab ─────────────────────────────────────────────────────────────────
 
 class _InnerTab extends StatelessWidget {
   const _InnerTab({
@@ -548,8 +783,10 @@ class _InnerTab extends StatelessWidget {
         alignment: Alignment.center,
         child: Text(
           text,
+          overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
             color: active ? Colors.white : Colors.black87,
           ),
         ),
@@ -558,7 +795,7 @@ class _InnerTab extends StatelessWidget {
   }
 }
 
-// ── Full-screen scanner ───────────────────────────────────────────────────────
+// ── Full-screen camera scanner ────────────────────────────────────────────────
 
 class _ScannerPage extends StatefulWidget {
   const _ScannerPage();
@@ -592,17 +829,13 @@ class _ScannerPageState extends State<_ScannerPage> {
             },
           ),
           Center(
-            child: Container(
-              width: 220,
-              height: 220,
-              decoration: BoxDecoration(
-                border: Border.all(color: UserUi.blue, width: 3),
-                borderRadius: BorderRadius.circular(16),
-              ),
+            child: CustomPaint(
+              painter: _ScanFramePainter(),
+              child: const SizedBox(width: 220, height: 220),
             ),
           ),
           const Positioned(
-            bottom: 32,
+            bottom: 40,
             left: 0,
             right: 0,
             child: Text(
@@ -615,4 +848,34 @@ class _ScannerPageState extends State<_ScannerPage> {
       ),
     );
   }
+}
+
+class _ScanFramePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF3B82F6)
+      ..strokeWidth = 4
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    const len = 30.0;
+
+    canvas.drawLine(Offset(0, len), Offset.zero, paint);
+    canvas.drawLine(Offset.zero, Offset(len, 0), paint);
+
+    canvas.drawLine(Offset(size.width - len, 0), Offset(size.width, 0), paint);
+    canvas.drawLine(Offset(size.width, 0), Offset(size.width, len), paint);
+
+    canvas.drawLine(Offset(0, size.height - len), Offset(0, size.height), paint);
+    canvas.drawLine(Offset(0, size.height), Offset(len, size.height), paint);
+
+    canvas.drawLine(Offset(size.width - len, size.height),
+        Offset(size.width, size.height), paint);
+    canvas.drawLine(Offset(size.width, size.height - len),
+        Offset(size.width, size.height), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

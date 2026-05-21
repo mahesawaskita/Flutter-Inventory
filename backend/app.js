@@ -33,6 +33,18 @@ app.get('/', (req, res) => {
   res.send('Backend jalan 🚀');
 });
 
+// Migrasi kolom users
+[
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(100) DEFAULT NULL`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20) DEFAULT NULL`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS jabatan VARCHAR(100) DEFAULT NULL`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP`,
+].forEach((sql) => db.query(sql, (err) => {
+  if (err && !err.message.includes('Duplicate column')) {
+    console.log('[DB] User migration error:', err.message);
+  }
+}));
+
 // Migrasi kolom borrowings
 const migrations = [
   `ALTER TABLE borrowings ADD COLUMN IF NOT EXISTS quantity INT NOT NULL DEFAULT 1`,

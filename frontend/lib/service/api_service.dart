@@ -184,6 +184,60 @@ class ApiService {
     }
   }
 
+  // ── USER PROFILE ─────────────────────────────────────────────────────────
+
+  static Future<Map<String, dynamic>?> getUserProfile(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/auth/me'),
+        headers: {'Authorization': token},
+      );
+      if (response.statusCode == 200) {
+        return Map<String, dynamic>.from(jsonDecode(response.body));
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>> updateUserProfile(
+      String token, Map<String, dynamic> data) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/auth/me'),
+        headers: {'Content-Type': 'application/json', 'Authorization': token},
+        body: jsonEncode(data),
+      );
+      final body = jsonDecode(response.body);
+      return {
+        'success': response.statusCode == 200,
+        'message': body['message'] ?? 'Error',
+      };
+    } catch (_) {
+      return {'success': false, 'message': 'Tidak dapat terhubung ke server'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> changePassword(
+      String token, String oldPassword, String newPassword) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/auth/change-password'),
+        headers: {'Content-Type': 'application/json', 'Authorization': token},
+        body: jsonEncode(
+            {'oldPassword': oldPassword, 'newPassword': newPassword}),
+      );
+      final body = jsonDecode(response.body);
+      return {
+        'success': response.statusCode == 200,
+        'message': body['message'] ?? 'Error',
+      };
+    } catch (_) {
+      return {'success': false, 'message': 'Tidak dapat terhubung ke server'};
+    }
+  }
+
   /// Kembalikan barang (multipart: opsional foto + catatan)
   static Future<Map<String, dynamic>> returnLoan(
     String token,
