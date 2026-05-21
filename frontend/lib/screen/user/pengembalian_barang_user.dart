@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/service/api_service.dart';
 import 'package:frontend/service/auth_service.dart';
-
+import 'detail_pengembalian_user.dart';
 import 'user_ui.dart';
 
 class PengembalianBarangUserScreen extends StatefulWidget {
@@ -15,7 +15,6 @@ class _PengembalianBarangUserScreenState extends State<PengembalianBarangUserScr
   List<Map<String, dynamic>> _myLoans = [];
   bool _isLoading = true;
   int _activeTab = 0; // 0=dipinjam, 1=terlambat, 2=riwayat
-  bool _isReturning = false;
 
   @override
   void initState() {
@@ -56,42 +55,6 @@ class _PengembalianBarangUserScreenState extends State<PengembalianBarangUserScr
       default:
         return _myLoans.where((l) => l['status'] == 'borrowed').toList();
     }
-  }
-
-  Future<void> _returnItem(Map<String, dynamic> loan) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Kembalikan Barang'),
-        content: Text('Yakin ingin mengembalikan "${loan['item_name']}"?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: UserUi.blue),
-            child: const Text('Kembalikan', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-    if (confirm != true) return;
-
-    setState(() => _isReturning = true);
-    final token = await AuthService.getToken();
-    if (token == null) { if (mounted) setState(() => _isReturning = false); return; }
-
-    final loanId = (loan['id'] as num).toInt();
-    final result = await ApiService.returnLoan(token, loanId);
-
-    if (!mounted) return;
-    setState(() => _isReturning = false);
-
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(result['message']?.toString() ?? ''),
-      backgroundColor: result['success'] == true ? Colors.green : Colors.red,
-    ));
-
-    if (result['success'] == true) _loadLoans();
   }
 
   String _fmtDisplay(String? s) {
@@ -209,11 +172,16 @@ class _PengembalianBarangUserScreenState extends State<PengembalianBarangUserScr
                           )
                         else
                           GestureDetector(
-                            onTap: _isReturning ? null : () => _returnItem(loan),
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => DetailPengembalianBarangUserScreen(loan: loan),
+                              ),
+                            ),
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                               decoration: BoxDecoration(
-                                color: _isReturning ? Colors.grey : UserUi.blue,
+                                color: UserUi.blue,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Text(

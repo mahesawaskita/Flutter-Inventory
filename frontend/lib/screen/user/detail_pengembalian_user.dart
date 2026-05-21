@@ -3,15 +3,35 @@ import 'package:flutter/material.dart';
 import 'user_ui.dart';
 
 class DetailPengembalianBarangUserScreen extends StatefulWidget {
-  const DetailPengembalianBarangUserScreen({super.key});
+  const DetailPengembalianBarangUserScreen({super.key, required this.loan});
+
+  final Map<String, dynamic> loan;
 
   @override
   State<DetailPengembalianBarangUserScreen> createState() => _DetailPengembalianBarangUserScreenState();
 }
 
 class _DetailPengembalianBarangUserScreenState extends State<DetailPengembalianBarangUserScreen> {
+  String _fmtDisplay(String? s) {
+    if (s == null) return '-';
+    try {
+      final d = DateTime.parse(s);
+      const m = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+      return '${d.day} ${m[d.month - 1]} ${d.year}';
+    } catch (_) {
+      return s;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final loan = widget.loan;
+    final itemName = loan['item_name']?.toString() ?? '-';
+    final borrowerName = loan['user_name']?.toString() ?? loan['borrower_name']?.toString() ?? '-';
+    final borrowDate = _fmtDisplay(loan['borrow_date']?.toString() ?? loan['created_at']?.toString());
+    final dueDate = _fmtDisplay(loan['due_date']?.toString());
+    final returnDate = _fmtDisplay(loan['return_date']?.toString());
+
     return UserPageScaffold(
       child: UserFramedPage(
         title: 'Detail Pengembalian Barang',
@@ -23,30 +43,30 @@ class _DetailPengembalianBarangUserScreenState extends State<DetailPengembalianB
             children: [
               const Text('Barang yang Dikembalikan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
               const SizedBox(height: 8),
-              const UserInfoTile(
-                leading: UserProductThumb(icon: Icons.laptop_mac_rounded),
-                title: 'Laptop',
-                subtitle: 'Bintang Audi',
+              UserInfoTile(
+                leading: const UserProductThumb(icon: Icons.inventory_2_rounded),
+                title: itemName,
+                subtitle: borrowerName,
               ),
               const SizedBox(height: 8),
               Row(
-                children: const [
-                  Icon(Icons.list_alt_rounded, color: Color(0xFF52B2F1)),
-                  SizedBox(width: 8),
-                  Text('24 Maret 2024', style: TextStyle(fontSize: 13)),
+                children: [
+                  const Icon(Icons.list_alt_rounded, color: Color(0xFF52B2F1)),
+                  const SizedBox(width: 8),
+                  Text(borrowDate, style: const TextStyle(fontSize: 13)),
                 ],
               ),
               const SizedBox(height: 10),
               UserSectionCard(
                 child: Column(
-                  children: const [
-                    _DateGroup(title: 'Tanggal Peminjaman', start: '24 Maret 2024', end: '1 Mei 2024'),
-                    SizedBox(height: 10),
-                    _SingleDateGroup(title: 'Tanggal Pengembalian', value: '29 April 2024'),
-                    SizedBox(height: 10),
-                    _PhotoArea(),
-                    SizedBox(height: 10),
-                    _OptionalNote(),
+                  children: [
+                    _DateGroup(title: 'Tanggal Peminjaman', start: borrowDate, end: dueDate),
+                    const SizedBox(height: 10),
+                    _SingleDateGroup(title: 'Tanggal Pengembalian', value: returnDate),
+                    const SizedBox(height: 10),
+                    const _PhotoArea(),
+                    const SizedBox(height: 10),
+                    const _OptionalNote(),
                   ],
                 ),
               ),
