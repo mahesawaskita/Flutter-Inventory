@@ -16,17 +16,17 @@ class QRScannerUserScreen extends StatefulWidget {
 
 class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
   Map<String, dynamic>? _item;
-  List<dynamic> _loans = [];
+  List<Map<String, dynamic>> _loans = [];
   bool _isLoading = false;
-  int _activeScanTab = 0;   // 0 = Peminjaman, 1 = Perbaikan
-  int _activeInnerTab = 0;  // 0 = Peminjaman, 1 = Perbaikan
+  int _activeScanTab = 0;  // 0=Peminjaman, 1=Perbaikan
+  int _activeInnerTab = 0; // 0=Peminjaman, 1=Perbaikan
   bool _showAll = false;
   String? _currentUsername;
   String? _error;
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
+  // ── Helpers ───────────────────────────────────────────────────────────────
 
-  String _fmtDisplay(String? s) {
+  String _fmt(String? s) {
     if (s == null) return '-';
     try {
       final d = DateTime.parse(s);
@@ -37,11 +37,10 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
     }
   }
 
-  String _daysLeft(String? dueDateStr) {
-    if (dueDateStr == null) return '';
+  String _daysLeft(String? s) {
+    if (s == null) return '';
     try {
-      final due = DateTime.parse(dueDateStr);
-      final diff = due.difference(DateTime.now()).inDays;
+      final diff = DateTime.parse(s).difference(DateTime.now()).inDays;
       if (diff < 0) return '${-diff} hari terlambat';
       if (diff == 0) return 'Jatuh tempo hari ini';
       return '$diff hari lagi';
@@ -50,40 +49,39 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
     }
   }
 
-  bool _isLate(String? dueDateStr) {
-    if (dueDateStr == null) return false;
-    try {
-      return DateTime.parse(dueDateStr).isBefore(DateTime.now());
-    } catch (_) {
-      return false;
-    }
+  bool _isLate(String? s) {
+    if (s == null) return false;
+    try { return DateTime.parse(s).isBefore(DateTime.now()); } catch (_) { return false; }
   }
 
-  Map<String, dynamic>? get _activeLoanForCurrentUser {
+  // Loan untuk user yang sedang login (boleh jadi null)
+  Map<String, dynamic>? get _myActiveLoan {
     if (_currentUsername == null) return null;
     for (final l in _loans) {
-      final loan = Map<String, dynamic>.from(l as Map);
-      if (loan['status'] == 'borrowed' && loan['username'] == _currentUsername) {
-        return loan;
-      }
+      if (l['status'] == 'borrowed' && l['username'] == _currentUsername) return l;
     }
     return null;
   }
 
-  List<dynamic> get _loanHistory =>
-      _loans.where((l) => (l as Map)['status'] == 'borrowed' || l['status'] == 'returned').toList();
+  // Siapa pun yang saat ini sedang meminjam (untuk ditampilkan di kartu item)
+  Map<String, dynamic>? get _currentBorrower {
+    for (final l in _loans) {
+      if (l['status'] == 'borrowed') return l;
+    }
+    return null;
+  }
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
   Future<void> _scan() async {
-    final result = await Navigator.push<String>(
+    final raw = await Navigator.push<String>(
       context,
       MaterialPageRoute(builder: (_) => const _ScannerPage()),
     );
-    if (result == null) return;
-    final id = int.tryParse(result.trim());
+    if (raw == null || !mounted) return;
+    final id = int.tryParse(raw.trim());
     if (id == null) {
-      if (mounted) setState(() => _error = 'QR tidak valid: "$result"');
+      setState(() => _error = 'QR tidak valid: "$raw"');
       return;
     }
     await _loadItem(id);
@@ -96,11 +94,12 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
       _item = null;
       _loans = [];
       _showAll = false;
+      _activeScanTab = 0;
+      _activeInnerTab = 0;
     });
 
     final token = await AuthService.getToken();
     final username = await AuthService.getUsername();
-
     if (token == null) {
       if (mounted) setState(() { _isLoading = false; _error = 'Silakan login ulang.'; });
       return;
@@ -110,28 +109,30 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
       ApiService.getItemById(token, id),
       ApiService.getLoansByItem(token, id),
     ]);
-
     if (!mounted) return;
 
-    final item = results[0] as Map<String, dynamic>?;
-    final loans = results[1] as List<dynamic>;
+    final rawItem = results[0] as Map<String, dynamic>?;
+    final rawLoans = (results[1] as List<dynamic>)
+        .map((e) => Map<String, dynamic>.from(e as Map))
+        .toList();
 
     setState(() {
       _isLoading = false;
-      _item = item;
-      _loans = loans;
+      _item = rawItem;
+      _loans = rawLoans;
       _currentUsername = username;
-      if (item == null) _error = 'Barang dengan ID $id tidak ditemukan.';
+      if (rawItem == null) _error = 'Barang dengan ID $id tidak ditemukan.';
     });
   }
 
-  // ── Build ──────────────────────────────────────────────────────────────
+  // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     final item = _item;
-    final activeLoan = _activeLoanForCurrentUser;
-    final late = activeLoan != null && _isLate(activeLoan['due_date']?.toString());
+    final myLoan = _myActiveLoan;
+    final borrower = _currentBorrower;
+    final late = myLoan != null && _isLate(myLoan['due_date']?.toString());
 
     return UserPageScaffold(
       child: UserFramedPage(
@@ -141,73 +142,97 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
 
-            // ── QR / Scanner Box ──────────────────────────────────────────
-            GestureDetector(
-              onTap: _isLoading ? null : _scan,
-              child: Container(
-                height: 184,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: UserUi.softBorder),
-                  image: const DecorationImage(
-                    image: AssetImage('assets/image/user/detail QR scanner/image 20.png'),
-                    fit: BoxFit.cover,
-                    colorFilter: ColorFilter.mode(Color(0x66FFFFFF), BlendMode.lighten),
+            // ── QR / Scanner Box ─────────────────────────────────────────
+            Container(
+              height: 184,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: UserUi.softBorder),
+                image: const DecorationImage(
+                  image: AssetImage('assets/image/user/detail QR scanner/image 20.png'),
+                  fit: BoxFit.cover,
+                  colorFilter: ColorFilter.mode(Color(0x66FFFFFF), BlendMode.lighten),
+                ),
+              ),
+              child: Stack(
+                children: [
+                  Center(
+                    child: Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: Colors.black, width: 7),
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(17),
+                        child: _isLoading
+                            ? const Center(child: CircularProgressIndicator(color: UserUi.blue))
+                            : item != null
+                                ? QrImageView(
+                                    data: item['id'].toString(),
+                                    version: QrVersions.auto,
+                                    size: 106,
+                                    backgroundColor: Colors.white,
+                                  )
+                                : const Center(
+                                    child: Icon(Icons.qr_code_2_rounded,
+                                        size: 90, color: Colors.black)),
+                      ),
+                    ),
                   ),
-                ),
-                child: Stack(
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(color: Colors.black, width: 7),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(17),
-                          child: _isLoading
-                              ? const Center(
-                                  child: CircularProgressIndicator(color: UserUi.blue))
-                              : item != null
-                                  ? QrImageView(
-                                      data: item['id'].toString(),
-                                      version: QrVersions.auto,
-                                      size: 106,
-                                      backgroundColor: Colors.white,
-                                    )
-                                  : const Center(
-                                      child: Icon(Icons.qr_code_2_rounded,
-                                          size: 90, color: Colors.black)),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      right: 10,
-                      bottom: 10,
-                      child: GestureDetector(
-                        onTap: _isLoading ? null : _scan,
-                        child: Container(
-                          width: 72,
-                          height: 72,
-                          decoration: BoxDecoration(
-                            color: _isLoading ? Colors.grey.withValues(alpha: .7) : Colors.black54,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 3),
+                  // Scan / re-scan button
+                  Positioned(
+                    right: 10,
+                    bottom: 10,
+                    child: GestureDetector(
+                      onTap: _isLoading ? null : _scan,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              color: item != null
+                                  ? const Color(0xFF3C4EBD)
+                                  : Colors.black54,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 3),
+                            ),
+                            child: Icon(
+                              item != null
+                                  ? Icons.qr_code_2_rounded
+                                  : Icons.document_scanner_rounded,
+                              size: 30,
+                              color: Colors.white,
+                            ),
                           ),
-                          child: const Icon(Icons.document_scanner_rounded,
-                              size: 38, color: Colors.white),
-                        ),
+                          if (item != null)
+                            Positioned(
+                              top: -2,
+                              right: -2,
+                              child: Container(
+                                width: 18,
+                                height: 18,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF3B82F6),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.add_rounded,
+                                    size: 13, color: Colors.white),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
 
-            // ── Error / hint ──────────────────────────────────────────────
+            // ── Hint / Error ─────────────────────────────────────────────
             if (_error != null) ...[
               const SizedBox(height: 8),
               Text(_error!,
@@ -215,26 +240,30 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
                   style: const TextStyle(color: Colors.red, fontSize: 12)),
             ] else if (!_isLoading && item == null) ...[
               const SizedBox(height: 8),
-              const Text('Tap tombol scan untuk memindai QR barang',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, color: UserUi.textMuted)),
+              const Text(
+                'Tap tombol scan untuk memindai QR barang',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: UserUi.textMuted),
+              ),
             ],
 
-            // ── Item Info ─────────────────────────────────────────────────
+            // ── Item card + history ──────────────────────────────────────
             if (item != null) ...[
               const SizedBox(height: 10),
+
+              // Item info tile
               UserInfoTile(
-                leading: const UserProductThumb(icon: Icons.inventory_2_rounded),
+                leading: const UserProductThumb(icon: Icons.laptop_mac_rounded),
                 title: item['name']?.toString() ?? '-',
-                subtitle: item['category_name']?.toString() ?? '-',
-                trailing: activeLoan != null
+                subtitle: borrower?['username']?.toString() ?? '-',
+                trailing: myLoan != null
                     ? GestureDetector(
                         onTap: () async {
                           final returned = await Navigator.push<bool>(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => DetailPengembalianBarangUserScreen(
-                                  loan: activeLoan),
+                              builder: (_) =>
+                                  DetailPengembalianBarangUserScreen(loan: myLoan),
                             ),
                           );
                           if (returned == true) {
@@ -248,35 +277,44 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
                             color: UserUi.blue,
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Text('Kembalikan',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700)),
+                          child: const Text(
+                            'Kembalikan',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700),
+                          ),
                         ),
                       )
                     : null,
               ),
 
-              // ── Due date row ────────────────────────────────────────────
-              if (activeLoan != null) ...[
+              // Due date row (shown if anyone is currently borrowing)
+              if (borrower != null) ...[
                 const SizedBox(height: 4),
                 Padding(
-                  padding: const EdgeInsets.only(left: 10),
-                  child: Text(
-                    'Batas Pengembalian ${_fmtDisplay(activeLoan['due_date']?.toString())}  '
-                    '${_daysLeft(activeLoan['due_date']?.toString())}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: late ? Colors.red : UserUi.textMuted,
-                    ),
+                  padding: const EdgeInsets.only(left: 4),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info_outline_rounded,
+                          size: 14, color: UserUi.textMuted),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Batas Pengembalian ${_fmt(borrower['due_date']?.toString())}  '
+                        '${_daysLeft(borrower['due_date']?.toString())}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: late ? Colors.red : UserUi.textMuted,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
 
               const SizedBox(height: 10),
 
-              // ── Outer tabs ──────────────────────────────────────────────
+              // ── Outer tabs ───────────────────────────────────────────
               Row(
                 children: [
                   Expanded(
@@ -307,10 +345,11 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
 
               const SizedBox(height: 8),
 
-              // ── Inner card ──────────────────────────────────────────────
+              // ── Inner card ───────────────────────────────────────────
               UserSectionCard(
                 color: const Color(0xFFF8F2F7),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Row(
                       children: [
@@ -341,14 +380,16 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
                     ),
                     const SizedBox(height: 8),
 
-                    // ── History list ──────────────────────────────────────
-                    if (_activeInnerTab == 0) ..._buildLoanRows()
+                    if (_activeInnerTab == 0)
+                      ..._buildLoanRows()
                     else
                       const Padding(
                         padding: EdgeInsets.symmetric(vertical: 16),
                         child: Center(
-                          child: Text('Belum ada riwayat perbaikan',
-                              style: TextStyle(fontSize: 12, color: UserUi.textMuted)),
+                          child: Text(
+                            'Belum ada riwayat perbaikan',
+                            style: TextStyle(fontSize: 12, color: UserUi.textMuted),
+                          ),
                         ),
                       ),
                   ],
@@ -362,42 +403,40 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
   }
 
   List<Widget> _buildLoanRows() {
-    final list = _loanHistory;
-    if (list.isEmpty) {
+    if (_loans.isEmpty) {
       return [
         const Padding(
           padding: EdgeInsets.symmetric(vertical: 16),
           child: Center(
-            child: Text('Belum ada riwayat peminjaman',
-                style: TextStyle(fontSize: 12, color: UserUi.textMuted)),
+            child: Text(
+              'Belum ada riwayat peminjaman',
+              style: TextStyle(fontSize: 12, color: UserUi.textMuted),
+            ),
           ),
         ),
       ];
     }
 
     const maxVisible = 3;
-    final displayed = _showAll ? list : list.take(maxVisible).toList();
+    final displayed = _showAll ? _loans : _loans.take(maxVisible).toList();
 
     return [
-      ...displayed.map((l) {
-        final loan = Map<String, dynamic>.from(l as Map);
-        final isActive = loan['status'] == 'borrowed';
-        final name = loan['username']?.toString() ?? '-';
-        final subtitle = isActive ? 'Pinjam hingga' : 'Di pinjam selama';
-        final date = isActive
-            ? _fmtDisplay(loan['due_date']?.toString())
-            : _fmtDisplay(loan['borrow_date']?.toString());
-        return UserHistoryRow(
-          avatar: const UserProductThumb(icon: Icons.inventory_2_rounded),
-          name: name,
-          subtitle: subtitle,
-          date: date,
-          status: isActive ? 'Sedang Dipinjam' : 'Sudah Dikembalikan',
-          statusColor: isActive ? const Color(0xFF68B45B) : const Color(0xFF4D7BEE),
-        );
-      }),
+      for (final loan in displayed) ...[
+        UserHistoryRow(
+          avatar: const UserProductThumb(icon: Icons.laptop_mac_rounded),
+          name: loan['username']?.toString() ?? '-',
+          subtitle: loan['status'] == 'borrowed' ? 'Pinjam hingga' : 'Di pinjam selama',
+          date: loan['status'] == 'borrowed'
+              ? _fmt(loan['due_date']?.toString())
+              : _fmt(loan['borrow_date']?.toString()),
+          status: loan['status'] == 'borrowed' ? 'Sedang Dipinjam' : 'Sudah Dikembalikan',
+          statusColor: loan['status'] == 'borrowed'
+              ? const Color(0xFF68B45B)
+              : const Color(0xFF4D7BEE),
+        ),
+      ],
       const SizedBox(height: 8),
-      if (list.length > maxVisible)
+      if (_loans.length > maxVisible)
         GestureDetector(
           onTap: () => setState(() => _showAll = !_showAll),
           child: Center(
@@ -433,7 +472,7 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
   }
 }
 
-// ── Sub-widgets ─────────────────────────────────────────────────────────────
+// ── _ScanTab ─────────────────────────────────────────────────────────────────
 
 class _ScanTab extends StatelessWidget {
   const _ScanTab({
@@ -465,7 +504,9 @@ class _ScanTab extends StatelessWidget {
             Text(
               text,
               style: TextStyle(
-                  fontSize: 12, color: active ? Colors.white : Colors.black87),
+                fontSize: 12,
+                color: active ? Colors.white : Colors.black87,
+              ),
             ),
             if (!active) ...[
               const SizedBox(width: 8),
@@ -479,6 +520,8 @@ class _ScanTab extends StatelessWidget {
     );
   }
 }
+
+// ── _InnerTab ─────────────────────────────────────────────────────────────────
 
 class _InnerTab extends StatelessWidget {
   const _InnerTab({
@@ -506,14 +549,16 @@ class _InnerTab extends StatelessWidget {
         child: Text(
           text,
           style: TextStyle(
-              fontSize: 12, color: active ? Colors.white : Colors.black87),
+            fontSize: 12,
+            color: active ? Colors.white : Colors.black87,
+          ),
         ),
       ),
     );
   }
 }
 
-// ── Full-screen scanner ──────────────────────────────────────────────────────
+// ── Full-screen scanner ───────────────────────────────────────────────────────
 
 class _ScannerPage extends StatefulWidget {
   const _ScannerPage();

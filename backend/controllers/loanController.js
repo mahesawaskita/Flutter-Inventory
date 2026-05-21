@@ -10,15 +10,23 @@ const storage = multer.diskStorage({
   },
 });
 
+const imageFilter = (req, file, cb) => {
+  const extOk = /\.(jpeg|jpg|png|gif|webp)$/i.test(file.originalname);
+  const mimeOk = file.mimetype.startsWith('image/') || file.mimetype === 'application/octet-stream';
+  cb(null, extOk || mimeOk);
+};
+
 exports.uploadLoanPhoto = multer({
   storage,
-  fileFilter: (req, file, cb) => {
-    const extOk = /\.(jpeg|jpg|png|gif|webp)$/i.test(file.originalname);
-    const mimeOk = file.mimetype.startsWith('image/') || file.mimetype === 'application/octet-stream';
-    cb(null, extOk || mimeOk); // terima jika salah satu lolos
-  },
+  fileFilter: imageFilter,
   limits: { fileSize: 10 * 1024 * 1024 },
 }).single('foto_barang');
+
+exports.uploadReturnPhoto = multer({
+  storage,
+  fileFilter: imageFilter,
+  limits: { fileSize: 10 * 1024 * 1024 },
+}).single('foto_pengembalian');
 
 // GET /api/loans — semua peminjaman (admin)
 exports.getAllLoans = (req, res) => {
@@ -179,9 +187,12 @@ exports.returnLoan = (req, res) => {
       return res.status(400).json({ message: `Data quantity tidak valid: ${loan.quantity}` });
     }
 
+    const fotoReturn = req.file ? req.file.filename : null;
+    const catatan = req.body?.catatan_pengembalian || null;
+
     db.query(
-      "UPDATE borrowings SET status = 'returned', actual_return = CURDATE() WHERE id = ?",
-      [id],
+      "UPDATE borrowings SET status = 'returned', actual_return = CURDATE(), foto_pengembalian = ?, catatan_pengembalian = ? WHERE id = ?",
+      [fotoReturn, catatan, id],
       (err2) => {
         if (err2) return res.status(500).json({ message: 'Gagal memperbarui peminjaman' });
 

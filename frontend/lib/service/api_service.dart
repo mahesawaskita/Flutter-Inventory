@@ -184,13 +184,27 @@ class ApiService {
     }
   }
 
-  /// Kembalikan barang
-  static Future<Map<String, dynamic>> returnLoan(String token, int loanId) async {
+  /// Kembalikan barang (multipart: opsional foto + catatan)
+  static Future<Map<String, dynamic>> returnLoan(
+    String token,
+    int loanId, {
+    String? imagePath,
+    String? catatan,
+  }) async {
     try {
-      final response = await http.put(
-        Uri.parse('$baseUrl/api/loans/$loanId/return'),
-        headers: {'Authorization': token},
-      );
+      final uri = Uri.parse('$baseUrl/api/loans/$loanId/return');
+      final request = http.MultipartRequest('PUT', uri);
+      request.headers['Authorization'] = token;
+      if (catatan != null && catatan.isNotEmpty) {
+        request.fields['catatan_pengembalian'] = catatan;
+      }
+      if (imagePath != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('foto_pengembalian', imagePath),
+        );
+      }
+      final streamed = await request.send();
+      final response = await http.Response.fromStream(streamed);
       final body = jsonDecode(response.body);
       return {
         'success': response.statusCode == 200,

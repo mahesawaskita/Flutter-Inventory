@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:frontend/service/api_service.dart';
 import 'package:frontend/service/auth_service.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'user_ui.dart';
 
@@ -10,11 +13,14 @@ class DetailPengembalianBarangUserScreen extends StatefulWidget {
   final Map<String, dynamic> loan;
 
   @override
-  State<DetailPengembalianBarangUserScreen> createState() => _DetailPengembalianBarangUserScreenState();
+  State<DetailPengembalianBarangUserScreen> createState() =>
+      _DetailPengembalianBarangUserScreenState();
 }
 
-class _DetailPengembalianBarangUserScreenState extends State<DetailPengembalianBarangUserScreen> {
+class _DetailPengembalianBarangUserScreenState
+    extends State<DetailPengembalianBarangUserScreen> {
   final _noteController = TextEditingController();
+  File? _photoFile;
   bool _isSubmitting = false;
 
   @override
@@ -40,6 +46,31 @@ class _DetailPengembalianBarangUserScreenState extends State<DetailPengembalianB
     return '${d.day} ${m[d.month - 1]} ${d.year}';
   }
 
+  Future<void> _takePhoto() async {
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 80,
+        maxWidth: 1280,
+      );
+      if (picked != null && mounted) {
+        setState(() => _photoFile = File(picked.path));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal membuka kamera: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _removePhoto() => setState(() => _photoFile = null);
+
   Future<void> _konfirmasi() async {
     setState(() => _isSubmitting = true);
     final token = await AuthService.getToken();
@@ -49,7 +80,12 @@ class _DetailPengembalianBarangUserScreenState extends State<DetailPengembalianB
     }
 
     final loanId = (widget.loan['id'] as num).toInt();
-    final result = await ApiService.returnLoan(token, loanId);
+    final result = await ApiService.returnLoan(
+      token,
+      loanId,
+      imagePath: _photoFile?.path,
+      catatan: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+    );
 
     if (!mounted) return;
     setState(() => _isSubmitting = false);
@@ -68,7 +104,11 @@ class _DetailPengembalianBarangUserScreenState extends State<DetailPengembalianB
   Widget build(BuildContext context) {
     final loan = widget.loan;
     final itemName = loan['item_name']?.toString() ?? '-';
-    final borrowerName = loan['user_name']?.toString() ?? loan['borrower_name']?.toString() ?? '-';
+    final borrowerName =
+        loan['username']?.toString() ??
+        loan['user_name']?.toString() ??
+        loan['borrower_name']?.toString() ??
+        '-';
     final borrowDate = _fmtDisplay(loan['borrow_date']?.toString() ?? loan['created_at']?.toString());
     final dueDate = _fmtDisplay(loan['due_date']?.toString());
 
@@ -81,7 +121,8 @@ class _DetailPengembalianBarangUserScreenState extends State<DetailPengembalianB
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Barang yang Dikembalikan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+              const Text('Barang yang Dikembalikan',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
               const SizedBox(height: 8),
               UserInfoTile(
                 leading: const UserProductThumb(icon: Icons.inventory_2_rounded),
@@ -105,9 +146,122 @@ class _DetailPengembalianBarangUserScreenState extends State<DetailPengembalianB
                     const SizedBox(height: 10),
                     _SingleDateGroup(value: _todayFormatted),
                     const SizedBox(height: 10),
-                    const _PhotoArea(),
+
+                    // ── Foto Barang ──
+                    Row(
+                      children: const [
+                        Icon(Icons.photo_camera_rounded),
+                        SizedBox(width: 8),
+                        Text('Foto Barang',
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Center(
+                      child: _photoFile != null
+                          ? Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.file(
+                                    _photoFile!,
+                                    width: 144,
+                                    height: 144,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 4,
+                                  right: 4,
+                                  child: GestureDetector(
+                                    onTap: _removePhoto,
+                                    child: Container(
+                                      width: 26,
+                                      height: 26,
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xFFD63A30),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.delete_rounded,
+                                          size: 16, color: Colors.white),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          : GestureDetector(
+                              onTap: _takePhoto,
+                              child: Container(
+                                width: 144,
+                                height: 100,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFD7D7D7),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                      color: UserUi.frameBorder.withValues(alpha: .7)),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const [
+                                    Icon(Icons.camera_alt_rounded,
+                                        size: 36, color: Color(0xFF4460C8)),
+                                    SizedBox(height: 6),
+                                    Text('Buka Kamera',
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            color: Color(0xFF4460C8),
+                                            fontWeight: FontWeight.w700)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                    ),
+
                     const SizedBox(height: 10),
-                    _NoteInput(controller: _noteController),
+
+                    // ── Catatan ──
+                    const Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                              text: 'Catatan ',
+                              style: TextStyle(
+                                  fontSize: 14, fontWeight: FontWeight.w800)),
+                          TextSpan(
+                              text: '(Opsional)',
+                              style: TextStyle(fontSize: 14)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: _noteController,
+                      maxLines: 3,
+                      style: const TextStyle(fontSize: 13),
+                      decoration: InputDecoration(
+                        hintText: 'Masukkan catatan pengembalian barang...',
+                        hintStyle: const TextStyle(
+                            color: Color(0xFFAAAAAA), fontSize: 13),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(
+                              color: UserUi.frameBorder.withValues(alpha: .5)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(
+                              color: UserUi.frameBorder.withValues(alpha: .5)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: UserUi.blue),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -128,6 +282,8 @@ class _DetailPengembalianBarangUserScreenState extends State<DetailPengembalianB
   }
 }
 
+// ── Sub-widgets ─────────────────────────────────────────────────────────────
+
 class _DateGroup extends StatelessWidget {
   const _DateGroup({required this.start, required this.end});
 
@@ -143,7 +299,8 @@ class _DateGroup extends StatelessWidget {
           children: const [
             Icon(Icons.calendar_month_rounded),
             SizedBox(width: 8),
-            Text('Tanggal Peminjaman', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+            Text('Tanggal Peminjaman',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
           ],
         ),
         const SizedBox(height: 6),
@@ -167,7 +324,8 @@ class _DateGroup extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: Row(
                   children: [
-                    const Icon(Icons.bolt_rounded, size: 15, color: Color(0xFFB07D00)),
+                    const Icon(Icons.bolt_rounded,
+                        size: 15, color: Color(0xFFB07D00)),
                     const SizedBox(width: 6),
                     Text(end, style: const TextStyle(fontSize: 12)),
                   ],
@@ -195,7 +353,8 @@ class _SingleDateGroup extends StatelessWidget {
           children: const [
             Icon(Icons.check_circle_rounded, color: Color(0xFF33B35A)),
             SizedBox(width: 8),
-            Text('Tanggal Pengembalian', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+            Text('Tanggal Pengembalian',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
           ],
         ),
         const SizedBox(height: 6),
@@ -203,101 +362,6 @@ class _SingleDateGroup extends StatelessWidget {
           text: value,
           icon: const Icon(Icons.calendar_today_rounded, size: 14),
           muted: true,
-        ),
-      ],
-    );
-  }
-}
-
-class _PhotoArea extends StatelessWidget {
-  const _PhotoArea();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: const [
-            Icon(Icons.photo_camera_rounded),
-            SizedBox(width: 8),
-            Text('Foto Barang', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Center(
-          child: Stack(
-            children: [
-              Container(
-                width: 144,
-                height: 76,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFD7D7D7),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: UserUi.frameBorder.withValues(alpha: .7)),
-                ),
-                child: const Icon(Icons.inventory_2_rounded, size: 46, color: Color(0xFF4460C8)),
-              ),
-              Positioned(
-                top: 4,
-                right: 4,
-                child: Container(
-                  width: 26,
-                  height: 26,
-                  decoration: const BoxDecoration(color: Color(0xFFD63A30), shape: BoxShape.circle),
-                  child: const Icon(Icons.delete_rounded, size: 16, color: Colors.white),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _NoteInput extends StatelessWidget {
-  const _NoteInput({required this.controller});
-
-  final TextEditingController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text.rich(
-          TextSpan(
-            children: [
-              TextSpan(text: 'Catatan ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
-              TextSpan(text: '(Opsional)', style: TextStyle(fontSize: 14)),
-            ],
-          ),
-        ),
-        const SizedBox(height: 6),
-        TextField(
-          controller: controller,
-          maxLines: 3,
-          style: const TextStyle(fontSize: 13),
-          decoration: InputDecoration(
-            hintText: 'Masukkan catatan pengembalian barang...',
-            hintStyle: const TextStyle(color: Color(0xFFAAAAAA), fontSize: 13),
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: UserUi.frameBorder.withValues(alpha: .5)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: UserUi.frameBorder.withValues(alpha: .5)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: UserUi.blue),
-            ),
-          ),
         ),
       ],
     );
