@@ -74,6 +74,21 @@ flutter:
     - assets/image/admin/statusbarang/
     - assets/image/admin/profil/
     - assets/image/user/
+    - assets/image/user/QR scanner/
+    - assets/image/user/daftar barang/
+    - assets/image/user/dashboard/
+    - assets/image/user/detail QR scanner/
+    - assets/image/user/detail peminjaman barang/
+    - assets/image/user/detail pengembalian barang/
+    - assets/image/user/detail perbaikan user/
+    - assets/image/user/detail status barang/
+    - assets/image/user/generate QR scanner/
+    - assets/image/user/laporan QR scanner/
+    - assets/image/user/peminjaman barang/
+    - assets/image/user/pengajuan peminjaman/
+    - assets/image/user/pengembalian barang/
+    - assets/image/user/profile user/
+    - assets/image/user/status barang/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
