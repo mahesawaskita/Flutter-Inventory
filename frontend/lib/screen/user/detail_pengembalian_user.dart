@@ -234,7 +234,7 @@ class _PhotoArea extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFFD7D7D7),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: UserUi.frameBorder.withOpacity(.7)),
+                  border: Border.all(color: UserUi.frameBorder.withValues(alpha: .7)),
                 ),
                 child: const Icon(Icons.inventory_2_rounded, size: 46, color: Color(0xFF4460C8)),
               ),

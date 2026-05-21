@@ -72,6 +72,30 @@ exports.getMyLoans = (req, res) => {
   });
 };
 
+// GET /api/loans/item/:itemId — semua peminjaman untuk item tertentu
+exports.getLoansByItem = (req, res) => {
+  const { itemId } = req.params;
+  const sql = `
+    SELECT
+      b.id, b.user_id, b.status,
+      b.borrow_date,
+      b.return_date  AS due_date,
+      b.actual_return AS return_date,
+      COALESCE(b.nama_barang, i.name) AS item_name,
+      u.username,
+      b.quantity
+    FROM borrowings b
+    LEFT JOIN users u ON b.user_id = u.id
+    LEFT JOIN items i ON b.item_id = i.id
+    WHERE b.item_id = ?
+    ORDER BY b.id DESC
+  `;
+  db.query(sql, [itemId], (err, result) => {
+    if (err) return res.status(500).json({ message: 'Server error', error: err.message });
+    res.json(result);
+  });
+};
+
 // POST /api/loans — buat peminjaman baru
 exports.createLoan = (req, res) => {
   const userId = req.user.id;
