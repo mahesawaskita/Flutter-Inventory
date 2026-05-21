@@ -156,6 +156,34 @@ class ApiService {
     }
   }
 
+  /// Ambil detail satu item berdasarkan ID
+  static Future<Map<String, dynamic>?> getItemById(String token, int id) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/items/$id'),
+        headers: {'Authorization': token},
+      );
+      if (response.statusCode == 200) return Map<String, dynamic>.from(jsonDecode(response.body));
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Ambil semua peminjaman untuk item tertentu
+  static Future<List<dynamic>> getLoansByItem(String token, int itemId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/loans/item/$itemId'),
+        headers: {'Authorization': token},
+      );
+      if (response.statusCode == 200) return jsonDecode(response.body);
+      return [];
+    } catch (_) {
+      return [];
+    }
+  }
+
   /// Kembalikan barang
   static Future<Map<String, dynamic>> returnLoan(String token, int loanId) async {
     try {

@@ -20,6 +20,22 @@ exports.upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
 }).single('image');
 
+// 🔹 GET SINGLE ITEM BY ID
+exports.getItemById = (req, res) => {
+  const { id } = req.params;
+  const sql = `
+    SELECT items.*, categories.name AS category_name
+    FROM items
+    LEFT JOIN categories ON items.category_id = categories.id
+    WHERE items.id = ? AND (items.status IS NULL OR items.status != 'inactive')
+  `;
+  db.query(sql, [id], (err, result) => {
+    if (err) return res.status(500).json(err);
+    if (result.length === 0) return res.status(404).json({ message: 'Barang tidak ditemukan' });
+    res.json(result[0]);
+  });
+};
+
 // 🔹 GET ALL ITEMS (with category_name via JOIN)
 exports.getItems = (req, res) => {
   const sql = `
