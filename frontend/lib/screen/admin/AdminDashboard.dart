@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:frontend/constants/app_assets.dart';
 import 'package:frontend/screen/admin/DaftarBarang.dart';
 import 'package:frontend/screen/admin/PenambahanBarang.dart';
+import 'package:frontend/screen/admin/PersetujuanPeminjaman.dart';
 import 'package:frontend/screen/admin/Profil.dart';
 import 'package:frontend/screen/admin/StatusBarang.dart';
+import 'package:frontend/service/api_service.dart';
 import 'package:frontend/service/auth_service.dart';
 
 class AdminDashboard extends StatefulWidget {
@@ -15,16 +17,27 @@ class AdminDashboard extends StatefulWidget {
 
 class _AdminDashboardState extends State<AdminDashboard> {
   String _username = '';
+  int _pendingCount = 0;
 
   @override
   void initState() {
     super.initState();
     _loadUsername();
+    _loadPendingCount();
   }
 
   Future<void> _loadUsername() async {
     final username = await AuthService.getUsername();
     if (mounted) setState(() => _username = username ?? '');
+  }
+
+  Future<void> _loadPendingCount() async {
+    try {
+      final token = await AuthService.getToken();
+      if (token == null) return;
+      final loans = await ApiService.getPendingLoans(token);
+      if (mounted) setState(() => _pendingCount = loans.length);
+    } catch (_) {}
   }
 
   @override
@@ -115,8 +128,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
               const SizedBox(height: 20),
 
               // ===== MENU =====
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
                 children: [
                   _buildMenuItem(
                     title: "Penambahan\nBarang",
@@ -141,6 +155,18 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       context,
                       MaterialPageRoute(builder: (_) => const StatusBarangAdmin()),
                     ),
+                  ),
+                  _buildMenuItemWithBadge(
+                    title: "Persetujuan\nPeminjaman",
+                    icon: Icons.assignment_turned_in_rounded,
+                    badge: _pendingCount,
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const PersetujuanPeminjamanAdmin()),
+                      );
+                      _loadPendingCount();
+                    },
                   ),
                 ],
               ),
@@ -198,6 +224,74 @@ class _AdminDashboardState extends State<AdminDashboard> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildMenuItemWithBadge({
+    required String title,
+    required IconData icon,
+    required int badge,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: 100,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 4,
+                  offset: const Offset(2, 3),
+                )
+              ],
+            ),
+            child: Column(
+              children: [
+                Container(
+                  height: 50,
+                  width: 50,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                  ),
+                  child: Icon(icon, color: const Color(0xFF3998FC), size: 28),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
+          ),
+          if (badge > 0)
+            Positioned(
+              top: -4,
+              right: -4,
+              child: Container(
+                padding: const EdgeInsets.all(5),
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+                child: Text(
+                  badge > 99 ? '99+' : '$badge',
+                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

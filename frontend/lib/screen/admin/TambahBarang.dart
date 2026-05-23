@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:frontend/screen/user/generateqr.dart';
 import 'package:frontend/service/api_service.dart';
 import 'package:frontend/service/auth_service.dart';
 import 'package:file_picker/file_picker.dart';
@@ -103,17 +104,32 @@ class _DetailPenambahanBarangAdminState
         'condition': _selectedCondition,
       };
 
-      final ok = await ApiService.createItem(token, data, imagePath: _imageFile?.path);
+      final result = await ApiService.createItem(token, data, imagePath: _imageFile?.path);
 
       if (!mounted) return;
-      if (ok) {
+      if (result['success'] == true) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Barang berhasil ditambahkan!'),
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.of(context).pop();
+        final newItemId = result['id'];
+        if (newItemId != null) {
+          final newItem = {
+            'id': newItemId,
+            'name': data['name'],
+            'category_name': _selectedCategory?['name'] ?? '',
+            'stock': data['stock'],
+            'condition': data['condition'],
+            'description': data['description'] ?? '',
+          };
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => GenerateQrUser(item: newItem)),
+          );
+        } else {
+          Navigator.of(context).pop();
+        }
       } else {
         _showError('Gagal menyimpan barang. Periksa koneksi ke server.');
       }

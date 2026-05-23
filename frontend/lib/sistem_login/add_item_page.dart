@@ -23,7 +23,7 @@ class _AddItemPageState extends State<AddItemPage> {
 
     if (token == null) return;
 
-    bool success = await ApiService.createItem(token, {
+    final result = await ApiService.createItem(token, {
       "category_id": 1,
       "name": nameController.text,
       "description": descController.text,
@@ -33,7 +33,7 @@ class _AddItemPageState extends State<AddItemPage> {
 
     setState(() => isLoading = false);
 
-    if (success) {
+    if (result['success'] == true) {
       Navigator.pop(context, true); // kirim signal ke halaman sebelumnya
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
