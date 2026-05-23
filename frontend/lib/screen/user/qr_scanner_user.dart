@@ -24,6 +24,35 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
   String? _currentUsername;
   String? _error;
 
+  // user's own loans (always loaded on open)
+  List<Map<String, dynamic>> _myLoans = [];
+  bool _isLoadingMyLoans = false;
+
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMyLoans();
+  }
+
+  Future<void> _loadMyLoans() async {
+    setState(() => _isLoadingMyLoans = true);
+    final token = await AuthService.getToken();
+    final username = await AuthService.getUsername();
+    if (token == null || !mounted) {
+      if (mounted) setState(() => _isLoadingMyLoans = false);
+      return;
+    }
+    final raw = await ApiService.getMyLoans(token);
+    if (!mounted) return;
+    setState(() {
+      _myLoans = raw.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      _currentUsername = username;
+      _isLoadingMyLoans = false;
+    });
+  }
+
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   String _fmt(String? s) {
@@ -347,6 +376,22 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
               ),
             ],
 
+            // ── Barang yang Saya Pinjam ───────────────────────────────────
+            if (_isLoadingMyLoans) ...[
+              const SizedBox(height: 12),
+              const Center(child: CircularProgressIndicator(color: UserUi.blue, strokeWidth: 2)),
+            ] else if (_myLoans.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              const Text(
+                'Barang yang Saya Pinjam',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 8),
+              ..._myLoans
+                  .where((l) => l['status'] == 'borrowed')
+                  .map((loan) => _myLoanCard(loan)),
+            ],
+
             // ── Item info + history ───────────────────────────────────────
             if (item != null) ...[
               const SizedBox(height: 10),
@@ -656,6 +701,74 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ── Card for current user's own loan ─────────────────────────────────────
+
+  Widget _myLoanCard(Map<String, dynamic> loan) {
+    final itemName = loan['item_name']?.toString() ?? '-';
+    final dueDate = _fmt(loan['due_date']?.toString());
+    final daysLeftText = _daysLeft(loan['due_date']?.toString());
+    final late = _isLate(loan['due_date']?.toString());
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: UserSectionCard(
+        child: Row(
+          children: [
+            const UserProductThumb(icon: Icons.inventory_2_rounded),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(itemName,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w800, fontSize: 13)),
+                  const SizedBox(height: 2),
+                  Text('Jatuh tempo: $dueDate',
+                      style: const TextStyle(fontSize: 11)),
+                  const SizedBox(height: 2),
+                  Text(
+                    daysLeftText,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: late ? Colors.red : UserUi.textMuted,
+                      fontWeight: late ? FontWeight.w700 : FontWeight.normal,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () async {
+                final returned = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        DetailPengembalianBarangUserScreen(loan: loan),
+                  ),
+                );
+                if (returned == true && mounted) _loadMyLoans();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                decoration: BoxDecoration(
+                  color: UserUi.blue,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Text('Kembalikan',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700)),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
