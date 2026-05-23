@@ -18,6 +18,7 @@ class _GenerateQrUserState extends State<GenerateQrUser> {
   List<Map<String, dynamic>> _items = [];
   Map<String, dynamic>? _selectedItem;
   bool _isLoading = true;
+  String? _loadError;
 
   @override
   void initState() {
@@ -31,18 +32,24 @@ class _GenerateQrUserState extends State<GenerateQrUser> {
   }
 
   Future<void> _loadItems() async {
-    final token = await AuthService.getToken();
-    if (token == null) {
-      if (mounted) setState(() => _isLoading = false);
-      return;
-    }
-    final items = await ApiService.getItems(token);
-    if (mounted) {
+    if (mounted) setState(() { _isLoading = true; _loadError = null; });
+    try {
+      final token = await AuthService.getToken();
+      if (token == null) {
+        if (mounted) setState(() { _isLoading = false; _loadError = 'Silakan login ulang.'; });
+        return;
+      }
+      final items = await ApiService.getItems(token)
+          .timeout(const Duration(seconds: 12), onTimeout: () => []);
+      if (!mounted) return;
       setState(() {
-        _items = items.map((e) => Map<String, dynamic>.from(e)).toList();
+        _items = items.map((e) => Map<String, dynamic>.from(e as Map)).toList();
         if (_items.isNotEmpty) _selectedItem = _items.first;
         _isLoading = false;
+        if (_items.isEmpty) _loadError = 'Tidak ada barang. Periksa koneksi server.';
       });
+    } catch (_) {
+      if (mounted) setState(() { _isLoading = false; _loadError = 'Gagal memuat data barang.'; });
     }
   }
 
@@ -62,6 +69,35 @@ class _GenerateQrUserState extends State<GenerateQrUser> {
                   child: CircularProgressIndicator(color: UserUi.blue),
                 ),
               )
+            : _loadError != null && _selectedItem == null
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        children: [
+                          const Icon(Icons.cloud_off_rounded,
+                              size: 48, color: UserUi.textMuted),
+                          const SizedBox(height: 12),
+                          Text(_loadError!,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                  color: UserUi.textMuted, fontSize: 13)),
+                          const SizedBox(height: 16),
+                          OutlinedButton.icon(
+                            onPressed: _loadItems,
+                            icon: const Icon(Icons.refresh_rounded, size: 16),
+                            label: const Text('Coba Lagi'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: UserUi.blue,
+                              side: const BorderSide(color: UserUi.blue),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
             : Column(
                 children: [
                   // ── Item selector (only shown when not passed directly) ──
@@ -165,11 +201,15 @@ class _GenerateQrUserState extends State<GenerateQrUser> {
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: UserUi.softBorder),
                       ),
-                      child: QrImageView(
-                        data: itemId,
-                        version: QrVersions.auto,
-                        backgroundColor: Colors.white,
-                      ),
+                      child: itemId.isNotEmpty
+                          ? QrImageView(
+                              data: itemId,
+                              version: QrVersions.auto,
+                              backgroundColor: Colors.white,
+                            )
+                          : const Center(
+                              child: Icon(Icons.qr_code_2_rounded,
+                                  size: 80, color: UserUi.textLight)),
                     ),
                     const SizedBox(height: 8),
                     Text(
