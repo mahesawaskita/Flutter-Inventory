@@ -152,43 +152,6 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
     _loadItem(id);
   }
 
-  /// Dialog untuk input ID manual (fallback jika kamera tidak tersedia)
-  Future<void> _openManualInput() async {
-    final controller = TextEditingController();
-    final result = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Masukkan ID Barang',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          autofocus: true,
-          decoration: InputDecoration(
-            hintText: 'Contoh: 1, 2, 3...',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: const Text('Cari'),
-          ),
-        ],
-      ),
-    );
-    controller.dispose();
-    if (result != null && result.isNotEmpty && mounted) {
-      _processQrValue(result);
-    }
-  }
-
   Future<void> _loadItem(int id) async {
     setState(() {
       _isLoading = true;
@@ -359,20 +322,6 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
                 'Tap kotak di atas untuk memindai QR barang',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 12, color: UserUi.textMuted),
-              ),
-              const SizedBox(height: 6),
-              Center(
-                child: GestureDetector(
-                  onTap: _openManualInput,
-                  child: const Text(
-                    'atau masukkan ID barang manual',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: UserUi.blue,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ),
               ),
             ],
 
