@@ -53,7 +53,7 @@ class _PengembalianBarangUserScreenState extends State<PengembalianBarangUserScr
       case 2:
         return _myLoans.where((l) => l['status'] == 'returned').toList();
       default:
-        return _myLoans.where((l) => l['status'] == 'borrowed').toList();
+        return _myLoans.where((l) => l['status'] == 'borrowed' || l['status'] == 'pending').toList();
     }
   }
 
@@ -128,7 +128,9 @@ class _PengembalianBarangUserScreenState extends State<PengembalianBarangUserScr
                 final returnDate = _fmtDisplay(loan['return_date']?.toString());
                 final late = _isLate(loan);
                 final daysLeft = _daysLeft(loan);
-                final isReturned = loan['status'] == 'returned';
+                final status = loan['status']?.toString() ?? '';
+                final isReturned = status == 'returned';
+                final isPending = status == 'pending';
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 10),
@@ -137,7 +139,11 @@ class _PengembalianBarangUserScreenState extends State<PengembalianBarangUserScr
                       children: [
                         UserProductThumb(
                           icon: Icons.inventory_2_rounded,
-                          background: late ? const Color(0xFFFFE0D7) : const Color(0xFFE7E8F4),
+                          background: isPending
+                              ? const Color(0xFFFFF3CD)
+                              : late
+                                  ? const Color(0xFFFFE0D7)
+                                  : const Color(0xFFE7E8F4),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
@@ -148,6 +154,11 @@ class _PengembalianBarangUserScreenState extends State<PengembalianBarangUserScr
                               const SizedBox(height: 2),
                               if (isReturned)
                                 Text('Dikembalikan: $returnDate', style: const TextStyle(fontSize: 11, color: UserUi.textMuted))
+                              else if (isPending)
+                                const Text(
+                                  'Menunggu persetujuan admin',
+                                  style: TextStyle(fontSize: 11, color: Color(0xFFD4890A), fontWeight: FontWeight.w600),
+                                )
                               else ...[
                                 Text('Jatuh tempo: $dueDate', style: const TextStyle(fontSize: 11)),
                                 const SizedBox(height: 2),
@@ -169,6 +180,12 @@ class _PengembalianBarangUserScreenState extends State<PengembalianBarangUserScr
                             text: 'Selesai',
                             background: Color(0xFFD8DEFF),
                             foreground: Color(0xFF4D7BEE),
+                          )
+                        else if (isPending)
+                          const UserPill(
+                            text: 'Menunggu',
+                            background: Color(0xFFFFF3CD),
+                            foreground: Color(0xFFD4890A),
                           )
                         else
                           GestureDetector(

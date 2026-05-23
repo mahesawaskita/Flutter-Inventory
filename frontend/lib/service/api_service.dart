@@ -19,7 +19,7 @@ class ApiService {
     }
   }
 
-  static Future<bool> createItem(
+  static Future<Map<String, dynamic>> createItem(
     String token,
     Map<String, dynamic> data, {
     String? imagePath,
@@ -36,9 +36,14 @@ class ApiService {
       }
       final streamed = await request.send();
       final response = await http.Response.fromStream(streamed);
-      return response.statusCode == 200;
+      final body = jsonDecode(response.body);
+      return {
+        'success': response.statusCode == 200,
+        'id': body['id'],
+        'message': body['message'] ?? '',
+      };
     } catch (_) {
-      return false;
+      return {'success': false, 'id': null, 'message': 'Tidak dapat terhubung ke server'};
     }
   }
 
@@ -181,6 +186,54 @@ class ApiService {
       return [];
     } catch (_) {
       return [];
+    }
+  }
+
+  /// Ambil semua pengajuan pending (admin)
+  static Future<List<dynamic>> getPendingLoans(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/loans/pending'),
+        headers: {'Authorization': token},
+      );
+      if (response.statusCode == 200) return jsonDecode(response.body);
+      return [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  /// Setujui pengajuan peminjaman (admin)
+  static Future<Map<String, dynamic>> approveLoan(String token, int id) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/loans/$id/approve'),
+        headers: {'Authorization': token},
+      );
+      final body = jsonDecode(response.body);
+      return {
+        'success': response.statusCode == 200,
+        'message': body['message'] ?? 'Error',
+      };
+    } catch (_) {
+      return {'success': false, 'message': 'Tidak dapat terhubung ke server'};
+    }
+  }
+
+  /// Tolak pengajuan peminjaman (admin)
+  static Future<Map<String, dynamic>> rejectLoan(String token, int id) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/loans/$id/reject'),
+        headers: {'Authorization': token},
+      );
+      final body = jsonDecode(response.body);
+      return {
+        'success': response.statusCode == 200,
+        'message': body['message'] ?? 'Error',
+      };
+    } catch (_) {
+      return {'success': false, 'message': 'Tidak dapat terhubung ke server'};
     }
   }
 
