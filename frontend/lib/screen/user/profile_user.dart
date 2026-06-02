@@ -139,6 +139,7 @@ class _ProfileUserScreenState extends State<ProfileUserScreen> {
         phoneCtrl: phoneCtrl,
         jabatanCtrl: jabatanCtrl,
         onSave: () async {
+          final messenger = ScaffoldMessenger.of(context);
           final token = await AuthService.getToken();
           if (token == null) return;
           final result = await ApiService.updateUserProfile(token, {
@@ -149,7 +150,7 @@ class _ProfileUserScreenState extends State<ProfileUserScreen> {
           });
           if (!ctx.mounted) return;
           Navigator.pop(ctx);
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          messenger.showSnackBar(SnackBar(
             content: Text(result['message']?.toString() ?? ''),
             backgroundColor:
                 result['success'] == true ? Colors.green : Colors.red,
@@ -182,6 +183,7 @@ class _ProfileUserScreenState extends State<ProfileUserScreen> {
         newCtrl: newCtrl,
         confirmCtrl: confirmCtrl,
         onSave: () async {
+          final messenger = ScaffoldMessenger.of(context);
           if (newCtrl.text != confirmCtrl.text) {
             ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
               content: Text('Konfirmasi password tidak cocok'),
@@ -195,7 +197,7 @@ class _ProfileUserScreenState extends State<ProfileUserScreen> {
               token, oldCtrl.text, newCtrl.text);
           if (!ctx.mounted) return;
           Navigator.pop(ctx);
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          messenger.showSnackBar(SnackBar(
             content: Text(result['message']?.toString() ?? ''),
             backgroundColor:
                 result['success'] == true ? Colors.green : Colors.red,

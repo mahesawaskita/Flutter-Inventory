@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:frontend/screen/user/generateqr.dart';
+import 'package:frontend/screen/admin/admin_item_qr_screen.dart';
 import 'package:frontend/service/api_service.dart';
 import 'package:frontend/service/auth_service.dart';
 import 'package:file_picker/file_picker.dart';
@@ -125,7 +125,7 @@ class _DetailPenambahanBarangAdminState
             'description': data['description'] ?? '',
           };
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => GenerateQrUser(item: newItem)),
+            MaterialPageRoute(builder: (_) => AdminItemQrScreen(item: newItem)),
           );
         } else {
           Navigator.of(context).pop();
