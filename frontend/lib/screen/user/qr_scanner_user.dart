@@ -169,46 +169,30 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
   }
 
   Future<void> _loadItem(int id) async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-      _item = null;
-      _loans = [];
-      _showAll = false;
-      _activeScanTab = 0;
-      _activeInnerTab = 0;
-    });
+    setState(() { _isLoading = true; _error = null; });
 
     final token = await AuthService.getToken();
-    final username = await AuthService.getUsername();
     if (token == null) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _error = 'Silakan login ulang.';
-        });
-      }
+      if (mounted) setState(() { _isLoading = false; _error = 'Silakan login ulang.'; });
       return;
     }
 
-    final results = await Future.wait([
-      ApiService.getItemById(token, id),
-      ApiService.getLoansByItem(token, id),
-    ]);
+    final item = await ApiService.getItemById(token, id);
     if (!mounted) return;
+    setState(() => _isLoading = false);
 
-    final rawItem = results[0] as Map<String, dynamic>?;
-    final rawLoans = (results[1] as List<dynamic>)
-        .map((e) => Map<String, dynamic>.from(e as Map))
-        .toList();
+    if (item == null) {
+      setState(() => _error = 'Barang dengan ID $id tidak ditemukan.');
+      return;
+    }
 
-    setState(() {
-      _isLoading = false;
-      _item = rawItem;
-      _loans = rawLoans;
-      _currentUsername = username;
-      if (rawItem == null) _error = 'Barang dengan ID $id tidak ditemukan.';
-    });
+    // Langsung arahkan ke halaman pengajuan peminjaman
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => PengajuanPeminjamanUserScreen(item: item)),
+    );
+
+    if (result == true && mounted) _loadMyLoans();
   }
 
   // ── Build ─────────────────────────────────────────────────────────────────
