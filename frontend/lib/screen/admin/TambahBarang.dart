@@ -317,7 +317,7 @@ class _DetailPenambahanBarangAdminState
                                   ),
                                 )
                               : DropdownButtonFormField<Map<String, dynamic>>(
-                                  initialValue: _selectedCategory,
+                                  value: _selectedCategory,
                                   decoration: _inputDeco('Pilih kategori'),
                                   items: _categories
                                       .map((cat) =>
@@ -369,7 +369,7 @@ class _DetailPenambahanBarangAdminState
                 const SizedBox(height: 14),
                 _fieldLabel('Status / Kondisi'),
                 DropdownButtonFormField<String>(
-                  initialValue: _selectedCondition,
+                  value: _selectedCondition,
                   decoration: _inputDeco(''),
                   items: _conditions
                       .map((c) => DropdownMenuItem(
