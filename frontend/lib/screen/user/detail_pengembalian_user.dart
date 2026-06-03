@@ -5,8 +5,6 @@ import 'package:frontend/service/api_service.dart';
 import 'package:frontend/service/auth_service.dart';
 import 'package:image_picker/image_picker.dart';
 
-import 'user_ui.dart';
-
 class DetailPengembalianBarangUserScreen extends StatefulWidget {
   const DetailPengembalianBarangUserScreen({super.key, required this.loan});
 
@@ -23,6 +21,10 @@ class _DetailPengembalianBarangUserScreenState
   File? _photoFile;
   bool _isSubmitting = false;
 
+  static const _bg = Color(0xFF0D1117);
+  static const _cardBorder = Color(0xFF30363D);
+  static const _blue = Color(0xFF4A6CF7);
+
   @override
   void dispose() {
     _noteController.dispose();
@@ -33,7 +35,7 @@ class _DetailPengembalianBarangUserScreenState
     if (s == null) return '-';
     try {
       final d = DateTime.parse(s);
-      const m = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+      const m = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
       return '${d.day} ${m[d.month - 1]} ${d.year}';
     } catch (_) {
       return s;
@@ -42,28 +44,19 @@ class _DetailPengembalianBarangUserScreenState
 
   String get _todayFormatted {
     final d = DateTime.now();
-    const m = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const m = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
     return '${d.day} ${m[d.month - 1]} ${d.year}';
   }
 
   Future<void> _takePhoto() async {
     try {
       final picker = ImagePicker();
-      final picked = await picker.pickImage(
-        source: ImageSource.camera,
-        imageQuality: 80,
-        maxWidth: 1280,
-      );
-      if (picked != null && mounted) {
-        setState(() => _photoFile = File(picked.path));
-      }
+      final picked = await picker.pickImage(source: ImageSource.camera, imageQuality: 80, maxWidth: 1280);
+      if (picked != null && mounted) setState(() => _photoFile = File(picked.path));
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal membuka kamera: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Gagal membuka kamera: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -95,9 +88,7 @@ class _DetailPengembalianBarangUserScreenState
       backgroundColor: result['success'] == true ? Colors.green : Colors.red,
     ));
 
-    if (result['success'] == true) {
-      Navigator.pop(context, true);
-    }
+    if (result['success'] == true) Navigator.pop(context, true);
   }
 
   @override
@@ -112,258 +103,268 @@ class _DetailPengembalianBarangUserScreenState
     final borrowDate = _fmtDisplay(loan['borrow_date']?.toString() ?? loan['created_at']?.toString());
     final dueDate = _fmtDisplay(loan['due_date']?.toString());
 
-    return UserPageScaffold(
-      child: UserFramedPage(
-        title: 'Detail Pengembalian Barang',
-        topIcon: const Icon(Icons.sync_alt_rounded, size: 48, color: Color(0xFF33343D)),
-        child: UserSectionCard(
-          color: const Color(0xFFF8F2F7),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text('Barang yang Dikembalikan',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
-              const SizedBox(height: 8),
-              UserInfoTile(
-                leading: const UserProductThumb(icon: Icons.inventory_2_rounded),
-                title: itemName,
-                subtitle: borrowerName,
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(Icons.list_alt_rounded, color: Color(0xFF52B2F1)),
-                  const SizedBox(width: 8),
-                  Text(borrowDate, style: const TextStyle(fontSize: 13)),
-                ],
-              ),
-              const SizedBox(height: 10),
-              UserSectionCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _DateGroup(start: borrowDate, end: dueDate),
-                    const SizedBox(height: 10),
-                    _SingleDateGroup(value: _todayFormatted),
-                    const SizedBox(height: 10),
+    return Scaffold(
+      backgroundColor: _bg,
+      appBar: AppBar(
+        backgroundColor: _bg,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Detail Pengembalian',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
 
-                    // ── Foto Barang ──
-                    Row(
-                      children: const [
-                        Icon(Icons.photo_camera_rounded),
-                        SizedBox(width: 8),
-                        Text('Foto Barang',
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+            // ── Item info card ────────────────────────────────────────────
+            Container(
+              decoration: BoxDecoration(
+                color: _blue,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [BoxShadow(color: _blue.withValues(alpha: 0.35), blurRadius: 12, offset: const Offset(0, 4))],
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.inventory_2_rounded, color: Colors.white, size: 28),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(itemName,
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                        const SizedBox(height: 2),
+                        Text(borrowerName,
+                            style: const TextStyle(color: Colors.white70, fontSize: 12)),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    Center(
-                      child: _photoFile != null
-                          ? Stack(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.file(
-                                    _photoFile!,
-                                    width: 144,
-                                    height: 144,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                                Positioned(
-                                  top: 4,
-                                  right: 4,
-                                  child: GestureDetector(
-                                    onTap: _removePhoto,
-                                    child: Container(
-                                      width: 26,
-                                      height: 26,
-                                      decoration: const BoxDecoration(
-                                        color: Color(0xFFD63A30),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(Icons.delete_rounded,
-                                          size: 16, color: Colors.white),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            )
-                          : GestureDetector(
-                              onTap: _takePhoto,
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
+            // ── Tanggal Peminjaman ────────────────────────────────────────
+            _SectionCard(
+              title: 'Tanggal Peminjaman',
+              titleIcon: Icons.calendar_month_rounded,
+              child: Row(
+                children: [
+                  Expanded(child: _DateChip(label: 'Mulai', value: borrowDate, color: const Color(0xFF4A6CF7))),
+                  const SizedBox(width: 10),
+                  Expanded(child: _DateChip(label: 'Jatuh Tempo', value: dueDate, color: const Color(0xFFF97316))),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // ── Tanggal Pengembalian ──────────────────────────────────────
+            _SectionCard(
+              title: 'Tanggal Pengembalian',
+              titleIcon: Icons.check_circle_rounded,
+              titleColor: const Color(0xFF10B981),
+              child: _DateChip(label: 'Hari ini', value: _todayFormatted, color: const Color(0xFF10B981)),
+            ),
+
+            const SizedBox(height: 10),
+
+            // ── Foto Barang ───────────────────────────────────────────────
+            _SectionCard(
+              title: 'Foto Barang',
+              titleIcon: Icons.photo_camera_rounded,
+              child: Center(
+                child: _photoFile != null
+                    ? Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.file(_photoFile!, width: 160, height: 160, fit: BoxFit.cover),
+                          ),
+                          Positioned(
+                            top: 6,
+                            right: 6,
+                            child: GestureDetector(
+                              onTap: _removePhoto,
                               child: Container(
-                                width: 144,
-                                height: 100,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFD7D7D7),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                      color: UserUi.frameBorder.withValues(alpha: .7)),
-                                ),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
-                                    Icon(Icons.camera_alt_rounded,
-                                        size: 36, color: Color(0xFF4460C8)),
-                                    SizedBox(height: 6),
-                                    Text('Buka Kamera',
-                                        style: TextStyle(
-                                            fontSize: 12,
-                                            color: Color(0xFF4460C8),
-                                            fontWeight: FontWeight.w700)),
-                                  ],
-                                ),
+                                width: 28,
+                                height: 28,
+                                decoration: const BoxDecoration(color: Color(0xFFD63A30), shape: BoxShape.circle),
+                                child: const Icon(Icons.close_rounded, size: 16, color: Colors.white),
                               ),
                             ),
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    // ── Catatan ──
-                    const Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(
-                              text: 'Catatan ',
-                              style: TextStyle(
-                                  fontSize: 14, fontWeight: FontWeight.w800)),
-                          TextSpan(
-                              text: '(Opsional)',
-                              style: TextStyle(fontSize: 14)),
+                          ),
                         ],
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: _noteController,
-                      maxLines: 3,
-                      style: const TextStyle(fontSize: 13),
-                      decoration: InputDecoration(
-                        hintText: 'Masukkan catatan pengembalian barang...',
-                        hintStyle: const TextStyle(
-                            color: Color(0xFFAAAAAA), fontSize: 13),
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 10),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(
-                              color: UserUi.frameBorder.withValues(alpha: .5)),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(
-                              color: UserUi.frameBorder.withValues(alpha: .5)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: UserUi.blue),
+                      )
+                    : GestureDetector(
+                        onTap: _takePhoto,
+                        child: Container(
+                          width: 160,
+                          height: 110,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF21262D),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: _cardBorder),
+                          ),
+                          child: const Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.camera_alt_rounded, size: 36, color: _blue),
+                              SizedBox(height: 8),
+                              Text('Buka Kamera',
+                                  style: TextStyle(fontSize: 12, color: _blue, fontWeight: FontWeight.w700)),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // ── Catatan ───────────────────────────────────────────────────
+            _SectionCard(
+              title: 'Catatan (Opsional)',
+              titleIcon: Icons.notes_rounded,
+              child: TextField(
+                controller: _noteController,
+                maxLines: 3,
+                style: const TextStyle(fontSize: 13, color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Masukkan catatan pengembalian barang...',
+                  hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
+                  filled: true,
+                  fillColor: const Color(0xFF21262D),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: _cardBorder),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: _cardBorder),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: _blue, width: 1.5),
+                  ),
                 ),
               ),
-              const SizedBox(height: 14),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 86),
-                child: UserPrimaryButton(
-                  text: _isSubmitting ? 'Memproses...' : 'Konfirmasi',
-                  background: _isSubmitting ? Colors.grey : UserUi.blue,
-                  onTap: _isSubmitting ? null : _konfirmasi,
+            ),
+
+            const SizedBox(height: 24),
+
+            // ── Tombol Konfirmasi ─────────────────────────────────────────
+            SizedBox(
+              height: 50,
+              child: ElevatedButton.icon(
+                onPressed: _isSubmitting ? null : _konfirmasi,
+                icon: _isSubmitting
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Icon(Icons.check_circle_rounded, size: 20),
+                label: Text(
+                  _isSubmitting ? 'Memproses...' : 'Konfirmasi Pengembalian',
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _isSubmitting ? const Color(0xFF21262D) : _blue,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: const Color(0xFF21262D),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  elevation: 0,
                 ),
               ),
-            ],
-          ),
+            ),
+
+            const SizedBox(height: 16),
+          ],
         ),
       ),
     );
   }
 }
 
-// ── Sub-widgets ─────────────────────────────────────────────────────────────
+// ── Helper widgets ─────────────────────────────────────────────────────────
 
-class _DateGroup extends StatelessWidget {
-  const _DateGroup({required this.start, required this.end});
-
-  final String start;
-  final String end;
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({
+    required this.title,
+    required this.titleIcon,
+    required this.child,
+    this.titleColor = Colors.white,
+  });
+  final String title;
+  final IconData titleIcon;
+  final Widget child;
+  final Color titleColor;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: const [
-            Icon(Icons.calendar_month_rounded),
-            SizedBox(width: 8),
-            Text('Tanggal Peminjaman',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Row(
-          children: [
-            Expanded(
-              child: UserTextInputMock(
-                text: start,
-                icon: const Icon(Icons.calendar_today_rounded, size: 14),
-                muted: true,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Container(
-                height: 34,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFBE3AF),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Row(
-                  children: [
-                    const Icon(Icons.bolt_rounded,
-                        size: 15, color: Color(0xFFB07D00)),
-                    const SizedBox(width: 6),
-                    Text(end, style: const TextStyle(fontSize: 12)),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF161B22),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFF30363D)),
+      ),
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(titleIcon, size: 16, color: titleColor),
+              const SizedBox(width: 8),
+              Text(title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: titleColor)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
     );
   }
 }
 
-class _SingleDateGroup extends StatelessWidget {
-  const _SingleDateGroup({required this.value});
-
+class _DateChip extends StatelessWidget {
+  const _DateChip({required this.label, required this.value, required this.color});
+  final String label;
   final String value;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: const [
-            Icon(Icons.check_circle_rounded, color: Color(0xFF33B35A)),
-            SizedBox(width: 8),
-            Text('Tanggal Pengembalian',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-          ],
-        ),
-        const SizedBox(height: 6),
-        UserTextInputMock(
-          text: value,
-          icon: const Icon(Icons.calendar_today_rounded, size: 14),
-          muted: true,
-        ),
-      ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.8))),
+          const SizedBox(height: 2),
+          Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: color)),
+        ],
+      ),
     );
   }
 }
