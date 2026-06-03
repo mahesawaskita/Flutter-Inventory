@@ -5,6 +5,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import 'detail_pengembalian_user.dart';
+import 'pengajuan_peminjaman_user.dart';
 import 'user_ui.dart';
 
 class QRScannerUserScreen extends StatefulWidget {
@@ -98,6 +99,21 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
       }
     }
     return null;
+  }
+
+  bool get _hasPendingLoan {
+    if (_currentUsername == null) return false;
+    for (final l in _loans) {
+      if (l['status'] == 'pending' && l['username'] == _currentUsername) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool get _canBorrow {
+    final stock = (_item?['stock'] as num?)?.toInt() ?? 0;
+    return stock > 0 && _myActiveLoan == null && !_hasPendingLoan;
   }
 
   Map<String, dynamic>? get _currentBorrower {
@@ -413,6 +429,62 @@ class _QRScannerUserScreenState extends State<QRScannerUserScreen> {
                   ),
                 ),
               ],
+
+              const SizedBox(height: 10),
+
+              // ── Pinjam / status button ────────────────────────────────
+              if (_canBorrow)
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      final result = await Navigator.push<bool>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PengajuanPeminjamanUserScreen(item: item),
+                        ),
+                      );
+                      if (result == true && mounted) {
+                        await _loadItem((item['id'] as num).toInt());
+                        _loadMyLoans();
+                      }
+                    },
+                    icon: const Icon(Icons.assignment_add, size: 18),
+                    label: const Text('Pinjam Barang', style: TextStyle(fontWeight: FontWeight.w700)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF28A745),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      elevation: 0,
+                    ),
+                  ),
+                )
+              else if (_hasPendingLoan)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF3CD),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFFFD700)),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.pending_actions_rounded, size: 16, color: Color(0xFFD4890A)),
+                      SizedBox(width: 8),
+                      Text(
+                        'Menunggu persetujuan admin',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFFD4890A),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
               const SizedBox(height: 10),
 
