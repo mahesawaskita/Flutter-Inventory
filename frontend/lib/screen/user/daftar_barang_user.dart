@@ -139,7 +139,8 @@ class _DaftarBarangUserScreenState extends State<DaftarBarangUserScreen> {
                       const SizedBox(height: 24),
 
                       // ── Stats ─────────────────────────────────────────────
-                      Row(
+                      IntrinsicHeight(
+                       child: Row(
                         children: [
                           Expanded(child: _StatCard(
                             label: 'Tersedia',
@@ -164,6 +165,7 @@ class _DaftarBarangUserScreenState extends State<DaftarBarangUserScreen> {
                             highlight: !_isLoading && _statHabis > 0,
                           )),
                         ],
+                      ),
                       ),
 
                       const SizedBox(height: 20),
