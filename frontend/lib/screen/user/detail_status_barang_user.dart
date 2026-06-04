@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:frontend/service/auth_service.dart';
 
 import 'peminjaman_barang_user.dart';
-import 'user_ui.dart';
 
 class DetailStatusBarangUserScreen extends StatefulWidget {
   final Map<String, dynamic> loan;
@@ -17,6 +16,13 @@ class DetailStatusBarangUserScreen extends StatefulWidget {
 class _DetailStatusBarangUserScreenState
     extends State<DetailStatusBarangUserScreen> {
   String _username = '';
+
+  static const _bg = Color(0xFF0D1117);
+  static const _purple = Color(0xFF8A20F7);
+  static const _blue = Color(0xFF4A6CF7);
+  static const _green = Color(0xFF10B981);
+  static const _red = Color(0xFFEF4444);
+  static const _orange = Color(0xFFF97316);
 
   @override
   void initState() {
@@ -57,10 +63,7 @@ class _DetailStatusBarangUserScreenState
     if (s == null || s.isEmpty) return '-';
     try {
       final d = DateTime.parse(s);
-      const m = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-        'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
-      ];
+      const m = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
       return '${d.day} ${m[d.month - 1]} ${d.year}';
     } catch (_) {
       return s;
@@ -81,230 +84,291 @@ class _DetailStatusBarangUserScreenState
     final borrowDate = _fmtDisplay(loan['borrow_date']?.toString());
     final dueDate = _fmtDisplay(loan['due_date']?.toString());
     final returnDate = _fmtDisplay(loan['return_date']?.toString());
-    final purpose =
-        (loan['purpose'] ?? loan['notes'] ?? '').toString().trim();
+    final purpose = (loan['purpose'] ?? loan['notes'] ?? '').toString().trim();
 
-    String statusLabel;
-    Color statusBg;
-    Color statusFg;
+    final Color statusColor;
+    final String statusLabel;
+    final IconData statusIcon;
+
     if (isReturned) {
+      statusColor = _green;
       statusLabel = 'Dikembalikan';
-      statusBg = const Color(0xFFD8DEFF);
-      statusFg = const Color(0xFF4D7BEE);
+      statusIcon = Icons.check_circle_rounded;
     } else if (late) {
+      statusColor = _red;
       statusLabel = 'Terlambat $daysLate Hari';
-      statusBg = const Color(0xFFFFA53B);
-      statusFg = Colors.white;
+      statusIcon = Icons.warning_amber_rounded;
     } else {
+      statusColor = _orange;
       statusLabel = 'Dipinjam';
-      statusBg = const Color(0xFFF3D88B);
-      statusFg = Colors.black87;
+      statusIcon = Icons.swap_horiz_rounded;
     }
 
-    return UserPageScaffold(
-      child: UserFramedPage(
-        title: 'Detail Status Barang',
-        topIcon: const Icon(Icons.inventory_2_rounded,
-            size: 48, color: Color(0xFF4B4B4B)),
-        child: Column(
-          children: [
-            // ── Header card: item + borrower + date + status ──
-            UserSectionCard(
-              padding: EdgeInsets.zero,
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Row(
+    return Scaffold(
+      backgroundColor: _bg,
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+
+                    // ── Header ──────────────────────────────────────────────
+                    Row(
                       children: [
-                        UserProductThumb(
-                          icon: Icons.inventory_2_rounded,
-                          background: late
-                              ? const Color(0xFFFFE0D7)
-                              : const Color(0xFFF3EEF3),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text.rich(
-                            TextSpan(
-                              children: [
-                                const TextSpan(
-                                  text: 'Nama Barang\n',
-                                  style: TextStyle(fontWeight: FontWeight.w700),
-                                ),
-                                TextSpan(
-                                  text: itemName,
-                                  style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w900),
-                                ),
-                              ],
+                        GestureDetector(
+                          onTap: () => Navigator.maybePop(context),
+                          child: Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
                             ),
+                            child: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
                           ),
                         ),
+                        const Spacer(),
+                        const Text(
+                          'Detail Status Barang',
+                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                        const Spacer(),
+                        const SizedBox(width: 38),
                       ],
                     ),
-                  ),
-                  Container(height: 1, color: UserUi.softBorder),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            const CircleAvatar(
-                              radius: 16,
-                              backgroundColor: Color(0xFFE8EEF8),
-                              child: Icon(Icons.person,
-                                  size: 18, color: Color(0xFF5A6C91)),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text.rich(
-                                TextSpan(
-                                  children: [
-                                    const TextSpan(
-                                      text: 'Peminjam\n',
-                                      style: TextStyle(fontSize: 12),
-                                    ),
-                                    TextSpan(
-                                      text: borrowerName,
-                                      style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w800),
-                                    ),
-                                  ],
+
+                    const SizedBox(height: 24),
+
+                    // ── Status Banner ────────────────────────────────────────
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: statusColor,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [BoxShadow(color: statusColor.withValues(alpha: 0.4), blurRadius: 16, offset: const Offset(0, 6))],
+                      ),
+                      child: Stack(
+                        children: [
+                          Positioned(
+                            right: -10,
+                            top: -10,
+                            child: Icon(statusIcon, size: 100, color: Colors.white.withValues(alpha: 0.12)),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Icon(statusIcon, color: Colors.white, size: 26),
+                              ),
+                              const SizedBox(height: 14),
+                              Text(
+                                itemName,
+                                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
+                              const SizedBox(height: 4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  statusLabel,
+                                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            const Icon(Icons.calendar_month_rounded),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text('$borrowDate - $dueDate'),
-                            ),
-                            UserPill(
-                              text: statusLabel,
-                              background: statusBg,
-                              foreground: statusFg,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // ── Detail peminjaman card ──
-            UserSectionCard(
-              padding: EdgeInsets.zero,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    color: const Color(0xFFF7F0F6),
-                    child: const Row(
-                      children: [
-                        Icon(Icons.fact_check_rounded,
-                            color: Color(0xFF7ABB23)),
-                        SizedBox(width: 8),
-                        Text('Detail Peminjaman',
-                            style: TextStyle(
-                                fontSize: 14, fontWeight: FontWeight.w900)),
-                      ],
-                    ),
-                  ),
-                  _DetailRow(
-                    icon: Icons.person_outline_rounded,
-                    label: 'Nama Peminjam',
-                    value: borrowerName,
-                  ),
-                  _DetailRow(
-                    icon: Icons.calendar_month_rounded,
-                    label: 'Tanggal Dipinjam',
-                    value: borrowDate,
-                  ),
-                  _DetailRow(
-                    icon: Icons.calendar_month_rounded,
-                    label: 'Tanggal Kembali',
-                    value: dueDate,
-                  ),
-                  _DetailRow(
-                    icon: Icons.info_outline_rounded,
-                    label: 'Status',
-                    value: statusLabel,
-                    isBadge: true,
-                    badgeText: statusLabel,
-                    badgeBackground: statusBg,
-                    badgeForeground: statusFg,
-                  ),
-                  if (isReturned)
-                    _DetailRow(
-                      icon: Icons.assignment_return_rounded,
-                      label: 'Tanggal Dikembalikan',
-                      value: returnDate,
-                    ),
-                  if (purpose.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(Icons.notes_rounded,
-                              color: Color(0xFFFFC400), size: 30),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF9F4F8),
-                                borderRadius: BorderRadius.circular(10),
-                                border:
-                                    Border.all(color: UserUi.softBorder),
-                              ),
-                              child: Text(purpose),
-                            ),
+                            ],
                           ),
                         ],
                       ),
                     ),
-                ],
-              ),
-            ),
 
-            // ── Tombol Pinjam Barang (hanya jika sudah dikembalikan) ──
-            if (isReturned) ...[
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: UserPrimaryButton(
-                  text: 'Pinjam Barang',
-                  icon: Icons.arrow_forward_rounded,
-                  onTap: () => Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => PeminjamanBarangUserScreen(
-                        selectedItem: {
-                          'id': widget.loan['item_id'],
-                          'name': widget.loan['item_name'],
-                        },
+                    const SizedBox(height: 20),
+
+                    // ── Info Peminjam ────────────────────────────────────────
+                    _SectionLabel(label: 'Info Peminjam'),
+                    const SizedBox(height: 10),
+
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 46,
+                            height: 46,
+                            decoration: BoxDecoration(
+                              color: _blue.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.person_rounded, color: _blue, size: 24),
+                          ),
+                          const SizedBox(width: 14),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Peminjam',
+                                style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.5)),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                borrowerName,
+                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                  ),
+
+                    const SizedBox(height: 20),
+
+                    // ── Detail Peminjaman ────────────────────────────────────
+                    _SectionLabel(label: 'Detail Peminjaman'),
+                    const SizedBox(height: 10),
+
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                      ),
+                      child: Column(
+                        children: [
+                          _DetailRow(
+                            icon: Icons.inventory_2_rounded,
+                            label: 'Nama Barang',
+                            value: itemName,
+                            iconColor: _purple,
+                            isFirst: true,
+                          ),
+                          _DetailRow(
+                            icon: Icons.login_rounded,
+                            label: 'Tanggal Dipinjam',
+                            value: borrowDate,
+                            iconColor: _blue,
+                          ),
+                          _DetailRow(
+                            icon: Icons.logout_rounded,
+                            label: 'Tanggal Kembali',
+                            value: dueDate,
+                            iconColor: _orange,
+                          ),
+                          _DetailRow(
+                            icon: Icons.info_outline_rounded,
+                            label: 'Status',
+                            value: statusLabel,
+                            iconColor: statusColor,
+                            isStatus: true,
+                            statusColor: statusColor,
+                          ),
+                          if (isReturned)
+                            _DetailRow(
+                              icon: Icons.assignment_return_rounded,
+                              label: 'Tanggal Dikembalikan',
+                              value: returnDate,
+                              iconColor: _green,
+                              isLast: !purpose.isNotEmpty,
+                            ),
+                          if (purpose.isNotEmpty)
+                            _NoteRow(note: purpose),
+                        ],
+                      ),
+                    ),
+
+                    // ── Pinjam Barang button (hanya jika sudah dikembalikan) ──
+                    if (isReturned) ...[
+                      const SizedBox(height: 24),
+                      GestureDetector(
+                        onTap: () => Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => PeminjamanBarangUserScreen(
+                              selectedItem: {
+                                'id': widget.loan['item_id'],
+                                'name': widget.loan['item_name'],
+                              },
+                            ),
+                          ),
+                        ),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: _purple,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [BoxShadow(color: _purple.withValues(alpha: 0.4), blurRadius: 14, offset: const Offset(0, 5))],
+                          ),
+                          child: Stack(
+                            children: [
+                              Positioned(
+                                right: -10,
+                                top: -10,
+                                child: Icon(Icons.swap_horiz_rounded, size: 90, color: Colors.white.withValues(alpha: 0.1)),
+                              ),
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 46,
+                                    height: 46,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(Icons.swap_horiz_rounded, color: Colors.white, size: 26),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'Pinjam Barang',
+                                          style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          'Pinjam barang ini kembali',
+                                          style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 11),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Row(
+                                    children: [
+                                      Text('Buka', style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 11, fontWeight: FontWeight.w600)),
+                                      const SizedBox(width: 3),
+                                      Icon(Icons.arrow_forward_rounded, color: Colors.white.withValues(alpha: 0.85), size: 14),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
-            ],
-
-            const SizedBox(height: 8),
+            ),
           ],
         ),
       ),
@@ -312,51 +376,145 @@ class _DetailStatusBarangUserScreenState
   }
 }
 
+// ── Section Label ─────────────────────────────────────────────────────────────
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+    );
+  }
+}
+
+// ── Detail Row ────────────────────────────────────────────────────────────────
+
 class _DetailRow extends StatelessWidget {
   const _DetailRow({
     required this.icon,
     required this.label,
     required this.value,
-    this.isBadge = false,
-    this.badgeText,
-    this.badgeBackground,
-    this.badgeForeground,
+    required this.iconColor,
+    this.isFirst = false,
+    this.isLast = false,
+    this.isStatus = false,
+    this.statusColor,
   });
 
   final IconData icon;
   final String label;
   final String value;
-  final bool isBadge;
-  final String? badgeText;
-  final Color? badgeBackground;
-  final Color? badgeForeground;
+  final Color iconColor;
+  final bool isFirst;
+  final bool isLast;
+  final bool isStatus;
+  final Color? statusColor;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: UserUi.softBorder)),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        border: isLast
+            ? null
+            : Border(bottom: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
       ),
       child: Row(
         children: [
-          Icon(icon, color: const Color(0xFF444444)),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(label, style: const TextStyle(fontSize: 14)),
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 16, color: iconColor),
           ),
-          if (isBadge && badgeText != null)
-            UserPill(
-              text: badgeText!,
-              background: badgeBackground ?? UserUi.blue.withValues(alpha: 0.2),
-              foreground: badgeForeground ?? UserUi.blue,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.6)),
+            ),
+          ),
+          if (isStatus && statusColor != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: statusColor!.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: statusColor!.withValues(alpha: 0.4)),
+              ),
+              child: Text(
+                value,
+                style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.w700),
+              ),
             )
           else
-            Text(value,
-                style: const TextStyle(
-                    fontSize: 14, fontWeight: FontWeight.w800)),
-          const SizedBox(width: 4),
-          const Icon(Icons.chevron_right_rounded),
+            Text(
+              value,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Note Row ──────────────────────────────────────────────────────────────────
+
+class _NoteRow extends StatelessWidget {
+  const _NoteRow({required this.note});
+  final String note;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFC400).withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.notes_rounded, size: 16, color: Color(0xFFFFC400)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Catatan',
+                  style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.6)),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                  ),
+                  child: Text(
+                    note,
+                    style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.8)),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
