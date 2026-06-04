@@ -3,8 +3,6 @@ import 'package:frontend/screen/user/peminjaman_barang_user.dart';
 import 'package:frontend/service/api_service.dart';
 import 'package:frontend/service/auth_service.dart';
 
-import 'user_ui.dart';
-
 class DaftarBarangUserScreen extends StatefulWidget {
   const DaftarBarangUserScreen({super.key});
 
@@ -17,9 +15,15 @@ class _DaftarBarangUserScreenState extends State<DaftarBarangUserScreen> {
   List<Map<String, dynamic>> _categories = [];
   bool _isLoading = true;
   String _search = '';
-  int _activeCat = 0; // 0 = Semua
+  int _activeCat = 0;
 
-  // ── Computed ──────────────────────────────────────────────
+  static const _bg = Color(0xFF0D1117);
+  static const _purple = Color(0xFF8A20F7);
+  static const _blue = Color(0xFF4A6CF7);
+  static const _green = Color(0xFF10B981);
+  static const _orange = Color(0xFFF97316);
+  static const _red = Color(0xFFEF4444);
+
   List<Map<String, dynamic>> get _filtered {
     var list = List<Map<String, dynamic>>.from(_allItems);
     if (_activeCat > 0 && _activeCat <= _categories.length) {
@@ -76,9 +80,9 @@ class _DaftarBarangUserScreenState extends State<DaftarBarangUserScreen> {
 
   Color _statusColor(Map<String, dynamic> item) {
     switch (item['status']?.toString() ?? 'available') {
-      case 'available': return const Color(0xFF74D294);
-      case 'borrowed': return const Color(0xFFF0D48A);
-      case 'reserved': return const Color(0xFF90CAF9);
+      case 'available': return _green;
+      case 'borrowed': return _orange;
+      case 'reserved': return _blue;
       case 'inactive': return Colors.grey;
       default: return Colors.grey;
     }
@@ -88,200 +92,296 @@ class _DaftarBarangUserScreenState extends State<DaftarBarangUserScreen> {
   Widget build(BuildContext context) {
     final cats = ['Semua', ..._categories.map((c) => c['name'].toString())];
 
-    return UserPageScaffold(
-      child: UserFramedPage(
-        title: 'Daftar Barang',
-        topIcon: const Icon(Icons.favorite_rounded, size: 48, color: Color(0xFF22B9D2)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // ── Stats ──
-            Row(
-              children: [
-                Expanded(child: _StatCard(
-                  color: const Color(0xFFDDE5F8),
-                  icon: Icons.inventory_2_rounded,
-                  value: '$_statTersedia',
-                  label: 'Tersedia',
-                )),
-                const SizedBox(width: 8),
-                Expanded(child: _StatCard(
-                  color: const Color(0xFFFDF0C5),
-                  icon: Icons.bolt_rounded,
-                  value: '$_statHampirHabis',
-                  label: 'Hampir Habis',
-                )),
-                const SizedBox(width: 8),
-                Expanded(child: _StatCard(
-                  color: const Color(0xFFFFE0D7),
-                  icon: Icons.warning_amber_rounded,
-                  value: '$_statHabis',
-                  label: 'Habis',
-                )),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // ── Category filter chips ──
-            SizedBox(
-              height: 36,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: cats.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 6),
-                itemBuilder: (_, i) {
-                  final active = i == _activeCat;
-                  return GestureDetector(
-                    onTap: () => setState(() => _activeCat = i),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      decoration: BoxDecoration(
-                        color: active ? UserUi.blue : const Color(0xFFF7F0F6),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        cats[i],
-                        style: TextStyle(
-                          color: active ? Colors.white : UserUi.textLight,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // ── Search ──
-            Container(
-              height: 34,
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF6ECF7),
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 18, height: 18,
-                    decoration: const BoxDecoration(color: Color(0xFF9DE8F2), shape: BoxShape.circle),
-                    child: const Icon(Icons.search, size: 13, color: Colors.black54),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      style: const TextStyle(fontSize: 12),
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        isDense: true,
-                        hintText: 'Cari nama barang...',
-                        hintStyle: TextStyle(fontSize: 12, color: UserUi.textLight),
-                      ),
-                      onChanged: (v) => setState(() => _search = v.trim().toLowerCase()),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // ── Items list ──
-            if (_isLoading)
-              const Center(child: Padding(
-                padding: EdgeInsets.all(24),
-                child: CircularProgressIndicator(color: UserUi.blue),
-              ))
-            else if (_filtered.isEmpty)
-              Center(
+    return Scaffold(
+      backgroundColor: _bg,
+      body: RefreshIndicator(
+        onRefresh: _loadData,
+        color: _purple,
+        backgroundColor: const Color(0xFF1A2035),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(
+              child: SafeArea(
+                bottom: false,
                 child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(
-                    _search.isNotEmpty ? 'Tidak ada hasil untuk "$_search"' : 'Belum ada barang',
-                    style: const TextStyle(color: UserUi.textMuted, fontSize: 13),
-                  ),
-                ),
-              )
-            else
-              ..._filtered.map((item) {
-                final name = item['name']?.toString() ?? '-';
-                final cat = item['category_name']?.toString() ?? '-';
-                final stock = item['stock'] as int? ?? 0;
-                final statusLabel = _statusLabel(item);
-                final condColor = _statusColor(item);
-                final canBorrow = (item['status']?.toString() ?? '') == 'available' && stock > 0;
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
 
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: UserSectionCard(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                    child: Row(
-                      children: [
-                        const UserProductThumb(icon: Icons.inventory_2_rounded),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
-                              Text(cat, style: const TextStyle(fontSize: 12, color: UserUi.textMuted)),
-                              const SizedBox(height: 4),
-                              Text('Stok: $stock', style: const TextStyle(fontSize: 11, color: UserUi.textMuted)),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            UserPill(
-                              text: statusLabel,
-                              background: condColor.withOpacity(0.2),
-                              foreground: condColor,
+                      // ── Header ────────────────────────────────────────────
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => Navigator.maybePop(context),
+                            child: Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                              ),
+                              child: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
                             ),
-                            if (canBorrow) ...[
-                              const SizedBox(height: 6),
-                              GestureDetector(
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) =>
-                                      PeminjamanBarangUserScreen(selectedItem: item)),
-                                ),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: UserUi.blue,
-                                    borderRadius: BorderRadius.circular(12),
+                          ),
+                          const Spacer(),
+                          const Text(
+                            'Daftar Barang',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                          ),
+                          const Spacer(),
+                          const SizedBox(width: 38),
+                        ],
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // ── Stats ─────────────────────────────────────────────
+                      Row(
+                        children: [
+                          Expanded(child: _StatCard(
+                            label: 'Tersedia',
+                            value: _isLoading ? null : _statTersedia,
+                            icon: Icons.inventory_2_rounded,
+                            color: _green,
+                          )),
+                          const SizedBox(width: 12),
+                          Expanded(child: _StatCard(
+                            label: 'Hampir\nHabis',
+                            value: _isLoading ? null : _statHampirHabis,
+                            icon: Icons.bolt_rounded,
+                            color: _orange,
+                            highlight: !_isLoading && _statHampirHabis > 0,
+                          )),
+                          const SizedBox(width: 12),
+                          Expanded(child: _StatCard(
+                            label: 'Stok\nHabis',
+                            value: _isLoading ? null : _statHabis,
+                            icon: Icons.warning_amber_rounded,
+                            color: _red,
+                            highlight: !_isLoading && _statHabis > 0,
+                          )),
+                        ],
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // ── Category filter chips ──────────────────────────────
+                      SizedBox(
+                        height: 36,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: cats.length,
+                          separatorBuilder: (_, __) => const SizedBox(width: 8),
+                          itemBuilder: (_, i) {
+                            final active = i == _activeCat;
+                            return GestureDetector(
+                              onTap: () => setState(() => _activeCat = i),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                decoration: BoxDecoration(
+                                  color: active ? _blue : Colors.white.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: active ? _blue : Colors.white.withValues(alpha: 0.15),
                                   ),
-                                  child: const Text(
-                                    'Pinjam',
-                                    style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
+                                  boxShadow: active
+                                      ? [BoxShadow(color: _blue.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 2))]
+                                      : null,
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  cats[i],
+                                  style: TextStyle(
+                                    color: active ? Colors.white : Colors.white60,
+                                    fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                                    fontSize: 12,
                                   ),
                                 ),
                               ),
-                            ],
+                            );
+                          },
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // ── Search ────────────────────────────────────────────
+                      Container(
+                        height: 46,
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.search_rounded, size: 20, color: Colors.white.withValues(alpha: 0.45)),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: TextField(
+                                style: const TextStyle(fontSize: 13, color: Colors.white),
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                  hintText: 'Cari nama barang...',
+                                  hintStyle: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.35)),
+                                ),
+                                onChanged: (v) => setState(() => _search = v.trim().toLowerCase()),
+                              ),
+                            ),
                           ],
                         ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
+                      ),
 
-            const SizedBox(height: 8),
+                      const SizedBox(height: 20),
 
-            // ── Pinjam Barang button ──
-            UserSectionCard(
-              color: Colors.white,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 60),
-                child: UserPrimaryButton(
-                  text: 'Pinjam Barang',
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const PeminjamanBarangUserScreen()),
+                      // ── Section label ─────────────────────────────────────
+                      Row(
+                        children: [
+                          const Text(
+                            'Semua Barang',
+                            style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+                          ),
+                          const Spacer(),
+                          if (!_isLoading)
+                            Text(
+                              '${_filtered.length} barang',
+                              style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 12),
+                            ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // ── Items list ────────────────────────────────────────
+                      if (_isLoading)
+                        const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(32),
+                            child: CircularProgressIndicator(color: _purple),
+                          ),
+                        )
+                      else if (_filtered.isEmpty)
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 32),
+                            child: Column(
+                              children: [
+                                Icon(Icons.inventory_2_outlined, size: 52, color: Colors.white.withValues(alpha: 0.25)),
+                                const SizedBox(height: 12),
+                                Text(
+                                  _search.isNotEmpty
+                                      ? 'Tidak ada hasil untuk "$_search"'
+                                      : 'Belum ada barang',
+                                  style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 13),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        ..._filtered.map((item) {
+                          final name = item['name']?.toString() ?? '-';
+                          final cat = item['category_name']?.toString() ?? '-';
+                          final stock = item['stock'] as int? ?? 0;
+                          final statusLabel = _statusLabel(item);
+                          final condColor = _statusColor(item);
+                          final canBorrow = (item['status']?.toString() ?? '') == 'available' && stock > 0;
+
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: _ItemCard(
+                              name: name,
+                              category: cat,
+                              stock: stock,
+                              statusLabel: statusLabel,
+                              statusColor: condColor,
+                              canBorrow: canBorrow,
+                              onBorrow: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) =>
+                                    PeminjamanBarangUserScreen(selectedItem: item)),
+                              ),
+                            ),
+                          );
+                        }),
+
+                      const SizedBox(height: 16),
+
+                      // ── Pinjam Barang button ──────────────────────────────
+                      GestureDetector(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const PeminjamanBarangUserScreen()),
+                        ),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: _purple,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [BoxShadow(color: _purple.withValues(alpha: 0.4), blurRadius: 14, offset: const Offset(0, 5))],
+                          ),
+                          child: Stack(
+                            children: [
+                              Positioned(
+                                right: -10,
+                                top: -10,
+                                child: Icon(Icons.swap_horiz_rounded, size: 90, color: Colors.white.withValues(alpha: 0.1)),
+                              ),
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 46,
+                                    height: 46,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(Icons.swap_horiz_rounded, color: Colors.white, size: 26),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'Pinjam Barang',
+                                          style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          'Ajukan peminjaman barang baru',
+                                          style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 11),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'Buka',
+                                        style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 11, fontWeight: FontWeight.w600),
+                                      ),
+                                      const SizedBox(width: 3),
+                                      Icon(Icons.arrow_forward_rounded, color: Colors.white.withValues(alpha: 0.85), size: 14),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 32),
+                    ],
                   ),
                 ),
               ),
@@ -293,29 +393,186 @@ class _DaftarBarangUserScreenState extends State<DaftarBarangUserScreen> {
   }
 }
 
+// ── Stat card ─────────────────────────────────────────────────────────────────
+
 class _StatCard extends StatelessWidget {
-  const _StatCard({required this.color, required this.icon, required this.value, required this.label});
-  final Color color;
-  final IconData icon;
-  final String value;
+  const _StatCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+    this.highlight = false,
+  });
+
   final String label;
+  final int? value;
+  final IconData icon;
+  final Color color;
+  final bool highlight;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 92,
+      padding: const EdgeInsets.fromLTRB(12, 14, 8, 14),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: UserUi.frameBorder),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.35), blurRadius: 10, offset: const Offset(0, 4))],
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Stack(
         children: [
-          Icon(icon, size: 28),
-          const SizedBox(height: 4),
-          Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
-          Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+          Positioned(
+            right: -4,
+            bottom: -8,
+            child: Icon(icon, size: 52, color: Colors.white.withValues(alpha: 0.18)),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              value == null
+                  ? const SizedBox(
+                      width: 20, height: 20,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                    )
+                  : Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          '$value',
+                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+                        ),
+                        if (highlight && value! > 0) ...[
+                          const SizedBox(width: 4),
+                          Container(
+                            width: 8, height: 8,
+                            decoration: const BoxDecoration(color: Colors.yellow, shape: BoxShape.circle),
+                          ),
+                        ],
+                      ],
+                    ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(fontSize: 9, color: Colors.white.withValues(alpha: 0.8), height: 1.3),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Item card ─────────────────────────────────────────────────────────────────
+
+class _ItemCard extends StatelessWidget {
+  const _ItemCard({
+    required this.name,
+    required this.category,
+    required this.stock,
+    required this.statusLabel,
+    required this.statusColor,
+    required this.canBorrow,
+    required this.onBorrow,
+  });
+
+  final String name;
+  final String category;
+  final int stock;
+  final String statusLabel;
+  final Color statusColor;
+  final bool canBorrow;
+  final VoidCallback onBorrow;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: statusColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(Icons.inventory_2_rounded, color: statusColor, size: 24),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  category,
+                  style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.5)),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(Icons.layers_rounded, size: 12, color: Colors.white.withValues(alpha: 0.4)),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Stok: $stock',
+                      style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.5)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.4)),
+                ),
+                child: Text(
+                  statusLabel,
+                  style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.w700),
+                ),
+              ),
+              if (canBorrow) ...[
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: onBorrow,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4A6CF7),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [BoxShadow(color: const Color(0xFF4A6CF7).withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 3))],
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('Pinjam', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
+                        SizedBox(width: 4),
+                        Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 11),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
         ],
       ),
     );
